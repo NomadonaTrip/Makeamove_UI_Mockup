@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MakeaMove — The Show (live screen mockup)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --stage-900:#080B16; --stage-850:#0D1326; --stage-800:#121B38;
+    --spotlight:#2F6BFF; --spotlight-soft:#6E9BFF;
+    --bulb:#FFB627; --bulb-soft:#FFD37A;
+    --move:#FF2D6F; --move-soft:#FF7AA6;
+    --stay:#5B6685; --stay-soft:#8A93B0;
+    --pass:#2BD18B;
+    --ink:#F5F7FF; --ink-dim:#AEB6D6; --ink-faint:#6B739A;
+    --rail:#FF7A1A;
+    --display:"Big Shoulders Display", system-ui, sans-serif;
+    --body:"Hanken Grotesk", system-ui, sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  html,body{height:100%}
+  body{
+    font-family:var(--body); background:var(--stage-900); color:var(--ink);
+    overflow:hidden; -webkit-font-smoothing:antialiased;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  /* ---------- THE STAGE ---------- */
+  .stage{
+    position:relative; width:100%; height:100%; overflow:hidden;
+    display:flex; flex-direction:column;
+  }
+  /* warm-bulb dot wall */
+  .bulbwall{
+    position:absolute; inset:-10% -10% 35% -10%; z-index:0;
+    background-image:radial-gradient(circle, rgba(255,182,39,.55) 0 1.4px, transparent 2px);
+    background-size:34px 34px;
+    -webkit-mask-image:radial-gradient(120% 90% at 50% 0%, #000 30%, transparent 72%);
+            mask-image:radial-gradient(120% 90% at 50% 0%, #000 30%, transparent 72%);
+    opacity:.5; animation:bulbShimmer 5.5s ease-in-out infinite;
+  }
+  /* drifting blue beams */
+  .beam{position:absolute; top:-30%; width:42vw; height:150vh; z-index:0;
+    background:linear-gradient(180deg, rgba(47,107,255,.32), rgba(47,107,255,0) 70%);
+    filter:blur(38px); transform-origin:top center; mix-blend-mode:screen;}
+  .beam.b1{left:8%;  transform:rotate(14deg);  animation:sway1 9s ease-in-out infinite}
+  .beam.b2{right:6%; transform:rotate(-12deg); background:linear-gradient(180deg, rgba(255,182,39,.20), rgba(255,182,39,0) 70%); animation:sway2 11s ease-in-out infinite}
+  .beam.b3{left:42%; width:30vw; transform:rotate(3deg); animation:sway1 13s ease-in-out infinite reverse}
+  /* amber neon rail */
+  .rail{position:absolute; left:0; right:0; bottom:33%; height:3px; z-index:1;
+    background:linear-gradient(90deg, transparent, var(--rail) 18%, var(--bulb-soft) 50%, var(--rail) 82%, transparent);
+    box-shadow:0 0 18px 2px rgba(255,122,26,.55); opacity:.8}
+  /* grain + vignette */
+  .grain{position:absolute; inset:0; z-index:2; pointer-events:none; opacity:.05;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+  .vignette{position:absolute; inset:0; z-index:2; pointer-events:none;
+    background:radial-gradient(120% 80% at 50% 38%, transparent 45%, rgba(0,0,0,.55) 100%)}
+
+  /* ---------- HUD ---------- */
+  .hud{position:relative; z-index:5; display:flex; align-items:center; justify-content:space-between;
+    padding:18px 22px; gap:16px}
+  .brand{font-family:var(--display); font-weight:900; letter-spacing:.06em; font-size:20px;
+    text-transform:uppercase; line-height:.9}
+  .brand .mk{color:var(--ink)} .brand .move{color:var(--move)}
+  .live{display:inline-flex; align-items:center; gap:7px; font-size:11px; font-weight:700;
+    letter-spacing:.16em; text-transform:uppercase; color:var(--ink-dim);
+    border:1px solid rgba(255,255,255,.12); padding:5px 10px; border-radius:999px; background:rgba(255,255,255,.03)}
+  .live .dot{width:8px; height:8px; border-radius:50%; background:var(--move); box-shadow:0 0 10px var(--move); animation:livepulse 1.6s infinite}
+  .counter{font-family:var(--display); font-weight:700; font-size:15px; letter-spacing:.12em;
+    color:var(--ink-dim); text-transform:uppercase}
+  .counter b{color:var(--bulb)}
+  .pips{display:flex; gap:6px; margin-top:7px; justify-content:flex-end}
+  .pip{width:18px; height:5px; border-radius:3px; background:rgba(255,255,255,.12)}
+  .pip.done{background:var(--spotlight)} .pip.move{background:var(--move)} .pip.stay{background:var(--stay)}
+
+  /* ---------- CENTER STAGE ---------- */
+  .center{position:relative; z-index:5; flex:1; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; padding:8px 22px; text-align:center; gap:18px}
+  .turn{display:flex; align-items:center; gap:10px; font-size:13px; letter-spacing:.04em; color:var(--ink-dim)}
+  .turn .who{font-weight:700; color:var(--ink)}
+  .turn .react{color:var(--move-soft); font-weight:700}
+  .chip{display:inline-flex; align-items:center; gap:8px; font-family:var(--display); font-weight:700;
+    text-transform:uppercase; letter-spacing:.14em; font-size:12px; color:var(--stage-900);
+    background:linear-gradient(180deg, var(--bulb-soft), var(--bulb)); padding:6px 14px; border-radius:999px;
+    box-shadow:0 0 22px rgba(255,182,39,.35)}
+  .chip.l3{background:linear-gradient(180deg,#FFA0BD,var(--move)); color:#fff; box-shadow:0 0 26px rgba(255,45,111,.5)}
+  .question{font-family:var(--display); font-weight:800; font-size:clamp(28px,5vw,52px);
+    line-height:.98; max-width:14ch; letter-spacing:.005em; text-wrap:balance}
+  .panel{position:relative; max-width:640px; width:100%; border-radius:18px; padding:22px 26px;
+    background:linear-gradient(180deg, rgba(31,42,80,.92), rgba(16,24,52,.92));
+    border:1px solid rgba(110,155,255,.22);
+    box-shadow:0 24px 60px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.06);
+    transition:transform .5s cubic-bezier(.2,.9,.2,1), box-shadow .5s, border-color .5s, opacity .4s}
+  .panel .ans-label{font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:8px; font-weight:700}
+  .panel .ans{font-size:clamp(17px,2.4vw,21px); line-height:1.45; color:var(--ink)}
+  .panel.flip-move{transform:translateY(-4px) scale(1.015); border-color:var(--move); box-shadow:0 0 0 2px rgba(255,45,111,.5), 0 0 60px rgba(255,45,111,.45)}
+  .panel.flip-stay{opacity:.55; transform:scale(.985); border-color:rgba(91,102,133,.6); box-shadow:0 0 0 1px rgba(91,102,133,.4)}
+
+  /* ---------- SCORE LADDER ---------- */
+  .ladder{position:absolute; left:22px; top:50%; transform:translateY(-50%); z-index:5;
+    width:74px; display:flex; flex-direction:column; align-items:center; gap:8px}
+  .ladder .pct{font-family:var(--display); font-weight:900; font-size:34px; line-height:.85; color:var(--ink); transition:color .4s}
+  .ladder .pct small{display:block; font-size:10px; letter-spacing:.16em; color:var(--ink-faint); font-family:var(--body); font-weight:700; margin-top:3px}
+  .ladder.passed .pct{color:var(--pass)}
+  .tube{position:relative; width:26px; height:230px; border-radius:14px; overflow:hidden;
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12)}
+  .fill{position:absolute; left:0; right:0; bottom:0; height:0%;
+    background:linear-gradient(180deg, var(--move-soft), var(--move)); transition:height .6s cubic-bezier(.2,.9,.2,1), background .5s}
+  .fill.passed{background:linear-gradient(180deg, #7CF0C2, var(--pass))}
+  .passline{position:absolute; left:-6px; right:-6px; bottom:70%; height:2px; background:var(--pass); z-index:3; box-shadow:0 0 8px var(--pass)}
+  .passline::after{content:"70%"; position:absolute; left:34px; top:-8px; font-family:var(--display); font-weight:700; font-size:12px; color:var(--pass); letter-spacing:.1em; white-space:nowrap}
+
+  /* ---------- REACTION CONTROLS ---------- */
+  .controls{position:relative; z-index:6; display:flex; gap:18px; justify-content:center;
+    padding:18px 22px 30px}
+  .react-btn{position:relative; border:none; cursor:pointer; font-family:var(--display); font-weight:800;
+    text-transform:uppercase; letter-spacing:.06em; color:#fff; padding:20px 0; width:190px; border-radius:18px;
+    font-size:26px; line-height:1; overflow:visible; transition:transform .15s, box-shadow .3s, filter .2s}
+  .react-btn .sub{display:block; font-family:var(--body); font-weight:600; font-size:12px; letter-spacing:.02em; opacity:.9; margin-top:6px; text-transform:none}
+  .react-btn:active{transform:translateY(2px) scale(.98)}
+  .react-btn:disabled{opacity:.4; cursor:default}
+  .btn-move{background:linear-gradient(180deg, var(--move-soft), var(--move));
+    box-shadow:0 10px 30px rgba(255,45,111,.45), inset 0 1px 0 rgba(255,255,255,.3); animation:breathe 2.6s ease-in-out infinite}
+  .btn-move:hover:not(:disabled){box-shadow:0 14px 44px rgba(255,45,111,.6); filter:brightness(1.05)}
+  .btn-stay{background:linear-gradient(180deg, var(--stay-soft), var(--stay));
+    box-shadow:0 8px 22px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.15)}
+  .btn-stay:hover:not(:disabled){filter:brightness(1.08)}
+  .react-btn .heart{position:absolute; top:14px; right:16px; font-size:16px; opacity:.85}
+
+  /* heart burst particles */
+  .burst{position:fixed; z-index:30; pointer-events:none; font-size:22px; will-change:transform,opacity}
+  @keyframes fly{to{transform:translate(var(--dx),var(--dy)) scale(var(--s)) rotate(var(--r)); opacity:0}}
+
+  /* escalation toast */
+  .toast{position:absolute; z-index:20; top:74px; left:50%; transform:translateX(-50%) translateY(-12px);
+    background:linear-gradient(180deg,#FFA0BD,var(--move)); color:#fff; font-weight:700; font-size:13px;
+    letter-spacing:.04em; padding:9px 16px; border-radius:999px; box-shadow:0 8px 30px rgba(255,45,111,.5);
+    opacity:0; pointer-events:none; transition:opacity .35s, transform .35s; display:flex; align-items:center; gap:8px}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+  .toast b{font-family:var(--display); letter-spacing:.1em; text-transform:uppercase}
+
+  /* host voice */
+  .host{position:relative; z-index:5; text-align:center; color:var(--ink-dim); font-size:14px;
+    font-style:italic; min-height:20px; padding:0 22px}
+
+  /* ---------- END OVERLAY ---------- */
+  .overlay{position:absolute; inset:0; z-index:40; display:none; align-items:center; justify-content:center;
+    flex-direction:column; gap:18px; text-align:center; padding:28px;
+    background:radial-gradient(80% 60% at 50% 40%, rgba(10,14,26,.7), rgba(8,11,22,.95))}
+  .overlay.show{display:flex; animation:fade .5s ease}
+  .overlay .verdict{font-family:var(--display); font-weight:900; font-size:clamp(40px,9vw,92px); line-height:.9; letter-spacing:.01em}
+  .overlay.win .verdict{color:var(--pass); text-shadow:0 0 40px rgba(43,209,139,.5)}
+  .overlay.lose .verdict{color:var(--ink); text-shadow:none}
+  .overlay .big-pct{font-family:var(--display); font-weight:800; font-size:64px}
+  .overlay.win .big-pct{color:var(--pass)} .overlay.lose .big-pct{color:var(--move-soft)}
+  .overlay p{max-width:42ch; color:var(--ink-dim); font-size:16px; line-height:1.5}
+  .overlay .partner{color:var(--ink); font-weight:600}
+  .restart{font-family:var(--display); font-weight:700; letter-spacing:.08em; text-transform:uppercase; font-size:15px;
+    background:linear-gradient(180deg,var(--spotlight-soft),var(--spotlight)); color:#fff; border:none; padding:14px 26px;
+    border-radius:14px; cursor:pointer; box-shadow:0 10px 30px rgba(47,107,255,.45)}
+  .lifeline{display:inline-flex; align-items:center; gap:8px; color:var(--bulb); font-weight:700; font-size:14px}
+
+  /* ---------- animations ---------- */
+  @keyframes bulbShimmer{0%,100%{opacity:.42; filter:brightness(1)} 50%{opacity:.6; filter:brightness(1.25)}}
+  @keyframes sway1{0%,100%{transform:rotate(14deg) translateX(0)} 50%{transform:rotate(10deg) translateX(20px)}}
+  @keyframes sway2{0%,100%{transform:rotate(-12deg) translateX(0)} 50%{transform:rotate(-8deg) translateX(-22px)}}
+  @keyframes livepulse{0%,100%{opacity:1} 50%{opacity:.35}}
+  @keyframes breathe{0%,100%{box-shadow:0 10px 30px rgba(255,45,111,.4), inset 0 1px 0 rgba(255,255,255,.3)} 50%{box-shadow:0 12px 44px rgba(255,45,111,.7), inset 0 1px 0 rgba(255,255,255,.3)}}
+  @keyframes fade{from{opacity:0} to{opacity:1}}
+  @keyframes popIn{0%{transform:scale(.9); opacity:0} 100%{transform:scale(1); opacity:1}}
+  .pop{animation:popIn .45s cubic-bezier(.2,1.3,.4,1) both}
+
+  /* ---------- responsive ---------- */
+  @media (max-width:760px){
+    .ladder{position:static; transform:none; flex-direction:row; width:auto; gap:14px;
+      align-self:center; margin-top:4px; align-items:center}
+    .ladder .pct{font-size:28px} .tube{width:160px; height:22px; transform:rotate(-90deg)} /* keep vertical feel */
+    .tube{transform:none; width:200px; height:18px}
+    .fill{left:0; bottom:0; top:0; height:100%; width:0%; transition:width .6s; background:linear-gradient(90deg,var(--move-soft),var(--move))}
+    .passline{left:70%; right:auto; top:-6px; bottom:-6px; width:2px; height:auto}
+    .passline::after{left:-10px; top:-18px}
+    .question{font-size:clamp(24px,7vw,34px); max-width:18ch}
+    .controls{gap:12px; padding-bottom:24px} .react-btn{width:44vw; font-size:20px; padding:16px 0}
+    .center{gap:12px}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important; transition:opacity .2s ease, color .2s ease !important}
+    .panel.flip-move,.panel.flip-stay{transform:none}
+    .burst{display:none !important}
+  }
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <div class="bulbwall"></div>
+  <div class="beam b1"></div><div class="beam b2"></div><div class="beam b3"></div>
+  <div class="rail"></div>
+
+  <!-- HUD -->
+  <div class="hud">
+    <div>
+      <div class="brand"><span class="mk">Make</span><span class="move">a</span><span class="mk">Move</span></div>
+    </div>
+    <div class="live"><span class="dot"></span> Live · The Show</div>
+    <div style="text-align:right">
+      <div class="counter">Q<b id="qnum">1</b> / 10 · First Half</div>
+      <div class="pips" id="pips"></div>
+    </div>
+  </div>
+
+  <!-- escalation toast -->
+  <div class="toast" id="toast"><b>Stay-cluster</b> · going deeper into Family →</div>
+
+  <!-- CENTER -->
+  <div class="center">
+    <div class="turn"><span class="who">David</span> is answering · <span class="react">you react</span></div>
+    <div class="chip" id="chip">FAMILY · Screening</div>
+    <h1 class="question" id="question">Do you want children of your own someday?</h1>
+    <div class="panel" id="panel">
+      <div class="ans-label">David's answer</div>
+      <div class="ans" id="answer">"Yes — two, ideally. I'm a deputy head; honestly, kids are my whole world already."</div>
+    </div>
+  </div>
+
+  <div class="host" id="host">Does that make you want to <b>Move</b>?</div>
+
+  <!-- SCORE LADDER -->
+  <div class="ladder" id="ladder">
+    <div class="pct" id="pct">0%<small>YOUR SCORE</small></div>
+    <div class="tube"><div class="passline"></div><div class="fill" id="fill"></div></div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <button class="react-btn btn-stay" id="btnStay">Stay<span class="sub">not feeling it</span></button>
+    <button class="react-btn btn-move" id="btnMove"><span class="heart">♥</span>Move<span class="sub">I want you</span></button>
+  </div>
+
+  <!-- END OVERLAY -->
+  <div class="overlay" id="overlay">
+    <div class="verdict" id="verdict">YOU PASSED</div>
+    <div class="big-pct" id="bigpct">—</div>
+    <p id="endmsg"></p>
+    <div id="lifeWrap"></div>
+    <button class="restart" id="restart">Play again</button>
+  </div>
+
+  <div class="grain"></div>
+  <div class="vignette"></div>
+</div>
+
+<script>
+// Reactor = "you" (the single-mother persona); weights are YOUR dimension weights.
+const QUESTIONS = [
+  {dim:"Family",    depth:"Screening",  w:3.0, q:"Do you want children of your own someday?",
+   a:"\"Yes — two, ideally. I'm a deputy head; honestly, kids are my whole world already.\""},
+  {dim:"Family",    depth:"Exploratory", w:3.0, q:"What role should extended family play in raising kids?",
+   a:"\"Close, but boundaried. Sunday dinners — not daily oversight of how we parent.\""},
+  {dim:"Values",    depth:"Screening",  w:1.5, q:"What matters most to you in a partner?",
+   a:"\"Honesty. And someone who's kind when absolutely no one is watching.\""},
+  {dim:"Family",    depth:"Exploratory", w:3.0, q:"How would you blend two families together?",
+   a:"\"Slowly. The kids set the pace, not the adults. You can't rush trust.\""},
+  {dim:"Family",    depth:"Deep dive",  w:3.0, l3:true, q:"Your partner's teenage child rejects you outright. What happens?",
+   a:"\"I stay consistent and patient. I was a stepkid — rejection is just fear. I'd earn it over years, not force it in weeks.\""},
+  {dim:"Lifestyle", depth:"Screening",  w:0.9, q:"Describe your ideal Saturday.",
+   a:"\"Park with the kids in the morning, then a proper grown-up dinner out in the evening.\""},
+  {dim:"Ambition",  depth:"Screening",  w:0.5, q:"Where do you want to be in five years?",
+   a:"\"Head teacher — and a calmer, fuller home life. Less hustle, more meaning.\""},
+];
+const TOTAL = QUESTIONS.length;
+
+let idx=0, askedW=0, earnedW=0, stayByDim={}, locked=false;
+const $=id=>document.getElementById(id);
+const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// build pips
+const pips=$('pips');
+for(let i=0;i<TOTAL;i++){const p=document.createElement('div');p.className='pip';p.dataset.i=i;pips.appendChild(p);}
+
+function render(){
+  const item=QUESTIONS[idx];
+  $('qnum').textContent=idx+1;
+  $('chip').textContent=`${item.dim.toUpperCase()} · ${item.depth}`;
+  $('chip').className = 'chip'+(item.l3?' l3':'');
+  $('question').textContent=item.q;
+  $('answer').textContent=item.a;
+  const panel=$('panel'); panel.className='panel'; void panel.offsetWidth; panel.classList.add('pop');
+  $('question').classList.remove('pop'); void $('question').offsetWidth; $('question').classList.add('pop');
+  $('host').innerHTML = item.l3
+     ? "This one goes deep. Does his answer earn a <b>Move</b>?"
+     : "Does that make you want to <b>Move</b>?";
+  // escalation toast when a Family stay-cluster (>=2) precedes an L3 family question
+  if(item.l3 && (stayByDim['Family']||0)>=2){ showToast(); }
+  locked=false; $('btnMove').disabled=false; $('btnStay').disabled=false;
+}
+
+function showToast(){const t=$('toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
+
+function updateScore(){
+  const pctVal = askedW>0 ? Math.round((earnedW/askedW)*100) : 0;
+  $('fill').style.height = pctVal+'%';
+  if(window.matchMedia('(max-width:760px)').matches){$('fill').style.width=pctVal+'%';$('fill').style.height='100%';}
+  $('pct').innerHTML = pctVal+'%<small>YOUR SCORE</small>';
+  const passed = pctVal>=70;
+  $('ladder').classList.toggle('passed',passed);
+  $('fill').classList.toggle('passed',passed);
+}
+
+function hearts(x,y){
+  if(reduced) return;
+  const glyphs=['♥','♥','♥','💖','✨'];
+  for(let i=0;i<16;i++){
+    const s=document.createElement('div'); s.className='burst'; s.textContent=glyphs[i%glyphs.length];
+    s.style.left=x+'px'; s.style.top=y+'px';
+    const ang=(Math.PI* (0.15+Math.random()*0.7))*-1; const dist=80+Math.random()*180;
+    s.style.setProperty('--dx',(Math.cos(ang)*dist*(Math.random()<.5?-1:1)).toFixed(0)+'px');
+    s.style.setProperty('--dy',(Math.sin(ang)*dist - 60).toFixed(0)+'px');
+    s.style.setProperty('--s',(0.6+Math.random()*1.1).toFixed(2));
+    s.style.setProperty('--r',(Math.random()*120-60).toFixed(0)+'deg');
+    s.style.color = Math.random()<.5 ? 'var(--move)' : 'var(--bulb)';
+    s.style.animation='fly '+(700+Math.random()*500)+'ms cubic-bezier(.2,.7,.3,1) forwards';
+    document.body.appendChild(s); setTimeout(()=>s.remove(),1300);
+  }
+}
+
+function react(kind, ev){
+  if(locked) return; locked=true;
+  $('btnMove').disabled=true; $('btnStay').disabled=true;
+  const item=QUESTIONS[idx];
+  askedW += item.w;
+  const pip=pips.children[idx]; pip.classList.add('done');
+  if(kind==='move'){
+    earnedW += item.w;
+    $('panel').classList.add('flip-move');
+    pip.classList.add('move');
+    const r=ev.currentTarget.getBoundingClientRect();
+    hearts(r.left+r.width/2, r.top+r.height/2);
+  }else{
+    stayByDim[item.dim]=(stayByDim[item.dim]||0)+1;
+    $('panel').classList.add('flip-stay');
+    pip.classList.add('stay');
+  }
+  updateScore();
+  setTimeout(next, reduced?450:950);
+}
+
+function next(){
+  idx++;
+  if(idx>=TOTAL){ return end(); }
+  render();
+}
+
+function end(){
+  const pctVal = Math.round((earnedW/askedW)*100);
+  const passed = pctVal>=70;
+  const ov=$('overlay'); ov.classList.add('show'); ov.classList.add(passed?'win':'lose');
+  $('verdict').textContent = passed ? 'You passed this half' : 'So close';
+  $('bigpct').textContent = pctVal+'%';
+  if(passed){
+    $('endmsg').innerHTML = `Your half cleared the 70% line. <span class="partner">David scored 81% on his half too</span> — it's a match. Next stop: a 30-minute video call, then a real date.`;
+    $('lifeWrap').innerHTML='';
+    if(!reduced) hearts(window.innerWidth/2, window.innerHeight*0.4);
+  }else{
+    $('endmsg').innerHTML = `Two Stays landed on <span class="partner">Family</span> — the thing you weigh most — so eight other Moves couldn't buy it back. That's the model being honest, not unkind.`;
+    $('lifeWrap').innerHTML = `<div class="lifeline">✦ You have one free retry — the questions David already won are swapped out; the Family ones stay.</div>`;
+  }
+}
+
+$('btnMove').addEventListener('click', e=>react('move',e));
+$('btnStay').addEventListener('click', e=>react('stay',e));
+$('restart').addEventListener('click', ()=>{
+  idx=0; askedW=0; earnedW=0; stayByDim={};
+  $('overlay').className='overlay';
+  [...pips.children].forEach(p=>p.className='pip');
+  updateScore(); render();
+});
+// keyboard: ← Stay, → Move
+document.addEventListener('keydown', e=>{
+  if(e.key==='ArrowRight'||e.key.toLowerCase()==='m') $('btnMove').click();
+  if(e.key==='ArrowLeft'||e.key.toLowerCase()==='s') $('btnStay').click();
+});
+
+render(); updateScore();
+</script>
+</body>
+</html>
