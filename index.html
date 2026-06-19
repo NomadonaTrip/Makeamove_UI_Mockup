@@ -100,7 +100,11 @@
     transition:transform .5s cubic-bezier(.2,.9,.2,1), box-shadow .5s, border-color .5s, opacity .4s}
   .panel .ans-label{font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:8px; font-weight:700}
   .panel .ans{font-size:clamp(17px,2.4vw,21px); line-height:1.45; color:var(--ink)}
-  .panel.flip-move{transform:translateY(-4px) scale(1.015); border-color:var(--move); box-shadow:0 0 0 2px rgba(255,45,111,.5), 0 0 60px rgba(255,45,111,.45)}
+  .panel.flip-move{transform:translateY(-4px) scale(1.015); border-color:var(--move);
+    background:linear-gradient(180deg, var(--move-soft), var(--move));
+    box-shadow:0 0 0 2px rgba(255,45,111,.5), 0 0 60px rgba(255,45,111,.45)}
+  .panel.flip-move .ans-label{color:rgba(255,255,255,.9)}
+  .panel.flip-move .ans{color:#fff}
   .panel.flip-stay{opacity:.55; transform:scale(.985); border-color:rgba(91,102,133,.6); box-shadow:0 0 0 1px rgba(91,102,133,.4)}
 
   /* ---------- SCORE LADDER ---------- */
@@ -295,6 +299,7 @@ function render(){
   $('question').textContent=item.q;
   $('answer').textContent=item.a;
   const panel=$('panel'); panel.className='panel'; void panel.offsetWidth; panel.classList.add('pop');
+  panel.querySelector('.ans-label').textContent="David's answer";
   $('question').classList.remove('pop'); void $('question').offsetWidth; $('question').classList.add('pop');
   $('host').innerHTML = item.l3
      ? "This one goes deep. Does his answer earn a <b>Move</b>?"
@@ -342,6 +347,7 @@ function react(kind, ev){
   if(kind==='move'){
     earnedW += item.w;
     $('panel').classList.add('flip-move');
+    $('panel').querySelector('.ans-label').textContent='✓ CORRECT';
     pip.classList.add('move');
     const r=ev.currentTarget.getBoundingClientRect();
     hearts(r.left+r.width/2, r.top+r.height/2);
