@@ -374,16 +374,19 @@ function next(){
 function end(){
   const pctVal = Math.round((earned/TOTAL_POINTS)*100);
   const passed = pctVal>=70;
+  const moves = earned/POINTS_PER_Q;
+  const PASS_POINTS = Math.ceil(TOTAL_POINTS*0.70);
+  const PASS_MOVES = Math.ceil(PASS_POINTS/POINTS_PER_Q);
   const ov=$('overlay'); ov.classList.add('show'); ov.classList.add(passed?'win':'lose');
   $('verdict').textContent = passed ? 'You passed this half' : 'So close';
   $('bigpct').textContent = pctVal+'%';
   if(passed){
-    $('endmsg').innerHTML = `Your half cleared the 70% line. <span class="partner">David scored 81% on his half too</span> — it's a match. Next stop: a 30-minute video call, then a real date.`;
+    $('endmsg').innerHTML = `You scored <span class="partner">${earned} of ${TOTAL_POINTS} points (${pctVal}%)</span> and cleared the 70% line with ${moves} Moves. David scored 81% on his half too — it's a match. Next stop: a 30-minute video call, then a real date.`;
     $('lifeWrap').innerHTML='';
     if(!reduced) hearts(window.innerWidth/2, window.innerHeight*0.4);
   }else{
-    $('endmsg').innerHTML = `Two Stays landed on <span class="partner">Family</span> — the thing you weigh most — so eight other Moves couldn't buy it back. That's the model being honest, not unkind.`;
-    $('lifeWrap').innerHTML = `<div class="lifeline">✦ You have one free retry — the questions David already won are swapped out; the Family ones stay.</div>`;
+    $('endmsg').innerHTML = `You scored <span class="partner">${earned} of ${TOTAL_POINTS} points (${pctVal}%)</span>. The pass line is 70% — that's ${PASS_POINTS} points, or ${PASS_MOVES} Moves out of ${TOTAL}. You gave ${moves}. Close, but the bar held.`;
+    $('lifeWrap').innerHTML = `<div class="lifeline">✦ You have one free retry — every question comes back, so a few more Moves clears it.</div>`;
   }
 }
 
