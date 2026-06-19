@@ -59,6 +59,10 @@
   .vignette{position:absolute; inset:0; z-index:2; pointer-events:none;
     background:radial-gradient(120% 80% at 50% 38%, transparent 45%, rgba(0,0,0,.55) 100%)}
 
+  /* ---------- 80% CONTENT FRAME ---------- */
+  .frame{position:relative; z-index:5; width:80%; max-width:1200px; margin:0 auto;
+    height:100%; display:flex; flex-direction:column}
+
   /* ---------- HUD ---------- */
   .hud{position:relative; z-index:5; display:flex; align-items:center; justify-content:space-between;
     padding:18px 22px; gap:16px}
@@ -100,7 +104,7 @@
   .panel.flip-stay{opacity:.55; transform:scale(.985); border-color:rgba(91,102,133,.6); box-shadow:0 0 0 1px rgba(91,102,133,.4)}
 
   /* ---------- SCORE LADDER ---------- */
-  .ladder{position:absolute; left:22px; top:50%; transform:translateY(-50%); z-index:5;
+  .ladder{position:absolute; right:0; top:50%; transform:translateY(-50%); z-index:5;
     width:74px; display:flex; flex-direction:column; align-items:center; gap:8px}
   .ladder .pct{font-family:var(--display); font-weight:900; font-size:34px; line-height:.85; color:var(--ink); transition:color .4s}
   .ladder .pct small{display:block; font-size:10px; letter-spacing:.16em; color:var(--ink-faint); font-family:var(--body); font-weight:700; margin-top:3px}
@@ -200,6 +204,7 @@
   <div class="beam b1"></div><div class="beam b2"></div><div class="beam b3"></div>
   <div class="rail"></div>
 
+  <div class="frame">
   <!-- HUD -->
   <div class="hud">
     <div>
@@ -238,6 +243,7 @@
   <div class="controls">
     <button class="react-btn btn-stay" id="btnStay">Stay<span class="sub">not feeling it</span></button>
     <button class="react-btn btn-move" id="btnMove"><span class="heart">♥</span>Move<span class="sub">I want you</span></button>
+  </div>
   </div>
 
   <!-- END OVERLAY -->
