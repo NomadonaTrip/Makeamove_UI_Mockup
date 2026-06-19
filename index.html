@@ -112,6 +112,8 @@
     width:74px; display:flex; flex-direction:column; align-items:center; gap:8px}
   .ladder .pct{font-family:var(--display); font-weight:900; font-size:34px; line-height:.85; color:var(--ink); transition:color .4s}
   .ladder .pct small{display:block; font-size:10px; letter-spacing:.16em; color:var(--ink-faint); font-family:var(--body); font-weight:700; margin-top:3px}
+  .pts{font-family:var(--display); font-weight:700; font-size:13px; letter-spacing:.1em;
+    color:var(--ink-dim); text-transform:uppercase}
   .ladder.passed .pct{color:var(--pass)}
   .tube{position:relative; width:26px; height:230px; border-radius:14px; overflow:hidden;
     background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12)}
@@ -216,7 +218,7 @@
     </div>
     <div class="live"><span class="dot"></span> Live · The Show</div>
     <div style="text-align:right">
-      <div class="counter">Q<b id="qnum">1</b> / 10 · First Half</div>
+      <div class="counter">Q<b id="qnum">1</b> / <span id="qtotal">10</span> · First Half</div>
       <div class="pips" id="pips"></div>
     </div>
   </div>
@@ -241,6 +243,7 @@
   <div class="ladder" id="ladder">
     <div class="pct" id="pct">0%<small>YOUR SCORE</small></div>
     <div class="tube"><div class="passline"></div><div class="fill" id="fill"></div></div>
+    <div class="pts" id="pts">0 / 35 PTS</div>
   </div>
 
   <!-- CONTROLS -->
@@ -264,26 +267,28 @@
 </div>
 
 <script>
-// Reactor = "you" (the single-mother persona); weights are YOUR dimension weights.
+// Reactor = "you" (the single-mother persona); flat 5 points per Move.
 const QUESTIONS = [
-  {dim:"Family",    depth:"Screening",  w:3.0, q:"Do you want children of your own someday?",
+  {dim:"Family",    depth:"Screening",  q:"Do you want children of your own someday?",
    a:"\"Yes — two, ideally. I'm a deputy head; honestly, kids are my whole world already.\""},
-  {dim:"Family",    depth:"Exploratory", w:3.0, q:"What role should extended family play in raising kids?",
+  {dim:"Family",    depth:"Exploratory", q:"What role should extended family play in raising kids?",
    a:"\"Close, but boundaried. Sunday dinners — not daily oversight of how we parent.\""},
-  {dim:"Values",    depth:"Screening",  w:1.5, q:"What matters most to you in a partner?",
+  {dim:"Values",    depth:"Screening",  q:"What matters most to you in a partner?",
    a:"\"Honesty. And someone who's kind when absolutely no one is watching.\""},
-  {dim:"Family",    depth:"Exploratory", w:3.0, q:"How would you blend two families together?",
+  {dim:"Family",    depth:"Exploratory", q:"How would you blend two families together?",
    a:"\"Slowly. The kids set the pace, not the adults. You can't rush trust.\""},
-  {dim:"Family",    depth:"Deep dive",  w:3.0, l3:true, q:"Your partner's teenage child rejects you outright. What happens?",
+  {dim:"Family",    depth:"Deep dive",  l3:true, q:"Your partner's teenage child rejects you outright. What happens?",
    a:"\"I stay consistent and patient. I was a stepkid — rejection is just fear. I'd earn it over years, not force it in weeks.\""},
-  {dim:"Lifestyle", depth:"Screening",  w:0.9, q:"Describe your ideal Saturday.",
+  {dim:"Lifestyle", depth:"Screening",  q:"Describe your ideal Saturday.",
    a:"\"Park with the kids in the morning, then a proper grown-up dinner out in the evening.\""},
-  {dim:"Ambition",  depth:"Screening",  w:0.5, q:"Where do you want to be in five years?",
+  {dim:"Ambition",  depth:"Screening",  q:"Where do you want to be in five years?",
    a:"\"Head teacher — and a calmer, fuller home life. Less hustle, more meaning.\""},
 ];
 const TOTAL = QUESTIONS.length;
+const POINTS_PER_Q = 5;
+const TOTAL_POINTS = TOTAL * POINTS_PER_Q;
 
-let idx=0, askedW=0, earnedW=0, stayByDim={}, locked=false;
+let idx=0, earned=0, stayByDim={}, locked=false;
 const $=id=>document.getElementById(id);
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -312,10 +317,11 @@ function render(){
 function showToast(){const t=$('toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
 
 function updateScore(){
-  const pctVal = askedW>0 ? Math.round((earnedW/askedW)*100) : 0;
+  const pctVal = Math.round((earned/TOTAL_POINTS)*100);
   $('fill').style.height = pctVal+'%';
   if(window.matchMedia('(max-width:760px)').matches){$('fill').style.width=pctVal+'%';$('fill').style.height='100%';}
   $('pct').innerHTML = pctVal+'%<small>YOUR SCORE</small>';
+  $('pts').textContent = earned+' / '+TOTAL_POINTS+' PTS';
   const passed = pctVal>=70;
   $('ladder').classList.toggle('passed',passed);
   $('fill').classList.toggle('passed',passed);
@@ -342,10 +348,9 @@ function react(kind, ev){
   if(locked) return; locked=true;
   $('btnMove').disabled=true; $('btnStay').disabled=true;
   const item=QUESTIONS[idx];
-  askedW += item.w;
   const pip=pips.children[idx]; pip.classList.add('done');
   if(kind==='move'){
-    earnedW += item.w;
+    earned += POINTS_PER_Q;
     $('panel').classList.add('flip-move');
     $('panel').querySelector('.ans-label').textContent='✓ CORRECT';
     pip.classList.add('move');
@@ -367,7 +372,7 @@ function next(){
 }
 
 function end(){
-  const pctVal = Math.round((earnedW/askedW)*100);
+  const pctVal = Math.round((earned/TOTAL_POINTS)*100);
   const passed = pctVal>=70;
   const ov=$('overlay'); ov.classList.add('show'); ov.classList.add(passed?'win':'lose');
   $('verdict').textContent = passed ? 'You passed this half' : 'So close';
@@ -385,7 +390,7 @@ function end(){
 $('btnMove').addEventListener('click', e=>react('move',e));
 $('btnStay').addEventListener('click', e=>react('stay',e));
 $('restart').addEventListener('click', ()=>{
-  idx=0; askedW=0; earnedW=0; stayByDim={};
+  idx=0; earned=0; stayByDim={};
   $('overlay').className='overlay';
   [...pips.children].forEach(p=>p.className='pip');
   updateScore(); render();
@@ -396,6 +401,7 @@ document.addEventListener('keydown', e=>{
   if(e.key==='ArrowLeft'||e.key.toLowerCase()==='s') $('btnStay').click();
 });
 
+$('qtotal').textContent = TOTAL;
 render(); updateScore();
 </script>
 </body>
