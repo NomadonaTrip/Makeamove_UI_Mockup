@@ -1,0 +1,32 @@
+- generic [ref=e2]:
+  - generic [ref=e8]:
+    - generic [ref=e10]: MakeaMove
+    - generic [ref=e11]: Live · The Show
+    - generic [ref=e14]: Q1 / 10 · First Half
+  - generic:
+    - generic: Stay-cluster
+    - text: · going deeper into Family →
+  - generic [ref=e23]:
+    - generic [ref=e24]:
+      - generic [ref=e25]: David
+      - text: is answering ·
+      - generic [ref=e26]: you react
+    - generic [ref=e27]: FAMILY · Screening
+    - heading "Do you want children of your own someday?" [level=1] [ref=e28]
+    - generic [ref=e29]:
+      - generic [ref=e30]: David's answer
+      - generic [ref=e31]: "\"Yes — two, ideally. I'm a deputy head; honestly, kids are my whole world already.\""
+  - generic [ref=e32]: Does that make you want to Move?
+  - generic [ref=e33]:
+    - generic [ref=e34]:
+      - text: 0%
+      - generic [ref=e35]: YOUR SCORE
+    - generic [ref=e37]: 70%
+  - generic [ref=e38]:
+    - button "Stay not feeling it" [ref=e39] [cursor=pointer]:
+      - text: Stay
+      - generic [ref=e40]: not feeling it
+    - button "♥ Move I want you" [ref=e41] [cursor=pointer]:
+      - generic [ref=e42]: ♥
+      - text: Move
+      - generic [ref=e43]: I want you
