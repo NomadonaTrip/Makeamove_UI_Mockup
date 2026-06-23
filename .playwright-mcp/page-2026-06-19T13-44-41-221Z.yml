@@ -1,0 +1,50 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e8]:
+    - generic [ref=e9]:
+      - generic [ref=e11]: MakeaMove
+      - generic [ref=e12]: Live · The Show
+      - generic [ref=e15]: Q5 / 7 · First Half
+    - generic:
+      - generic: Stay-cluster
+      - text: · going deeper into Family →
+    - generic [ref=e24]:
+      - generic [ref=e25]:
+        - generic [ref=e26]: David
+        - text: is answering ·
+        - generic [ref=e27]: you react
+      - generic [ref=e28]: FAMILY · Deep dive
+      - heading "Your partner's teenage child rejects you outright. What happens?" [level=1] [ref=e54]
+      - generic [ref=e30]:
+        - generic [ref=e31]: ✓ CORRECT
+        - generic [ref=e32]: "\"I stay consistent and patient. I was a stepkid — rejection is just fear. I'd earn it over years, not force it in weeks.\""
+    - generic [ref=e33]: This one goes deep. Does his answer earn a Move?
+    - generic [ref=e34]:
+      - generic [ref=e35]:
+        - text: 71%
+        - generic [ref=e55]: YOUR SCORE
+      - generic [ref=e38]: 70%
+      - generic [ref=e39]: 25 / 35 PTS
+    - generic [ref=e40]:
+      - button "Stay not feeling it" [disabled] [ref=e41]:
+        - text: Stay
+        - generic [ref=e42]: not feeling it
+      - button "♥ Move I want you" [disabled] [ref=e43]:
+        - generic [ref=e44]: ♥
+        - text: Move
+        - generic [ref=e45]: I want you
+  - generic: ♥
+  - generic: ♥
+  - generic: ♥
+  - generic: 💖
+  - generic: ✨
+  - generic: ♥
+  - generic: ♥
+  - generic: ♥
+  - generic: 💖
+  - generic: ✨
+  - generic: ♥
+  - generic: ♥
+  - generic: ♥
+  - generic: 💖
+  - generic: ✨
+  - generic: ♥
