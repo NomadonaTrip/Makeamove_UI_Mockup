@@ -1,3 +1,5 @@
 docs/
 .playwright-mcp/
 .claude/
+questions.md
+prompt.md

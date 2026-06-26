@@ -147,6 +147,30 @@
   .opt.sel.move{border-color:var(--move); background:rgba(255,45,111,.07)}
   .opt .dot{width:20px;height:20px;border-radius:50%;border:2px solid var(--line-strong);flex:0 0 auto}
   .opt.sel .dot{border-color:var(--spotlight); background:var(--spotlight); box-shadow:inset 0 0 0 3px var(--paper)}
+  /* styled select dropdown */
+  .select{position:relative}
+  .select select{appearance:none; -webkit-appearance:none; font-family:var(--body); font-size:15px; color:var(--t);
+    background:var(--paper); border:1.5px solid var(--line-strong); border-radius:11px; padding:13px 40px 13px 14px; width:100%; cursor:pointer}
+  .select select:focus{outline:none; border-color:var(--spotlight)}
+  .select::after{content:"▾"; position:absolute; right:15px; top:50%; transform:translateY(-50%); pointer-events:none; color:var(--t-dim); font-size:13px}
+  /* selected-date display + clickable calendar */
+  .dobview{display:flex; align-items:baseline; gap:8px; font-family:var(--display); font-weight:800; font-size:19px; color:var(--t);
+    background:var(--paper); border:1.5px solid var(--line-strong); border-radius:11px; padding:12px 14px}
+  .dobview .dv-tag{font-family:var(--body); font-weight:700; font-size:11px; letter-spacing:.04em; color:var(--spotlight); text-transform:uppercase}
+  .cal{background:var(--paper); border:1.5px solid var(--line-strong); border-radius:14px; padding:14px; user-select:none}
+  .cal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px}
+  .cal-head .mlabel{font-family:var(--display); font-weight:800; font-size:16px; color:var(--t)}
+  .cal-nav{width:32px; height:32px; border-radius:9px; border:1px solid var(--line-strong); background:var(--paper-soft);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:17px; color:var(--t-dim); transition:.12s}
+  .cal-nav:hover{border-color:var(--spotlight); color:var(--spotlight)}
+  .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px}
+  .cal-grid .dow{text-align:center; font-size:10px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--t-faint); padding:4px 0}
+  .cal-grid .day{aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:600;
+    border-radius:9px; cursor:pointer; color:var(--t); transition:.1s}
+  .cal-grid .day:hover{background:var(--paper-2)}
+  .cal-grid .day.muted{color:transparent; cursor:default}
+  .cal-grid .day.muted:hover{background:transparent}
+  .cal-grid .day.sel{background:linear-gradient(180deg,var(--spotlight-soft),var(--spotlight)); color:#fff; box-shadow:0 6px 14px rgba(47,107,255,.35)}
 
   /* progress */
   .prog{height:7px; border-radius:5px; background:var(--paper-2); overflow:hidden}
@@ -254,66 +278,97 @@
         </div>
       </section>
 
-      <section class="screen paper" id="S-A2" data-group="A · Onboarding" data-title="18+ age assurance">
-        <div class="pbar"><a class="back" href="#S-A1">‹</a><h1>One quick check</h1></div>
-        <div class="body">
-          <div class="card pad-lg center" style="display:flex;flex-direction:column;gap:14px;align-items:center">
-            <div class="av g1 s72">18+</div>
-            <h2 class="scrn" style="font-size:24px">MakeaMove is 18+</h2>
-            <p class="muted" style="font-size:14px">We use highly-effective age assurance (UK Online Safety Act). Your ID is checked once and never shown to other users.</p>
-          </div>
-          <div class="field"><label>Date of birth</label><input class="input" value="14 / 03 / 1989" readonly></div>
-          <div class="note info">Verified at registration via Onfido / Yoti. We confirm you're over 18 — nothing more is shared.</div>
-        </div>
-        <div class="foot"><a class="btn primary block" href="#S-A3">Continue</a></div>
-      </section>
-
-      <section class="screen dark" id="S-A3" data-group="A · Onboarding" data-title="Quiz intro">
+      <section class="screen dark" id="S-A2" data-group="A · Onboarding" data-title="Quiz intro">
         <div class="body" style="justify-content:center; gap:18px; text-align:center; padding:50px 26px">
           <div class="eyebrow">The onboarding gate</div>
           <h2 class="scrn" style="font-size:34px; max-width:15ch; margin:0 auto">10 questions stand between you and your matches.</h2>
-          <p class="muted" style="max-width:32ch; margin:0 auto; line-height:1.55">They cover the things most apps ask <i>after</i> you've wasted three dates — marriage intent, children, faith, finances, dealbreakers. Answer honestly. They shape who you meet.</p>
+          <p class="muted" style="max-width:32ch; margin:0 auto; line-height:1.55">First the essentials — who you are, where you're rooted, and the few hard facts that shape who you meet. Answer honestly. You can't activate an account until all 10 are done.</p>
           <div class="card" style="text-align:left; display:flex; gap:12px; align-items:center">
             <div class="av g4 s40">!</div>
-            <div style="font-size:13px" class="muted">You can't activate an account until all 10 are done. That's the point — it keeps the low-intent crowd out.</div>
+            <div style="font-size:13px" class="muted">That's the point — the gate keeps the low-intent crowd out.</div>
           </div>
-          <a class="btn move block" href="#S-A4" style="margin-top:6px">Start the questions</a>
+          <a class="btn move block" href="#S-Q1" style="margin-top:6px">Start the questions</a>
         </div>
       </section>
 
-      <section class="screen paper" id="S-A4" data-group="A · Onboarding" data-title="Quiz · multiple choice">
-        <div class="pbar"><a class="back" href="#S-A3">‹</a><h1 style="font-size:16px">Question 3 of 10</h1><span class="muted" style="font-size:12px">Values</span></div>
+      <!-- ---- 10 prequalifying questions ---- -->
+      <section class="screen paper" id="S-Q1" data-group="A · Onboarding" data-title="Q1 · Date of birth">
+        <div class="pbar"><a class="back" href="#S-A2">‹</a><h1 style="font-size:16px">Question 1 of 10</h1><span class="muted" style="font-size:12px">Identity</span></div>
+        <div class="body">
+          <div class="stepdots"><span class="sd on"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span></div>
+          <span class="chip" style="align-self:flex-start">Age assurance · 18+</span>
+          <h2 class="scrn" style="font-size:25px">When were you born?</h2>
+          <div class="field"><label>Date of birth</label><div class="dobview" id="dobView"><span class="dv-tag">Selected</span>14 March 1989</div></div>
+          <div class="cal" id="dobCal"></div>
+          <div class="note info" id="dobAge">Pick your date of birth above. Verified once via Onfido / Yoti at registration — we confirm you're over 18 and nothing more is shared.</div>
+        </div>
+        <div class="foot"><a class="btn primary block" href="#S-Q2">Continue</a></div>
+      </section>
+
+      <section class="screen paper" id="S-Q2" data-group="A · Onboarding" data-title="Q2 · Full name">
+        <div class="pbar"><a class="back" href="#S-Q1">‹</a><h1 style="font-size:16px">Question 2 of 10</h1><span class="muted" style="font-size:12px">Identity</span></div>
+        <div class="body">
+          <div class="stepdots"><span class="sd on"></span><span class="sd on"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span></div>
+          <span class="chip" style="align-self:flex-start">Identity</span>
+          <h2 class="scrn" style="font-size:25px">What's your full name?</h2>
+          <div class="field"><label>First name</label><input class="input" value="Tolu"></div>
+          <div class="field"><label>Surname</label><input class="input" value="Adeyemi"></div>
+          <div class="note">Matches see your first name only until you both pass the show. Your surname stays private.</div>
+        </div>
+        <div class="foot"><a class="btn primary block" href="#S-Q3">Next</a></div>
+      </section>
+
+      <section class="screen paper" id="S-Q3" data-group="A · Onboarding" data-title="Q3 · Email address">
+        <div class="pbar"><a class="back" href="#S-Q2">‹</a><h1 style="font-size:16px">Question 3 of 10</h1><span class="muted" style="font-size:12px">Identity</span></div>
         <div class="body">
           <div class="stepdots"><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span></div>
-          <span class="chip" style="align-self:flex-start">Faith · Values</span>
-          <h2 class="scrn" style="font-size:25px">How central is faith to your weekly life?</h2>
-          <div style="display:flex; flex-direction:column; gap:10px">
-            <div class="opt" onclick="pick(this)"><span class="dot"></span>Central — services + practice weekly</div>
-            <div class="opt sel" onclick="pick(this)"><span class="dot"></span>Important — but not weekly attendance</div>
-            <div class="opt" onclick="pick(this)"><span class="dot"></span>Spiritual, not religious</div>
-            <div class="opt" onclick="pick(this)"><span class="dot"></span>Not part of my life</div>
-          </div>
-          <div class="note">Tip: this seeds your <b>Values</b> dimension weight. Bisi flagged this question last week for a 3-tier reframe — for now it's binary-ish.</div>
+          <span class="chip" style="align-self:flex-start">Identity</span>
+          <h2 class="scrn" style="font-size:25px">What's your email address?</h2>
+          <div class="field"><label>Email address</label><input class="input" type="email" value="tolu.a@gmail.com"></div>
+          <div class="note">Your invite alerts and game-show times come here. Never shared with matches.</div>
         </div>
-        <div class="foot"><a class="btn primary block" href="#S-A5">Next</a></div>
+        <div class="foot"><a class="btn primary block" href="#S-Q4">Next</a></div>
       </section>
 
-      <section class="screen paper" id="S-A5" data-group="A · Onboarding" data-title="Quiz · free text">
-        <div class="pbar"><a class="back" href="#S-A4">‹</a><h1 style="font-size:16px">Question 6 of 10</h1><span class="muted" style="font-size:12px">Values</span></div>
+      <section class="screen paper" id="S-Q4" data-group="A · Onboarding" data-title="Q4 · Marital status">
+        <div class="pbar"><a class="back" href="#S-Q3">‹</a><h1 style="font-size:16px">Question 4 of 10</h1><span class="muted" style="font-size:12px">Status</span></div>
+        <div class="body">
+          <div class="stepdots"><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span></div>
+          <span class="chip" style="align-self:flex-start">Status</span>
+          <h2 class="scrn" style="font-size:25px">What's your marital status?</h2>
+          <div style="display:flex; flex-direction:column; gap:10px">
+            <div class="opt sel" onclick="pick(this)"><span class="dot"></span>Single</div>
+            <div class="opt" onclick="pick(this)"><span class="dot"></span>Divorced</div>
+            <div class="opt" onclick="pick(this)"><span class="dot"></span>Widowed</div>
+            <div class="opt" onclick="pick(this)"><span class="dot"></span>Separated</div>
+          </div>
+          <div class="note">Married users aren't eligible — MakeaMove is for people genuinely free to meet someone new.</div>
+        </div>
+        <div class="foot"><a class="btn primary block" href="#S-Q5">Next</a></div>
+      </section>
+
+      <section class="screen paper" id="S-Q5" data-group="A · Onboarding" data-title="Q5 · Vocational status">
+        <div class="pbar"><a class="back" href="#S-Q4">‹</a><h1 style="font-size:16px">Question 5 of 10</h1><span class="muted" style="font-size:12px">Status</span></div>
+        <div class="body">
+          <div class="stepdots"><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span></div>
+          <span class="chip" style="align-self:flex-start">Status</span>
+          <h2 class="scrn" style="font-size:25px">What's your vocational status?</h2>
+          <div style="display:flex; flex-direction:column; gap:10px">
+            <div class="opt sel" onclick="pick(this)"><span class="dot"></span>Employed — full-time</div>
+            <div class="opt" onclick="pick(this)"><span class="dot"></span>Self-employed / business owner</div>
+            <div class="opt" onclick="pick(this)"><span class="dot"></span>Student</div>
+            <div class="opt" onclick="pick(this)"><span class="dot"></span>Between roles</div>
+            <div class="opt" onclick="pick(this)"><span class="dot"></span>Retired</div>
+          </div>
+          <div class="note">Seeds your <b>Ambition</b> dimension weight — never shown to matches as a label.</div>
+        </div>
+        <div class="foot"><a class="btn primary block" href="#S-Q6">Next</a></div>
+      </section>
+
+      <section class="screen paper" id="S-Q6" data-group="A · Onboarding" data-title="Q6 · Medical status / genotype">
+        <div class="pbar"><a class="back" href="#S-Q5">‹</a><h1 style="font-size:16px">Question 6 of 10</h1><span class="muted" style="font-size:12px">Dealbreaker</span></div>
         <div class="body">
           <div class="stepdots"><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span></div>
-          <span class="chip" style="align-self:flex-start">Free response</span>
-          <h2 class="scrn" style="font-size:25px">What role does creativity play in a meaningful life?</h2>
-          <div class="field"><textarea class="textarea" style="min-height:130px">Honestly it's the whole point. I've a half-finished novel in a drawer and a partner who gets that — who protects the time for it — matters more than one who out-earns me.</textarea></div>
-          <div class="note">Answered, not graded. Free-text becomes a Position node in your profile — never a score on the live game path.</div>
-        </div>
-        <div class="foot"><a class="btn primary block" href="#S-A6">Next</a></div>
-      </section>
-
-      <section class="screen paper" id="S-A6" data-group="A · Onboarding" data-title="Quiz · dealbreaker (genotype)">
-        <div class="pbar"><a class="back" href="#S-A5">‹</a><h1 style="font-size:16px">Question 9 of 10</h1><span class="muted" style="font-size:12px">Dealbreaker</span></div>
-        <div class="body">
-          <div class="stepdots"><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd"></span></div>
           <span class="chip l3" style="align-self:flex-start">Hard dealbreaker · health data</span>
           <h2 class="scrn" style="font-size:25px">What is your genotype?</h2>
           <div class="note danger"><b>We treat this as a hard dealbreaker.</b> We will never match you with an AS or SS genotype partner. This is health data (GDPR Art. 9) — encrypted, consented separately, and never shown to other users.</div>
@@ -321,15 +376,89 @@
             <div class="opt sel" onclick="pick(this)"><span class="dot"></span>AA</div>
             <div class="opt" onclick="pick(this)"><span class="dot"></span>AS</div>
             <div class="opt" onclick="pick(this)"><span class="dot"></span>SS</div>
+            <div class="opt" onclick="pick(this)"><span class="dot"></span>AC</div>
             <div class="opt" onclick="pick(this)"><span class="dot"></span>I don't know yet</div>
           </div>
           <label class="opt" style="cursor:pointer"><input type="checkbox" checked style="width:18px;height:18px;accent-color:var(--move)"> &nbsp;Enforce as an absolute dealbreaker in matching</label>
         </div>
-        <div class="foot"><a class="btn primary block" href="#S-A7">Next</a></div>
+        <div class="foot"><a class="btn primary block" href="#S-Q7">Next</a></div>
+      </section>
+
+      <section class="screen paper" id="S-Q7" data-group="A · Onboarding" data-title="Q7 · Nationality (citizenship)">
+        <div class="pbar"><a class="back" href="#S-Q6">‹</a><h1 style="font-size:16px">Question 7 of 10</h1><span class="muted" style="font-size:12px">Identity</span></div>
+        <div class="body">
+          <div class="stepdots"><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span></div>
+          <span class="chip" style="align-self:flex-start">Identity</span>
+          <h2 class="scrn" style="font-size:25px">What's your nationality?</h2>
+          <p class="muted" style="font-size:13.5px; margin-top:-4px">Your country of citizenship — the country that issued your passport.</p>
+          <div class="field"><label>Country of citizenship</label>
+            <div class="select"><select aria-label="Country of citizenship">
+              <option value="">Select your country of citizenship…</option>
+              <option>Australia</option><option>Brazil</option><option>Canada</option><option>China</option>
+              <option>Egypt</option><option>France</option><option>Germany</option><option>Ghana</option>
+              <option>India</option><option>Ireland</option><option>Italy</option><option>Japan</option>
+              <option>Kenya</option><option>Mexico</option><option>Netherlands</option><option>New Zealand</option>
+              <option>Nigeria</option><option>Pakistan</option><option>Philippines</option><option>Poland</option>
+              <option>Portugal</option><option>Singapore</option><option>South Africa</option><option>South Korea</option>
+              <option>Spain</option><option>Sweden</option><option>Switzerland</option><option>Turkey</option>
+              <option>United Arab Emirates</option><option selected>United Kingdom</option><option>United States</option><option>Other</option>
+            </select></div>
+          </div>
+          <div class="note">Hold more than one passport? Pick your primary citizenship — you can add the others to your profile later.</div>
+        </div>
+        <div class="foot"><a class="btn primary block" href="#S-Q8">Next</a></div>
+      </section>
+
+      <section class="screen paper" id="S-Q8" data-group="A · Onboarding" data-title="Q8 · State of origin">
+        <div class="pbar"><a class="back" href="#S-Q7">‹</a><h1 style="font-size:16px">Question 8 of 10</h1><span class="muted" style="font-size:12px">Origin</span></div>
+        <div class="body">
+          <div class="stepdots"><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd"></span><span class="sd"></span></div>
+          <span class="chip" style="align-self:flex-start">Origin</span>
+          <h2 class="scrn" style="font-size:25px">What's your state or region of origin?</h2>
+          <div class="field"><label>State / region of origin</label><input class="input" value="Greater London" placeholder="e.g. Lagos, Bavaria, Texas…"></div>
+          <div class="note">Where your family roots are from — separate from where you live now. Helps with cultural matching.</div>
+        </div>
+        <div class="foot"><a class="btn primary block" href="#S-Q9">Next</a></div>
+      </section>
+
+      <section class="screen paper" id="S-Q9" data-group="A · Onboarding" data-title="Q9 · Country of residence">
+        <div class="pbar"><a class="back" href="#S-Q8">‹</a><h1 style="font-size:16px">Question 9 of 10</h1><span class="muted" style="font-size:12px">Location</span></div>
+        <div class="body">
+          <div class="stepdots"><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd"></span></div>
+          <span class="chip" style="align-self:flex-start">Location</span>
+          <h2 class="scrn" style="font-size:25px">Which country do you live in now?</h2>
+          <div class="field"><label>Country of residence</label>
+            <div class="select"><select aria-label="Country of residence">
+              <option value="">Select your country…</option>
+              <option>Australia</option><option>Brazil</option><option>Canada</option><option>China</option>
+              <option>Egypt</option><option>France</option><option>Germany</option><option>Ghana</option>
+              <option>India</option><option>Ireland</option><option>Italy</option><option>Japan</option>
+              <option>Kenya</option><option>Mexico</option><option>Netherlands</option><option>New Zealand</option>
+              <option>Nigeria</option><option>Pakistan</option><option>Philippines</option><option>Poland</option>
+              <option>Portugal</option><option>Singapore</option><option>South Africa</option><option>South Korea</option>
+              <option>Spain</option><option>Sweden</option><option>Switzerland</option><option>Turkey</option>
+              <option>United Arab Emirates</option><option selected>United Kingdom</option><option>United States</option><option>Other</option>
+            </select></div>
+          </div>
+          <div class="note">We only match within a sensible travel radius for the in-person date.</div>
+        </div>
+        <div class="foot"><a class="btn primary block" href="#S-Q10">Next</a></div>
+      </section>
+
+      <section class="screen paper" id="S-Q10" data-group="A · Onboarding" data-title="Q10 · City of residence">
+        <div class="pbar"><a class="back" href="#S-Q9">‹</a><h1 style="font-size:16px">Question 10 of 10</h1><span class="muted" style="font-size:12px">Location</span></div>
+        <div class="body">
+          <div class="stepdots"><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span></div>
+          <span class="chip" style="align-self:flex-start">Location</span>
+          <h2 class="scrn" style="font-size:25px">Which city do you live in?</h2>
+          <div class="field"><label>City / place of residence</label><input class="input" value="London" placeholder="e.g. Manchester, Abuja, Berlin…"></div>
+          <div class="note pass">Last one. Finish this and all 10 questions are complete.</div>
+        </div>
+        <div class="foot"><a class="btn primary block" href="#S-A7">Finish</a></div>
       </section>
 
       <section class="screen paper" id="S-A7" data-group="A · Onboarding" data-title="Account activate">
-        <div class="pbar"><a class="back" href="#S-A6">‹</a><h1>Create your account</h1></div>
+        <div class="pbar"><a class="back" href="#S-Q10">‹</a><h1>Create your account</h1></div>
         <div class="body">
           <div class="note pass">✓ All 10 questions complete. Your profile and dimension weights are seeded.</div>
           <div class="field"><label>Email</label><input class="input" value="tolu.a@gmail.com"></div>
@@ -1193,6 +1322,48 @@
   window.pick = pick;
   window.addEventListener('hashchange', route);
   window.addEventListener('DOMContentLoaded', route);
+
+  /* ---- clickable date-of-birth calendar (Q1) ---- */
+  (function(){
+    const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const DOW=['Su','Mo','Tu','We','Th','Fr','Sa'];
+    const cal=document.getElementById('dobCal');
+    if(!cal) return;
+    let sel=new Date(1989,2,14);   // default selected date of birth
+    let view=new Date(1989,2,1);   // month currently on screen
+    function ageFrom(d){ const t=new Date(); let a=t.getFullYear()-d.getFullYear(); const m=t.getMonth()-d.getMonth(); if(m<0||(m===0&&t.getDate()<d.getDate())) a--; return a; }
+    function render(){
+      const y=view.getFullYear(), mo=view.getMonth();
+      const first=new Date(y,mo,1).getDay();
+      const days=new Date(y,mo+1,0).getDate();
+      let h='<div class="cal-head"><div class="cal-nav" data-d="-1">‹</div><div class="mlabel">'+MONTHS[mo]+' '+y+'</div><div class="cal-nav" data-d="1">›</div></div><div class="cal-grid">';
+      DOW.forEach(d=>h+='<div class="dow">'+d+'</div>');
+      for(let i=0;i<first;i++) h+='<div class="day muted"></div>';
+      for(let d=1;d<=days;d++){
+        const isSel = sel.getFullYear()===y && sel.getMonth()===mo && sel.getDate()===d;
+        h+='<div class="day'+(isSel?' sel':'')+'" data-day="'+d+'">'+d+'</div>';
+      }
+      cal.innerHTML=h+'</div>';
+    }
+    function update(){
+      const v=document.getElementById('dobView');
+      if(v) v.innerHTML='<span class="dv-tag">Selected</span>'+sel.getDate()+' '+MONTHS[sel.getMonth()]+' '+sel.getFullYear();
+      const a=ageFrom(sel), n=document.getElementById('dobAge');
+      if(n){
+        if(a>=18){ n.className='note pass'; n.innerHTML='✓ You are '+a+' — over 18. Verified once via Onfido / Yoti at registration; nothing more is shared.'; }
+        else { n.className='note danger'; n.innerHTML='<b>You must be 18 or older.</b> That date makes you '+a+' — you can’t continue.'; }
+      }
+    }
+    cal.addEventListener('click',e=>{
+      const nav=e.target.closest('.cal-nav');
+      if(nav){ view=new Date(view.getFullYear(), view.getMonth()+(+nav.dataset.d), 1); render(); return; }
+      const day=e.target.closest('.day');
+      if(!day || day.classList.contains('muted')) return;
+      sel=new Date(view.getFullYear(), view.getMonth(), +day.dataset.day);
+      render(); update();
+    });
+    render(); update();
+  })();
   document.addEventListener('keydown', e=>{
     if(e.key==='Escape') closeIndex();
     if(e.key==='ArrowRight' && !document.getElementById('index').classList.contains('on')) nextS();
