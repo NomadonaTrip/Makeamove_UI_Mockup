@@ -220,7 +220,7 @@
   /* On a phone the framed mock just overflows and wastes space. Drop the bezel
      and run the prototype full-bleed like the real app, with a slim runner bar
      up top for the demo controls. Tablet/desktop keep the framed showcase. */
-  @media (max-width:767px), (max-height:560px) and (max-width:932px){
+  @media (max-width:480px), (max-height:560px) and (max-width:932px){
     body{background:#05070F; background-image:none}
     .proto{width:100%; height:100vh; height:100dvh; min-height:0;
       margin:0; padding:0; gap:0; align-items:stretch}
@@ -246,128 +246,12 @@
       max(18px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left))}
     .index .grid{gap:14px}
   }
-
-  /* flow nav is a desktop-only element; hidden everywhere else */
-  .flownav{display:none}
-
-  /* =====================================================================
-     RESPONSIVE · TABLET & DESKTOP  ( >= 768px )
-     The framed phone is dropped. The prototype becomes a real web app:
-     a sticky top bar with brand + flow navigation, and a full-bleed
-     content canvas where each screen reflows by archetype —
-       · hero    → wide, centred, oversized display type
-       · form    → a centred "sheet" (web form card), single column
-       · feed    → a self-adjusting responsive grid of cards/rows
-       · immersive → kept full-bleed, content measure-capped
-     ===================================================================== */
-  @media (min-width:768px){
-    :root{ --topbar-h:60px; --pagw:660px; --feedw:1080px; }
-    html,body{ height:auto; min-height:100% }
-    body{ display:block; color:var(--ink);
-      background:var(--stage-900);
-      background-image:radial-gradient(140% 60% at 50% -20%, #10182e 0%, var(--stage-900) 55%); }
-
-    .proto{ display:flex; flex-direction:column; width:100%;
-      min-height:100vh; min-height:100dvh; margin:0; padding:0; gap:0; align-items:stretch }
-    .hint{ display:none }
-
-    /* ---------- TOP APP BAR ---------- */
-    .toolbar{ position:sticky; top:0; z-index:120; flex:0 0 auto; width:100%; max-width:none;
-      height:var(--topbar-h); flex-wrap:nowrap; justify-content:flex-start; gap:14px;
-      padding:0 clamp(16px,3vw,34px);
-      background:rgba(7,10,20,.82); backdrop-filter:saturate(160%) blur(16px); -webkit-backdrop-filter:saturate(160%) blur(16px);
-      border-bottom:1px solid rgba(255,255,255,.07) }
-    .toolbar .title{ display:block; flex:0 0 auto; font-size:18px; margin-right:4px }
-    .crumb{ display:none }
-    .toolbar .tbtn{ flex:0 0 auto; padding:7px 11px; font-size:10px }
-
-    .flownav{ display:flex; align-items:center; gap:2px; flex:1 1 auto; min-width:0;
-      overflow-x:auto; scrollbar-width:none; -ms-overflow-style:none }
-    .flownav::-webkit-scrollbar{ display:none }
-    .flownav .fnav{ flex:0 0 auto; white-space:nowrap; text-decoration:none;
-      font-family:var(--display); font-weight:700; letter-spacing:.05em; text-transform:uppercase;
-      font-size:11px; color:var(--ink-faint); padding:8px 12px; border-radius:999px; transition:.15s }
-    .flownav .fnav:hover{ color:var(--ink); background:rgba(255,255,255,.06) }
-    .flownav .fnav.on{ color:var(--ink); background:rgba(255,45,111,.16); box-shadow:inset 0 0 0 1px rgba(255,122,166,.4) }
-
-    /* ---------- CONTENT CANVAS ---------- */
-    .device{ position:relative; flex:1 1 auto; width:100%; height:auto; min-height:0;
-      border:0; border-radius:0; box-shadow:none; background:transparent; overflow:hidden }
-    .statusbar{ display:none }
-    .screenwrap{ position:absolute; inset:0 }
-    .screen{ inset:0 }
-    .screen.on{ animation:none }
-    .tabbar{ display:none !important }            /* top nav replaces the phone tab bar */
-
-    .screen.paper{ background:var(--paper-soft) }
-    .screen.dark{ background:var(--stage-900);
-      background-image:radial-gradient(130% 75% at 50% -10%, #131d3a 0%, var(--stage-900) 58%) }
-
-    /* page header (carried over from the phone .pbar) */
-    .pbar{ width:min(100% - 48px, var(--pagw)); margin:0 auto;
-      padding:clamp(22px,3.4vh,40px) 2px 8px; gap:14px }
-    .lay-feed > .pbar{ width:min(100% - 56px, var(--feedw)) }
-    .pbar h1{ font-size:23px }
-
-    /* ============ HERO ============ */
-    .lay-hero > .body{ width:min(100% - 48px, 760px); margin-inline:auto; flex:1;
-      justify-content:center; gap:clamp(18px,2.6vh,32px);
-      padding:clamp(48px,8vh,112px) 8px clamp(40px,7vh,96px) !important }
-    .lay-hero > .pbar{ width:min(100% - 48px, 760px) }
-    .lay-hero > .body > h2.scrn{ font-size:clamp(2.5rem,4.6vw,4.4rem) !important; line-height:.97; max-width:20ch; margin-inline:auto }
-    .lay-hero > .body > .brand{ font-size:clamp(2rem,3vw,2.8rem) !important }
-    .lay-hero > .body > p{ font-size:clamp(1rem,1.15vw,1.18rem) }
-    .lay-hero .btn{ min-width:280px }
-    .lay-hero .btn.block{ max-width:420px; margin-inline:auto; width:100% }
-    .lay-hero .big-num{ margin-inline:auto }
-
-    /* ============ FORM (centred sheet) ============ */
-    .lay-form{ overflow-y:auto; padding-bottom:64px }
-    .lay-form > .body{ flex:0 0 auto; width:min(100% - 48px, var(--pagw)); margin:0 auto;
-      padding:clamp(26px,2.6vw,38px); gap:18px; border-radius:20px 20px 0 0 }
-    .lay-form > .body:first-child{ margin-top:clamp(28px,6vh,72px) }
-    .lay-form > .body:last-child{ border-radius:20px; border-bottom-width:1px }
-    .lay-form > .foot{ flex:0 0 auto; width:min(100% - 48px, var(--pagw)); margin:0 auto;
-      padding:20px clamp(26px,2.6vw,38px) 24px; border-radius:0 0 20px 20px }
-    .screen.paper.lay-form > .body{ background:var(--paper); border:1px solid var(--line); border-bottom:0 }
-    .screen.paper.lay-form > .foot{ background:var(--paper); border:1px solid var(--line); border-top:1px solid var(--line) }
-    .screen.dark.lay-form  > .body{ background:var(--stage-800); border:1px solid rgba(110,155,255,.18); border-bottom:0 }
-    .screen.dark.lay-form  > .foot{ background:var(--stage-800); border:1px solid rgba(110,155,255,.18); border-top:1px solid rgba(255,255,255,.08) }
-    .lay-form > .body > h2.scrn{ font-size:clamp(1.85rem,2.3vw,2.3rem) !important; line-height:1.02 }
-    .lay-form > .foot .btn.block{ max-width:360px; margin-inline:auto }
-    /* the phone-sized date picker would balloon in a wide sheet — keep it tidy */
-    .lay-form .cal{ max-width:430px; width:100%; margin-inline:auto }
-
-    /* ============ FEED (responsive grid) ============ */
-    .lay-feed{ overflow-y:auto; padding-bottom:64px }
-    .lay-feed > .body{ flex:0 0 auto; width:min(100% - 56px, var(--feedw)); margin:0 auto;
-      display:grid; grid-template-columns:repeat(auto-fit, minmax(290px, 1fr));
-      gap:16px; align-content:start; padding:clamp(10px,2vh,22px) 0 8px }
-    .lay-feed > .body > h2, .lay-feed > .body > h2.scrn, .lay-feed > .body > p,
-    .lay-feed > .body > .note, .lay-feed > .body > label, .lay-feed > .body > .eyebrow,
-    .lay-feed > .body > .field, .lay-feed > .body > .prog, .lay-feed > .body > .input,
-    .lay-feed > .body > .card.center, .lay-feed > .body > .card.pad-lg{ grid-column:1 / -1 }
-    .lay-feed > .body > h2.scrn{ font-size:clamp(1.7rem,2.1vw,2.1rem) !important }
-    .lay-feed > .foot{ flex:0 0 auto; width:min(100% - 56px, 520px); margin:0 auto;
-      padding:20px 0 0; border-top:0; background:transparent !important }
-    .lay-feed > .foot .btn.block{ max-width:420px; margin-inline:auto }
-
-    /* ============ IMMERSIVE (full-bleed, capped measure) ============ */
-    .lay-immersive .heads, .lay-immersive .turnflag, .lay-immersive .stage,
-    .lay-immersive .base, .lay-immersive .act{ max-width:620px; margin-inline:auto; width:100% }
-  }
-
-  /* large desktops: a touch more generosity */
-  @media (min-width:1280px){
-    :root{ --pagw:700px; --feedw:1140px }
-  }
 </style>
 </head>
 <body>
 <div class="proto">
   <div class="toolbar">
     <span class="title">Make<span class="a">a</span>Move</span>
-    <nav class="flownav" id="flownav" aria-label="Flow navigation"></nav>
     <button class="tbtn" onclick="prevS()">‹ Prev</button>
     <span class="crumb" id="crumb">—</span>
     <button class="tbtn" onclick="nextS()">Next ›</button>
@@ -1377,56 +1261,7 @@
 <script>
   const wrap = document.getElementById('screenwrap');
   let SCREENS = [], FIRST = '';
-  function refresh(){ SCREENS = [...wrap.querySelectorAll('.screen')]; FIRST = SCREENS[0]?.id || ''; classify(); }
-
-  /* Tag each screen with a desktop layout archetype so the responsive CSS
-     can reflow it for the web without touching any screen's markup.
-       feed      → list/gallery screens that become a responsive grid
-       immersive → full-bleed interactive screens (the show, the call)
-       hero      → centred marketing / outcome screens (wide display type)
-       form      → everything else → a centred single-column sheet            */
-  let _classified = false;
-  function classify(){
-    if(_classified) return;
-    const FEED = new Set(['S-B2','S-E3','S-E4','S-A8','S-H1','S-G3','S-H5']);
-    const IMMERSIVE = new Set(['S-D2','S-E1']);
-    SCREENS.forEach(s=>{
-      let lay;
-      if(IMMERSIVE.has(s.id)) lay='immersive';
-      else if(FEED.has(s.id)) lay='feed';
-      else {
-        const b = s.querySelector('.body');
-        const st = b ? (b.getAttribute('style')||'') : '';
-        lay = /justify-content\s*:\s*center/.test(st) ? 'hero' : 'form';
-      }
-      s.classList.add('lay-'+lay);
-    });
-    _classified = true;
-  }
-
-  /* persistent top-bar flow navigation (desktop) — one link per flow group */
-  function buildFlowNav(cur){
-    const nav = document.getElementById('flownav'); if(!nav) return;
-    const first = new Map();                       // group -> first screen id
-    SCREENS.forEach(s=>{ const g = s.dataset.group||'Other'; if(!first.has(g)) first.set(g, s.id); });
-    const curGroup = (document.getElementById(cur)||{}).dataset?.group || '';
-    nav.innerHTML = '';
-    first.forEach((id,g)=>{
-      const a = document.createElement('a');
-      a.href = '#'+id;
-      a.className = 'fnav'+(g===curGroup ? ' on' : '');
-      a.textContent = g.replace(/^\s*[A-Z]\s*·\s*/,'');   // drop the "A · " prefix
-      nav.appendChild(a);
-    });
-    const center = ()=>{
-      const o = nav.querySelector('.on'); if(!o) return;
-      const er = o.getBoundingClientRect(), nr = nav.getBoundingClientRect();
-      nav.scrollLeft += (er.left - nr.left) - (nr.width - er.width)/2;
-    };
-    center();                               // immediate
-    requestAnimationFrame(center);          // after layout
-    if(document.fonts && document.fonts.ready) document.fonts.ready.then(center);  // after webfont reflow
-  }
+  function refresh(){ SCREENS = [...wrap.querySelectorAll('.screen')]; FIRST = SCREENS[0]?.id || ''; }
   function go(id){ if(id) location.hash = id; }
   function curId(){ return location.hash.slice(1) || FIRST; }
   function route(){
@@ -1445,7 +1280,6 @@
       document.getElementById('statusbar').style.setProperty('--statusink', cur.classList.contains('paper') ? '#161B2E' : '#fff');
     }
     buildIndex(id);
-    buildFlowNav(cur ? cur.id : id);
   }
   function stepBy(d){
     refresh();
