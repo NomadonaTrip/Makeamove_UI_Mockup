@@ -12,7 +12,10 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8753/index.html)",
       "Bash(awk 'NR>=1080 && NR<=1400' index.html)",
       "mcp__plugin_playwright_playwright__browser_console_messages",
-      "mcp__plugin_playwright_playwright__browser_take_screenshot"
+      "mcp__plugin_playwright_playwright__browser_take_screenshot",
+      "Bash(python3 -m http.server 8791)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8791/index.html)",
+      "mcp__plugin_playwright_playwright__browser_select_option"
     ]
   }
 }
