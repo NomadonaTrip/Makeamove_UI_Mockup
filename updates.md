@@ -1,27 +1,12 @@
-Hero Text: Stop Swiping, Start Matching
-
-Order and content of questions to be modified:
-
-1. Full name
-2. Date of birth (selectable/calendar UI improvement requested): DOB input: implement an improved calendar UI (month selector dropdown + year selector) to avoid repeated back-navigation when selecting older years.
-3. Nationality
-   Branching logic: Nigerians get two additional questions:
-   Nigerians see: 3a. state of origin and genotype.
-   Other Africans get a different regional question (region).
-   3b. Genotype
-   Other nations see:
-   Birth Town
-
-4. Marital status
-
-City/place of residence should be collected (use globally understood “city” wording).
-
-5. Vocational status: provide standardized options (student, employed, self-employed, between jobs, retired) and a free-text occupation/career field optionally.
-
-6. Country of residence
-7. City of residence
-8. Ethnicity
-
-9. email address
-
-In the onboarding gate page, the section "That's the point - the gate keeps the low-intent crowd out" to be taken out.
+1. Remove "the onboarding gate" header from above the hero text
+2. Change "finish your profile" to "complete your profile"
+   Invite users to give us more information about their preferences
+   include the following questions as options:
+   a. From which country and tribe can you date
+   b. What marital status of a partner do you prefer
+   c. Are you tall, short or average in height?
+   d What shape of a partner do you prefer
+   e. Are you fat, slim, average or athletic/muscular
+   Take a look at the questions in the form, identify the questions that are not captured in the onboarding flow, categorize those questions and render them as buttons on the http://127.0.0.1:3000/index.html?vscode-livepreview=true#S-A9 page to replace the current placeholders. Each button enables the system collect some more information about the user.
+3. Remove the "Which town were you born in?" question from non-Nigerians
+4. Birth date: if age is less than 18 years, system informs the user they're too young and rejects their application.

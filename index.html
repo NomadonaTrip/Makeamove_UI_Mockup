@@ -27,6 +27,7 @@
     --r:14px;
   }
   *{box-sizing:border-box; margin:0; padding:0}
+  .icon{width:1em;height:1em;display:inline-block;vertical-align:-.125em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
   html,body{height:100%}
   body{font-family:var(--body); background:#070A14; color:var(--ink);
     -webkit-font-smoothing:antialiased; display:flex; min-height:100%;
@@ -370,6 +371,7 @@
 </style>
 </head>
 <body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true"><symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="i-x" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol><symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.5S4 15.6 4 10.1C4 7 6 5 8.5 5c1.6 0 3 .9 3.5 2 .5-1.1 1.9-2 3.5-2C18 5 20 7 20 10.1c0 5.5-8 10.4-8 10.4z"/></symbol><symbol id="i-mail" viewBox="0 0 24 24"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="m2.5 7.5 9.5 6 9.5-6"/></symbol><symbol id="i-diamond" viewBox="0 0 24 24"><path d="M12 2.5 21.5 12 12 21.5 2.5 12z"/></symbol><symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 21c.8-4 3.8-6 7.5-6s6.7 2 7.5 6"/></symbol><symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8h3l2-2.5h6L17 8h3a1.5 1.5 0 0 1 1.5 1.5V18a1.5 1.5 0 0 1-1.5 1.5H4A1.5 1.5 0 0 1 2.5 18V9.5A1.5 1.5 0 0 1 4 8z"/><circle cx="12" cy="13.5" r="3.5"/></symbol><symbol id="i-video" viewBox="0 0 24 24"><rect x="2.5" y="7" width="13" height="10" rx="2"/><path d="m15.5 13.5 6 3.5v-10l-6 3.5"/></symbol><symbol id="i-smile" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.5 14c.7 1.3 2 2 3.5 2s2.8-.7 3.5-2"/><path d="M9 9.3h.01M15 9.3h.01"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m15.7 15.7 4.8 4.8"/></symbol><symbol id="i-party" viewBox="0 0 24 24"><path d="M7.5 10.5 3 21l10.5-4.5z"/><path d="M7.5 10.5c-.3 2.6 3.4 6.3 6 6"/><path d="M12.5 8.3c.2-1.8 1.4-2.8 3-2.6M15 11.5c1.2-1.2 2.7-1.4 4-.6"/><path d="M13.5 3.5h.01M19 5h.01M20.5 10.5h.01M17 15.5h.01"/></symbol><symbol id="i-gift" viewBox="0 0 24 24"><rect x="3.5" y="8" width="17" height="4" rx="1"/><path d="M5.5 12v7.5a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V12M12 8v12.5"/><path d="M12 8c-4.2 0-4.8-1.9-4.3-3.2C8.2 3.4 10.8 3 12 8zm0 0c4.2 0 4.8-1.9 4.3-3.2C15.8 3.4 13.2 3 12 8z"/></symbol><symbol id="i-hourglass" viewBox="0 0 24 24"><path d="M6.5 2.5h11M6.5 21.5h11M8 2.5v3.7c0 2 1.6 3.3 4 5.8 2.4-2.5 4-3.8 4-5.8V2.5M8 21.5v-3.7c0-2 1.6-3.3 4-5.8 2.4 2.5 4 3.8 4 5.8v3.7"/></symbol><symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></symbol><symbol id="i-utensils" viewBox="0 0 24 24"><path d="M5 2.5v5a2.5 2.5 0 0 0 5 0v-5M7.5 2.5v19"/><path d="M18.5 15h-3c0-5 1-10.5 3-12.5zM18.5 15v6.5"/></symbol><symbol id="i-wine" viewBox="0 0 24 24"><path d="M7 2.5h10l-.8 6a4.2 4.2 0 0 1-8.4 0z"/><path d="M12 13v6.5M8 21.5h8"/></symbol><symbol id="i-coffee" viewBox="0 0 24 24"><path d="M4 9.5h13V16a4.5 4.5 0 0 1-4.5 4.5H8.5A4.5 4.5 0 0 1 4 16z"/><path d="M17 11h1.5a2.75 2.75 0 0 1 0 5.5H17"/><path d="M7.5 3c0 1.2 1 1.3 1 2.5S7.5 6.8 7.5 8M11.5 3c0 1.2 1 1.3 1 2.5s-1 1.3-1 2.5"/></symbol><symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21.5c4.7-4.7 7-8.6 7-11.7a7 7 0 0 0-14 0c0 3.1 2.3 7 7 11.7z"/><circle cx="12" cy="9.6" r="2.6"/></symbol><symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="16" rx="2"/><path d="M3.5 10h17M8 2.5V7M16 2.5V7"/></symbol><symbol id="i-flag" viewBox="0 0 24 24"><path d="M4.5 22v-7"/><path d="M4.5 15s1-1 4-1 5 2 8 2 4-1 4-1V4s-1 1-4 1-5-2-8-2-4 1-4 1z"/></symbol><symbol id="i-mailheart" viewBox="0 0 24 24"><rect x="2.5" y="4.5" width="19" height="15" rx="2"/><path d="M12 15.5c-2.2-1.4-3.4-2.9-3.4-4.4 0-1.1.9-1.9 1.9-1.9.6 0 1.2.3 1.5.9.3-.6.9-.9 1.5-.9 1 0 1.9.8 1.9 1.9 0 1.5-1.2 3-3.4 4.4z"/></symbol><symbol id="i-receipt" viewBox="0 0 24 24"><path d="M5.5 21.5v-18a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1v18l-2.15-1.6-2.2 1.6L12 19.9l-2.15 1.6-2.2-1.6z"/><path d="M9 7.5h6M9 11h6M9 14.5h3.5"/></symbol><symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 2.5 4.5 5.4v6.2c0 4.8 3.1 8.2 7.5 9.9 4.4-1.7 7.5-5.1 7.5-9.9V5.4z"/></symbol><symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 21h16"/><path d="M7.5 21v-5.5M12 21V8.5M16.5 21v-9"/></symbol><symbol id="i-ticket" viewBox="0 0 24 24"><path d="M3.5 9.5v-3a1 1 0 0 1 1-1h15a1 1 0 0 1 1 1v3a2.5 2.5 0 0 0 0 5v3a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1v-3a2.5 2.5 0 0 0 0-5z"/><path d="M14.5 5.5v2.6M14.5 11v2M14.5 16v2.5"/></symbol><symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.7v3M12 18.3v3M2.7 12h3M18.3 12h3M5.4 5.4l2.1 2.1M16.5 16.5l2.1 2.1M18.6 5.4l-2.1 2.1M7.5 16.5l-2.1 2.1"/></symbol><symbol id="i-mute" viewBox="0 0 24 24"><path d="M10.5 5.5v13L6.5 15H4a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h2.5z"/><path d="m15 9.5 5 5M20 9.5l-5 5"/></symbol><symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 18.6 6l2.9 3.5"/><path d="M21.5 4.5v5h-5"/></symbol><symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 3.5 22 20.5H2z"/><path d="M12 10.2v4.3M12 17.4h.01"/></symbol><symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3.5 13.7 9l5.5 1.7-5.5 1.7L12 18l-1.7-5.6L4.8 10.7 10.3 9z"/><path d="m19 16.5.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></symbol><symbol id="i-height" viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M8.5 6.5 12 3l3.5 3.5"/><path d="M8.5 17.5 12 21l3.5-3.5"/></symbol><symbol id="i-dumbbell" viewBox="0 0 24 24"><path d="M6.5 6.5v11"/><path d="M17.5 6.5v11"/><path d="M3.5 9v6"/><path d="M20.5 9v6"/><path d="M6.5 12h11"/></symbol><symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/></symbol><symbol id="i-ring" viewBox="0 0 24 24"><circle cx="12" cy="15" r="6"/><path d="M9.5 5 12 2l2.5 3-2.5 4z"/></symbol><symbol id="i-person" viewBox="0 0 24 24"><circle cx="12" cy="6" r="3.5"/><path d="M5 21c0-4.2 3.1-7 7-7s7 2.8 7 7"/></symbol></svg>
 <div class="proto">
   <div class="toolbar">
     <span class="title">Make<span class="a">a</span>Move</span>
@@ -388,11 +390,10 @@
       <section class="screen dark" id="S-A1" data-group="A · Onboarding" data-title="Landing / referral">
         <div class="body" style="justify-content:center; gap:22px; text-align:center; padding:60px 26px">
           <div>
-            <div class="eyebrow">Referred by Funmi A.</div>
-            <div class="brand" style="font-size:34px; margin-top:10px">Make<span class="a">a</span>Move</div>
+            <div class="brand" style="font-size:34px">Make<span class="a">a</span>Move</div>
           </div>
           <h2 class="scrn" style="font-size:40px; max-width:14ch; margin:0 auto">Stop Swiping, <span style="color:var(--move)">Start Matching</span></h2>
-          <p class="muted" style="max-width:30ch; margin:0 auto; font-size:15px; line-height:1.5">A compatibility game show that gets you matched — and off the app. No endless swiping.</p>
+          <p class="muted" style="max-width:30ch; margin:0 auto; font-size:15px; line-height:1.5">Online Matchmaking Game Show that connects compatible partners.</p>
           <div style="display:flex; flex-direction:column; gap:10px; margin-top:8px">
             <a class="btn move block" href="#S-A2">Begin · answer 10 questions</a>
             <a class="link" href="#S-A7">I already have an account</a>
@@ -402,7 +403,6 @@
 
       <section class="screen dark" id="S-A2" data-group="A · Onboarding" data-title="Quiz intro">
         <div class="body" style="justify-content:center; gap:18px; text-align:center; padding:50px 26px">
-          <div class="eyebrow">The onboarding gate</div>
           <h2 class="scrn" style="font-size:34px; max-width:15ch; margin:0 auto">10 questions stand between you and your matches.</h2>
           <p class="muted" style="max-width:32ch; margin:0 auto; line-height:1.55">First the essentials — who you are, where you're rooted, and the few hard facts that shape who you meet. Answer honestly. You can't activate an account until every question is done.</p>
           <a class="btn move block" href="#S-Q1" style="margin-top:6px">Start the questions</a>
@@ -433,7 +433,17 @@
           <div class="cal" id="dobCal"></div>
           <div class="note info" id="dobAge">Pick your date of birth above — jump straight to any month and year with the dropdowns. Verified once via Onfido / Yoti at registration — we confirm you're over 18 and nothing more is shared.</div>
         </div>
-        <div class="foot"><a class="btn primary block" href="#S-Q3">Next</a></div>
+        <div class="foot"><a class="btn primary block" id="dobNext" href="#S-Q3">Next</a></div>
+      </section>
+
+      <!-- branch · under-18: application rejected -->
+      <section class="screen dark" id="S-QREJ" data-group="A · Onboarding" data-title="⚠ Under 18 · application rejected">
+        <div class="body" style="justify-content:center;text-align:center;gap:18px;padding:40px 28px">
+          <div class="av g5 s72" style="margin:0 auto">18+</div>
+          <h2 class="scrn" style="font-size:30px">You're too young to join.</h2>
+          <p class="muted" style="max-width:32ch;margin:0 auto;line-height:1.55">MakeaMove is strictly for adults aged <b style="color:var(--ink)">18 and over</b>, so we can't accept your application. We'd love to see you back on your 18th birthday.</p>
+          <a class="btn primary block" href="#S-A1">Back to the start</a>
+        </div>
       </section>
 
       <section class="screen paper" id="S-Q3" data-group="A · Onboarding" data-title="Q3 · Nationality (citizenship)">
@@ -458,7 +468,7 @@
           </div>
           <div class="note">Hold more than one passport? Pick your primary citizenship. Your answer shapes the next question — it's how we get cultural matching right.</div>
         </div>
-        <div class="foot"><a class="btn primary block" id="natNext" href="#S-Q3T">Next</a></div>
+        <div class="foot"><a class="btn primary block" id="natNext" href="#S-Q4">Next</a></div>
       </section>
 
       <!-- branch · Nigeria: state of origin + genotype -->
@@ -520,21 +530,8 @@
         <div class="foot"><a class="btn primary block" href="#S-Q4">Next</a></div>
       </section>
 
-      <!-- branch · everywhere else: birth town -->
-      <section class="screen paper" id="S-Q3T" data-group="A · Onboarding" data-title="Q3 alt · Birth town">
-        <div class="pbar"><a class="back" href="#S-Q3">‹</a><h1 style="font-size:16px">Question 4 of 10</h1><span class="muted" style="font-size:12px">Origin</span></div>
-        <div class="body">
-          <div class="stepdots"><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span></div>
-          <span class="chip" style="align-self:flex-start">Origin</span>
-          <h2 class="scrn" style="font-size:25px">Which town were you born in?</h2>
-          <div class="field"><label>Birth town</label><input class="input" value="London" placeholder="e.g. Manchester, Lyon, Austin…"></div>
-          <div class="note">Where your story started — separate from where you live now. Helps with cultural matching.</div>
-        </div>
-        <div class="foot"><a class="btn primary block" href="#S-Q4">Next</a></div>
-      </section>
-
       <section class="screen paper" id="S-Q4" data-group="A · Onboarding" data-title="Q4 · Marital status">
-        <div class="pbar"><a class="back" id="q4back" href="#S-Q3T">‹</a><h1 style="font-size:16px">Question 5 of 10</h1><span class="muted" style="font-size:12px">Status</span></div>
+        <div class="pbar"><a class="back" id="q4back" href="#S-Q3">‹</a><h1 style="font-size:16px">Question 5 of 10</h1><span class="muted" style="font-size:12px">Status</span></div>
         <div class="body">
           <div class="stepdots"><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span></div>
           <span class="chip" style="align-self:flex-start">Status</span>
@@ -657,41 +654,132 @@
         <div class="pbar"><a class="back" href="#S-A7">‹</a><h1>Verify it's really you</h1></div>
         <div class="body">
           <div class="card pad-lg center" style="display:flex;flex-direction:column;gap:12px;align-items:center">
-            <div class="av g1 s72">📷</div>
+            <div class="av g1 s72"><svg class="icon" style="width:30px;height:30px"><use href="#i-camera"/></svg></div>
             <h2 class="scrn" style="font-size:22px">Photo ID + a quick selfie</h2>
             <p class="muted" style="font-size:14px">A one-time liveness + ID check. It's how we keep married men and catfish off the platform.</p>
           </div>
           <div class="row"><div class="av g5 s40">ID</div><div class="grow"><div class="t1">Government photo ID</div><div class="t2">Passport, driving licence, or NIN</div></div><span class="tag pass">Ready</span></div>
-          <div class="row"><div class="av g5 s40">😊</div><div class="grow"><div class="t1">Liveness selfie</div><div class="t2">Confirms the ID is yours</div></div><span class="chev">›</span></div>
+          <div class="row"><div class="av g5 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-smile"/></svg></div><div class="grow"><div class="t1">Liveness selfie</div><div class="t2">Confirms the ID is yours</div></div><span class="chev">›</span></div>
           <div class="note info">Verified by Onfido (UK) / Smile Identity (NG). Your verification persists even if you delete your account — it can't be bypassed by re-registering.</div>
         </div>
         <div class="foot"><a class="btn primary block" href="#S-A9">Verify with Onfido</a></div>
       </section>
 
       <section class="screen paper" id="S-A9" data-group="A · Onboarding" data-title="Profile completion">
-        <div class="pbar"><a class="back" href="#S-A8">‹</a><h1>Finish your profile</h1><a class="act" href="#S-B1">Skip</a></div>
+        <div class="pbar"><a class="back" href="#S-A8">‹</a><h1>Complete your profile</h1><a class="act" href="#S-B1">Skip</a></div>
         <div class="body">
           <div class="note">Optional now — none of this gates sign-up. But richer profiles get better matches.</div>
           <label class="muted" style="font-size:12px;font-weight:700">Photos</label>
           <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px">
-            <div class="av g2" style="width:100%;aspect-ratio:1;border-radius:12px">＋</div>
-            <div class="av g1" style="width:100%;aspect-ratio:1;border-radius:12px">＋</div>
-            <div class="card flat center" style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--t-faint)">＋</div>
+            <div class="av g2" style="width:100%;aspect-ratio:1;border-radius:12px"><svg class="icon" style="width:22px;height:22px"><use href="#i-plus"/></svg></div>
+            <div class="av g1" style="width:100%;aspect-ratio:1;border-radius:12px"><svg class="icon" style="width:22px;height:22px"><use href="#i-plus"/></svg></div>
+            <div class="card flat center" style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--t-faint)"><svg class="icon" style="width:22px;height:22px"><use href="#i-plus"/></svg></div>
           </div>
           <div class="field"><label>Short bio</label><textarea class="textarea">Project manager, mum of two, 12 months divorced and done wasting weekends. I want the real conversation early.</textarea></div>
           <label class="muted" style="font-size:12px;font-weight:700">Extended dealbreakers</label>
           <div style="display:flex;flex-wrap:wrap;gap:8px">
-            <span class="tag move">Must welcome a blended family</span><span class="tag">London only</span><span class="tag">Non-smoker</span><span class="tag" style="border:1px dashed var(--line-strong)">＋ add</span>
+            <span class="tag move">Must welcome a blended family</span><span class="tag">London only</span><span class="tag">Non-smoker</span><span class="tag" style="border:1px dashed var(--line-strong)"><svg class="icon" style="width:11px;height:11px"><use href="#i-plus"/></svg> add</span>
           </div>
+          <div class="note info">Tell us a little more about yourself and your preferences — every answer sharpens who we put in front of you.</div>
+          <label class="muted" style="font-size:12px;font-weight:700">About you</label>
+          <a class="row" href="#S-P1"><div class="av g1 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-height"/></svg></div><div class="grow"><div class="t1">Your height</div><div class="t2">Tall, short or average?</div></div><span class="chev">›</span></a>
+          <a class="row" href="#S-P2"><div class="av g3 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-dumbbell"/></svg></div><div class="grow"><div class="t1">Your build</div><div class="t2">Fat, slim, average or athletic/muscular?</div></div><span class="chev">›</span></a>
+          <label class="muted" style="font-size:12px;font-weight:700">Partner preferences</label>
+          <a class="row" href="#S-P3"><div class="av g4 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-globe"/></svg></div><div class="grow"><div class="t1">Country &amp; tribe</div><div class="t2">From which country and tribe can you date?</div></div><span class="chev">›</span></a>
+          <a class="row" href="#S-P4"><div class="av g2 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-ring"/></svg></div><div class="grow"><div class="t1">Marital status</div><div class="t2">What marital status of a partner do you prefer?</div></div><span class="chev">›</span></a>
+          <a class="row" href="#S-P5"><div class="av g5 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-person"/></svg></div><div class="grow"><div class="t1">Body shape</div><div class="t2">What shape of a partner do you prefer?</div></div><span class="chev">›</span></a>
         </div>
         <div class="foot"><a class="btn move block" href="#S-B1">Done · find my matches</a></div>
+      </section>
+
+      <!-- ---- profile preference questions (from S-A9) ---- -->
+      <section class="screen paper" id="S-P1" data-group="A · Onboarding" data-title="Profile · Your height">
+        <div class="pbar"><a class="back" href="#S-A9">‹</a><h1 style="font-size:16px">About you</h1></div>
+        <div class="body">
+          <span class="chip" style="align-self:flex-start">About you</span>
+          <h2 class="scrn" style="font-size:25px">Are you tall, short or average in height?</h2>
+          <div style="display:flex; flex-direction:column; gap:10px">
+            <div class="opt" onclick="pick(this)"><span class="dot"></span>Tall</div>
+            <div class="opt sel" onclick="pick(this)"><span class="dot"></span>Average</div>
+            <div class="opt" onclick="pick(this)"><span class="dot"></span>Short</div>
+          </div>
+          <div class="note">Shown to candidates alongside your photos — it helps set honest expectations before the show.</div>
+        </div>
+        <div class="foot"><a class="btn primary block" href="#S-A9">Save · back to profile</a></div>
+      </section>
+
+      <section class="screen paper" id="S-P2" data-group="A · Onboarding" data-title="Profile · Your build">
+        <div class="pbar"><a class="back" href="#S-A9">‹</a><h1 style="font-size:16px">About you</h1></div>
+        <div class="body">
+          <span class="chip" style="align-self:flex-start">About you</span>
+          <h2 class="scrn" style="font-size:25px">Are you fat, slim, average or athletic/muscular?</h2>
+          <div style="display:flex; flex-direction:column; gap:10px">
+            <div class="opt" onclick="pick(this)"><span class="dot"></span>Slim</div>
+            <div class="opt sel" onclick="pick(this)"><span class="dot"></span>Average</div>
+            <div class="opt" onclick="pick(this)"><span class="dot"></span>Athletic / muscular</div>
+            <div class="opt" onclick="pick(this)"><span class="dot"></span>Fat</div>
+          </div>
+          <div class="note">Honesty wins here — your matches will meet you in person.</div>
+        </div>
+        <div class="foot"><a class="btn primary block" href="#S-A9">Save · back to profile</a></div>
+      </section>
+
+      <section class="screen paper" id="S-P3" data-group="A · Onboarding" data-title="Profile · Country &amp; tribe preference">
+        <div class="pbar"><a class="back" href="#S-A9">‹</a><h1 style="font-size:16px">Partner preferences</h1></div>
+        <div class="body">
+          <span class="chip" style="align-self:flex-start">Partner preference</span>
+          <h2 class="scrn" style="font-size:25px">From which country and tribe can you date?</h2>
+          <div style="display:flex; flex-direction:column; gap:10px">
+            <div class="opt sel" onclick="pick(this)"><span class="dot"></span>Anywhere — no preference</div>
+            <div class="opt" onclick="pick(this)"><span class="dot"></span>My own country only</div>
+            <div class="opt" onclick="pick(this)"><span class="dot"></span>My own tribe only</div>
+            <div class="opt" onclick="pick(this)"><span class="dot"></span>Specific countries or tribes</div>
+          </div>
+          <div class="field"><label>Countries / tribes <span style="font-weight:400">(if specific)</span></label><input class="input" placeholder="e.g. Nigeria · Yoruba, Ghana · Ashanti…"></div>
+          <div class="note">A soft filter, not a dealbreaker — it shapes your candidate pool for cultural fit.</div>
+        </div>
+        <div class="foot"><a class="btn primary block" href="#S-A9">Save · back to profile</a></div>
+      </section>
+
+      <section class="screen paper" id="S-P4" data-group="A · Onboarding" data-title="Profile · Partner marital status">
+        <div class="pbar"><a class="back" href="#S-A9">‹</a><h1 style="font-size:16px">Partner preferences</h1></div>
+        <div class="body">
+          <span class="chip" style="align-self:flex-start">Partner preference</span>
+          <h2 class="scrn" style="font-size:25px">What marital status of a partner do you prefer?</h2>
+          <div style="display:flex; flex-direction:column; gap:10px">
+            <div class="opt sel" onclick="pick(this)"><span class="dot"></span>No preference</div>
+            <div class="opt" onclick="pick(this)"><span class="dot"></span>Single — never married</div>
+            <div class="opt" onclick="pick(this)"><span class="dot"></span>Divorced</div>
+            <div class="opt" onclick="pick(this)"><span class="dot"></span>Widowed</div>
+            <div class="opt" onclick="pick(this)"><span class="dot"></span>Separated</div>
+          </div>
+          <div class="note">Married users can't join MakeaMove, so everyone you meet is genuinely free to date.</div>
+        </div>
+        <div class="foot"><a class="btn primary block" href="#S-A9">Save · back to profile</a></div>
+      </section>
+
+      <section class="screen paper" id="S-P5" data-group="A · Onboarding" data-title="Profile · Partner body shape">
+        <div class="pbar"><a class="back" href="#S-A9">‹</a><h1 style="font-size:16px">Partner preferences</h1></div>
+        <div class="body">
+          <span class="chip" style="align-self:flex-start">Partner preference</span>
+          <h2 class="scrn" style="font-size:25px">What shape of a partner do you prefer?</h2>
+          <div style="display:flex; flex-direction:column; gap:10px">
+            <div class="opt sel" onclick="pick(this)"><span class="dot"></span>No preference</div>
+            <div class="opt" onclick="pick(this)"><span class="dot"></span>Slim</div>
+            <div class="opt" onclick="pick(this)"><span class="dot"></span>Average</div>
+            <div class="opt" onclick="pick(this)"><span class="dot"></span>Athletic / muscular</div>
+            <div class="opt" onclick="pick(this)"><span class="dot"></span>Fat</div>
+          </div>
+          <div class="note">A soft preference — chemistry on the show can always outvote a checkbox.</div>
+        </div>
+        <div class="foot"><a class="btn primary block" href="#S-A9">Save · back to profile</a></div>
       </section>
 
       <!-- ============ GROUP B · MATCHING & GALLERY ============ -->
       <section class="screen dark" id="S-B1" data-group="B · Matching" data-title="Finding matches">
         <div class="body" style="justify-content:center; gap:20px; text-align:center; padding:50px 26px">
           <div class="av g1 s96" style="margin:0 auto; position:relative">
-            <span style="font-size:34px">🔍</span>
+            <svg class="icon" style="width:38px;height:38px"><use href="#i-search"/></svg>
           </div>
           <h2 class="scrn" style="font-size:30px; max-width:14ch; margin:0 auto">We're finding people who fit your filters.</h2>
           <p class="muted" style="max-width:30ch; margin:0 auto; line-height:1.55">Not a feed of everyone — a short list that respects every dealbreaker you set. We'll notify you within <b style="color:var(--ink)">48 hours</b>.</p>
@@ -707,7 +795,7 @@
       <section class="screen paper" id="S-B2" data-group="B · Matching" data-title="Candidate gallery">
         <div class="pbar"><span class="brand" style="font-size:18px">Make<span class="a">a</span>Move</span><a class="act" href="#S-G1">Credits ›</a></div>
         <div class="body">
-          <div class="note pass" style="display:flex;align-items:center;gap:10px"><span style="font-size:20px">🎉</span><div><b>You have 3 pre-matches.</b><br><span style="font-size:12px">Each one cleared every dealbreaker you set.</span></div></div>
+          <div class="note pass" style="display:flex;align-items:center;gap:10px"><svg class="icon" style="width:22px;height:22px"><use href="#i-party"/></svg><div><b>You have 3 pre-matches.</b><br><span style="font-size:12px">Each one cleared every dealbreaker you set.</span></div></div>
           <h2 class="scrn" style="font-size:24px">Your candidates</h2>
           <p class="muted" style="font-size:12.5px;margin-top:-6px">Photo and a few details now — full profiles unlock only after they accept your invite. No bios to doom-scroll.</p>
           <a class="row" href="#S-B3" style="padding:0;overflow:hidden">
@@ -726,7 +814,7 @@
             <span class="chev" style="padding-right:12px">›</span>
           </a>
         </div>
-        <div class="tabbar"><a class="on" href="#S-B2"><span class="ic">♥</span>Matches</a><a href="#S-C2"><span class="ic">✉</span>Invites</a><a href="#S-G1"><span class="ic">◆</span>Credits</a><a href="#S-A9"><span class="ic">☺</span>Profile</a></div>
+        <div class="tabbar"><a class="on" href="#S-B2"><span class="ic"><svg class="icon"><use href="#i-heart"/></svg></span>Matches</a><a href="#S-C2"><span class="ic"><svg class="icon"><use href="#i-mail"/></svg></span>Invites</a><a href="#S-G1"><span class="ic"><svg class="icon"><use href="#i-diamond"/></svg></span>Credits</a><a href="#S-A9"><span class="ic"><svg class="icon"><use href="#i-user"/></svg></span>Profile</a></div>
       </section>
 
       <section class="screen paper" id="S-B3" data-group="B · Matching" data-title="Candidate profile (sparse)">
@@ -756,7 +844,7 @@
       <section class="screen paper" id="S-C1" data-group="C · Invite & schedule" data-title="Compose invite · seed 5 slots">
         <div class="pbar"><a class="back" href="#S-B3">‹</a><h1>Invite David</h1></div>
         <div class="body">
-          <div class="note gold">🎁 <b>Free during launch.</b> 1 free session credit applied — no charge now, and nothing held until a time is agreed.</div>
+          <div class="note gold"><svg class="icon"><use href="#i-gift"/></svg> <b>Free during launch.</b> 1 free session credit applied — no charge now, and nothing held until a time is agreed.</div>
           <div style="display:flex;align-items:center;gap:10px">
             <div class="av g1 s52">D</div><div><div style="font-weight:700">A synchronous game show</div><div class="muted" style="font-size:12px">One-on-one · ~20 questions · ≥70% each to pass</div></div>
           </div>
@@ -766,7 +854,7 @@
             <div class="opt sel" onclick="pick(this)"><span class="dot"></span>Sun 22 Jun · 7:30 pm</div>
             <div class="opt sel" onclick="pick(this)"><span class="dot"></span>Tue 24 Jun · 9:00 pm</div>
             <div class="opt sel" onclick="pick(this)"><span class="dot"></span>Thu 26 Jun · 8:30 pm</div>
-            <div class="opt" onclick="pick(this)"><span class="dot"></span>＋ add a fifth slot</div>
+            <div class="opt" onclick="pick(this)"><span class="dot"></span><svg class="icon"><use href="#i-plus"/></svg> add a fifth slot</div>
           </div>
           <div class="note info">David has <b>24 hours</b> to accept and agree a time. He'll only see your photo and a few details until he does.</div>
         </div>
@@ -786,13 +874,13 @@
             <div class="btnrow" style="margin-top:10px"><a class="btn ghost sm" href="#S-C3">David's view ›</a><a class="btn ghost sm" href="#S-C6">Declined</a><a class="btn ghost sm" href="#S-C7">Expired</a></div>
           </div>
         </div>
-        <div class="tabbar"><a href="#S-B2"><span class="ic">♥</span>Matches</a><a class="on" href="#S-C2"><span class="ic">✉</span>Invites</a><a href="#S-G1"><span class="ic">◆</span>Credits</a><a href="#S-A9"><span class="ic">☺</span>Profile</a></div>
+        <div class="tabbar"><a href="#S-B2"><span class="ic"><svg class="icon"><use href="#i-heart"/></svg></span>Matches</a><a class="on" href="#S-C2"><span class="ic"><svg class="icon"><use href="#i-mail"/></svg></span>Invites</a><a href="#S-G1"><span class="ic"><svg class="icon"><use href="#i-diamond"/></svg></span>Credits</a><a href="#S-A9"><span class="ic"><svg class="icon"><use href="#i-user"/></svg></span>Profile</a></div>
       </section>
 
       <section class="screen paper" id="S-C3" data-group="C · Invite & schedule" data-title="Invite received (receptor)">
         <div class="pbar"><span class="brand" style="font-size:16px">Make<span class="a">a</span>Move</span><span class="tag warn">David's view</span></div>
         <div class="body">
-          <div class="note info">⏳ Tolu invited you — <b>23h left</b> to respond.</div>
+          <div class="note info"><svg class="icon"><use href="#i-hourglass"/></svg> Tolu invited you — <b>23h left</b> to respond.</div>
           <div class="card" style="display:flex;gap:14px;align-items:center">
             <div class="av g2 s72">T</div>
             <div><div style="font-weight:800;font-size:18px">Tolu, 37</div><div class="muted" style="font-size:13px">Project manager · 2 kids · London</div><div style="margin-top:6px"><span class="tag pass">Family fit</span> <span class="tag">AA</span></div></div>
@@ -837,7 +925,7 @@
             <div class="muted" style="font-size:12px;margin-top:4px">Free during launch — your 1 free credit covers this. After the moratorium a hold is placed here and <b>captured only when you play</b>.</div>
           </div>
           <div class="card" style="border-color:var(--warn)">
-            <div style="font-weight:700;color:#b96a12">⚠ No-show terms</div>
+            <div style="font-weight:700;color:#b96a12"><svg class="icon"><use href="#i-warn"/></svg> No-show terms</div>
             <ul class="muted" style="font-size:12.5px;margin:8px 0 0;padding-left:18px;line-height:1.6">
               <li>A no-show forfeits <b>100%</b> of the hold.</li>
               <li>You can reschedule free up to <b>6 hours</b> before.</li>
@@ -860,7 +948,7 @@
 
       <section class="screen dark" id="S-C7" data-group="C · Invite & schedule" data-title="⚠ Invite expired (24h)">
         <div class="body" style="justify-content:center;text-align:center;gap:18px;padding:40px 28px">
-          <div class="av g5 s72" style="margin:0 auto">⌛</div>
+          <div class="av g5 s72" style="margin:0 auto"><svg class="icon" style="width:30px;height:30px"><use href="#i-hourglass"/></svg></div>
           <h2 class="scrn" style="font-size:28px">The 24 hours ran out.</h2>
           <p class="muted" style="max-width:32ch;margin:0 auto;line-height:1.55">No time was agreed, so the invite expired and the match closed. Because nothing is charged before scheduling, there's nothing to refund.</p>
           <a class="btn primary block" href="#S-B2">Back to candidates</a>
@@ -936,7 +1024,7 @@
           <div class="head you lit" id="hYou"><div class="who"><div class="av g2 s40">T</div><div><div class="nm">You</div><div class="ro">Tolu</div></div></div><div class="pctline"><span style="font-size:10px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.1em">Your score</span><span class="pct" id="pctYou">—</span></div><div class="climb"><i id="climbYou" style="width:0%"></i><span class="gate"></span></div></div>
         </div>
         <div class="turnflag" id="turnflag">Question <b id="qn">1</b> / 20</div>
-        <div class="esc" id="esc">⚡ Stay-cluster in Family — going deeper (L3)</div>
+        <div class="esc" id="esc"><svg class="icon"><use href="#i-bolt"/></svg> Stay-cluster in Family — going deeper (L3)</div>
         <div class="stage" id="stage"></div>
         <div class="base"><div class="blbl">David's reactions to you ↓</div><div class="tokens" id="tokens"></div></div>
         <div class="act" id="act"></div>
@@ -976,11 +1064,11 @@
             }else{
               $('turnflag').innerHTML='Question <b>'+(i+1)+'</b> / 20 · <b style="color:var(--spotlight-soft)">David is answering — you react</b>';
               $('stage').innerHTML=chip+'<div class="qtext">'+t.q+'</div><div class="ans"><div class="lbl">David\'s answer</div>'+t.a+'</div>';
-              $('act').innerHTML='<button class="btn ghost" onclick="DSHOW.react(\'stay\')">Stay<span class="sub">not feeling it</span></button><button class="btn move" onclick="DSHOW.react(\'move\')">♥ Move<span class="sub">I want you</span></button>';
+              $('act').innerHTML='<button class="btn ghost" onclick="DSHOW.react(\'stay\')">Stay<span class="sub">not feeling it</span></button><button class="btn move" onclick="DSHOW.react(\'move\')"><svg class="icon"><use href="#i-heart"/></svg> Move<span class="sub">I want you</span></button>';
             }
             paint();
           }
-          function addTok(kind){ const d=document.createElement('div'); d.className='tok '+(kind==='move'?'m':'s'); d.textContent=kind==='move'?'♥':'✕'; $('tokens').appendChild(d); }
+          function addTok(kind){ const d=document.createElement('div'); d.className='tok '+(kind==='move'?'m':'s'); d.innerHTML=kind==='move'?'<svg class="icon"><use href="#i-heart"/></svg>':'<svg class="icon"><use href="#i-x"/></svg>'; $('tokens').appendChild(d); }
           function lock(){ // you answered -> reveal David's verdict (interphase)
             const t=TURNS[i]; const v=t.verdict||'move'; yA+=W[t.dim]; if(v==='move') yE+=W[t.dim];
             addTok(v);
@@ -1013,7 +1101,7 @@
           <p class="muted" style="font-size:13px;max-width:30ch;margin:0 auto">You answered. For one held beat, you don't know. Then —</p>
           <div class="card" style="padding:26px;background:radial-gradient(70% 60% at 50% 40%, rgba(255,45,111,.18), var(--stage-800))">
             <div class="big-num" style="font-size:70px;color:var(--move);text-shadow:0 0 40px rgba(255,45,111,.5)">MOVE</div>
-            <div style="font-size:30px;margin-top:6px">♥ ♥ ✨</div>
+            <div style="font-size:30px;margin-top:6px;display:flex;gap:10px;justify-content:center;align-items:center"><svg class="icon" style="width:30px;height:30px;color:var(--move)"><use href="#i-heart"/></svg><svg class="icon" style="width:30px;height:30px;color:var(--move)"><use href="#i-heart"/></svg><svg class="icon" style="width:30px;height:30px;color:var(--bulb)"><use href="#i-sparkle"/></svg></div>
             <p class="muted" style="margin-top:10px;font-size:14px">David <b style="color:var(--move)">moved</b> on your answer.</p>
           </div>
           <div class="note gold">This is the change you asked for: the partner's verdict is <b>surfaced to the person being judged</b>, live. The reveal is the suspense — and the fun.</div>
@@ -1023,7 +1111,7 @@
 
       <section class="screen dark" id="S-D4" data-group="D · The Show" data-title="L3 Stay-cluster escalation">
         <div class="body" style="justify-content:center;text-align:center;gap:14px;padding:30px 24px">
-          <div class="chip l3" style="align-self:center;background:linear-gradient(180deg,#FFA0BD,var(--move));color:#fff">⚡ Stay-cluster · Family</div>
+          <div class="chip l3" style="align-self:center;background:linear-gradient(180deg,#FFA0BD,var(--move));color:#fff"><svg class="icon"><use href="#i-bolt"/></svg> Stay-cluster · Family</div>
           <h2 class="scrn" style="font-size:24px;max-width:18ch;margin:0 auto">Two Stays landed on Family — so we go deeper.</h2>
           <p class="muted" style="font-size:13px;max-width:30ch;margin:0 auto">When reactions cluster as Stays in the dimension you weigh most, the engine escalates to a harder L3 question instead of moving on. The model is probing the real issue.</p>
           <div class="card" style="text-align:left">
@@ -1035,9 +1123,9 @@
         </div>
       </section>
 
-      <section class="screen dark" id="S-D5" data-group="D · The Show" data-title="✅ Pass · it's a match">
+      <section class="screen dark" id="S-D5" data-group="D · The Show" data-title="✓ Pass · it's a match">
         <div class="body" style="justify-content:center;text-align:center;gap:16px;padding:30px 24px">
-          <div style="font-size:40px">🎉</div>
+          <div style="font-size:40px"><svg class="icon" style="width:40px;height:40px;color:var(--bulb)"><use href="#i-party"/></svg></div>
           <h2 class="scrn" style="font-size:40px;color:var(--pass);text-shadow:0 0 40px rgba(43,209,139,.4)">You passed.</h2>
           <div style="display:flex;justify-content:center;gap:24px">
             <div><div class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:.1em">You</div><div class="big-num" style="font-size:40px;color:var(--pass)" id="d5_you">84%</div></div>
@@ -1057,7 +1145,7 @@
             <div><div class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:.1em">David</div><div class="big-num" style="font-size:38px;color:var(--move-soft)" id="d6_them">66%</div></div>
           </div>
           <p class="muted" style="max-width:32ch;margin:0 auto;line-height:1.5" id="d6_msg">Stays clustered on a high-weight dimension, so other Moves couldn't buy it back. That's the model being honest, not unkind.</p>
-          <div class="note gold">✦ You have <b>one free retry</b> for this pair — the questions already won are swapped out; the ones that mattered stay.</div>
+          <div class="note gold"><svg class="icon"><use href="#i-sparkle"/></svg> You have <b>one free retry</b> for this pair — the questions already won are swapped out; the ones that mattered stay.</div>
           <a class="btn move block" href="#S-D1">Use the free retry</a>
           <a class="link" href="#S-B2">Maybe later — see other matches</a>
         </div>
@@ -1083,7 +1171,7 @@
 
       <section class="screen dark" id="S-D8" data-group="D · The Show" data-title="⚠ Disconnect & rejoin">
         <div class="body" style="justify-content:center;text-align:center;gap:16px;padding:40px 26px">
-          <div class="av g5 s72" style="margin:0 auto;animation:lp 1.6s infinite">⟳</div>
+          <div class="av g5 s72" style="margin:0 auto;animation:lp 1.6s infinite"><svg class="icon" style="width:30px;height:30px"><use href="#i-refresh"/></svg></div>
           <h2 class="scrn" style="font-size:26px">Reconnecting…</h2>
           <p class="muted" style="max-width:30ch;margin:0 auto;line-height:1.55">Your connection dropped. The session is paused, not lost — and a real disconnect will <b style="color:var(--ink)">never</b> be counted as a no-show.</p>
           <div class="card"><div class="prog"><i style="width:70%"></i></div><div class="muted" style="font-size:12px;margin-top:8px">Holding David on the line… both timers frozen.</div></div>
@@ -1104,9 +1192,9 @@
             <span class="tag" style="position:absolute;left:12px;bottom:12px;background:rgba(0,0,0,.5);color:#fff">You</span>
           </div>
           <div style="flex:0 0 auto;padding:16px;display:flex;gap:14px;justify-content:center;align-items:center;background:var(--stage-900)">
-            <div class="av g5 s52" style="cursor:pointer">🔇</div>
-            <div class="av g5 s52" style="cursor:pointer">📹</div>
-            <a class="av s52" href="#S-E2" style="background:var(--danger);cursor:pointer;text-decoration:none">✕</a>
+            <div class="av g5 s52" style="cursor:pointer"><svg class="icon" style="width:22px;height:22px"><use href="#i-mute"/></svg></div>
+            <div class="av g5 s52" style="cursor:pointer"><svg class="icon" style="width:22px;height:22px"><use href="#i-video"/></svg></div>
+            <a class="av s52" href="#S-E2" style="background:var(--danger);cursor:pointer;text-decoration:none"><svg class="icon" style="width:22px;height:22px"><use href="#i-x"/></svg></a>
           </div>
         </div>
       </section>
@@ -1127,11 +1215,11 @@
       <section class="screen paper" id="S-E3" data-group="E · Post-show" data-title="Date scheduling · venue">
         <div class="pbar"><a class="back" href="#S-E2">‹</a><h1>Pick a venue</h1></div>
         <div class="body">
-          <div class="note info">📍 Google Places · near Canary Wharf · 2-week window to meet.</div>
-          <div class="input" style="display:flex;align-items:center;gap:8px;color:var(--t-faint)">🔍 Search restaurants, bars…</div>
-          <a class="row" href="#S-E4"><div class="av g4 s52" style="border-radius:10px">🍽</div><div class="grow"><div class="t1">Boisdale of Canary Wharf</div><div class="t2">Scottish · ££ · 0.4 mi · ★4.6</div></div><span class="chev">›</span></a>
-          <a class="row" href="#S-E4"><div class="av g3 s52" style="border-radius:10px">🍷</div><div class="grow"><div class="t1">The Gun</div><div class="t2">Gastropub · ££ · 0.6 mi · ★4.5</div></div><span class="chev">›</span></a>
-          <a class="row" href="#S-E4"><div class="av g2 s52" style="border-radius:10px">☕</div><div class="grow"><div class="t1">Tom's Kitchen</div><div class="t2">Brasserie · ££ · 0.3 mi · ★4.3</div></div><span class="chev">›</span></a>
+          <div class="note info"><svg class="icon"><use href="#i-pin"/></svg> Google Places · near Canary Wharf · 2-week window to meet.</div>
+          <div class="input" style="display:flex;align-items:center;gap:8px;color:var(--t-faint)"><svg class="icon"><use href="#i-search"/></svg> Search restaurants, bars…</div>
+          <a class="row" href="#S-E4"><div class="av g4 s52" style="border-radius:10px"><svg class="icon" style="width:22px;height:22px"><use href="#i-utensils"/></svg></div><div class="grow"><div class="t1">Boisdale of Canary Wharf</div><div class="t2">Scottish · ££ · 0.4 mi · ★4.6</div></div><span class="chev">›</span></a>
+          <a class="row" href="#S-E4"><div class="av g3 s52" style="border-radius:10px"><svg class="icon" style="width:22px;height:22px"><use href="#i-wine"/></svg></div><div class="grow"><div class="t1">The Gun</div><div class="t2">Gastropub · ££ · 0.6 mi · ★4.5</div></div><span class="chev">›</span></a>
+          <a class="row" href="#S-E4"><div class="av g2 s52" style="border-radius:10px"><svg class="icon" style="width:22px;height:22px"><use href="#i-coffee"/></svg></div><div class="grow"><div class="t1">Tom's Kitchen</div><div class="t2">Brasserie · ££ · 0.3 mi · ★4.3</div></div><span class="chev">›</span></a>
         </div>
       </section>
 
@@ -1139,12 +1227,12 @@
         <div class="pbar"><h1>Date set</h1></div>
         <div class="body">
           <div class="card pad-lg center" style="display:flex;flex-direction:column;gap:8px;align-items:center">
-            <div style="font-size:36px">🍽</div>
+            <div style="font-size:36px"><svg class="icon" style="width:36px;height:36px"><use href="#i-utensils"/></svg></div>
             <h2 class="scrn" style="font-size:22px">Boisdale of Canary Wharf</h2>
             <div class="muted">Saturday 28 Jun · 7:30 pm · with David</div>
           </div>
-          <div class="row"><span>📅</span><div class="grow"><div class="t1">Reminder set</div><div class="t2">Email + push, 24h and 2h before</div></div></div>
-          <div class="row"><span>⏳</span><div class="grow"><div class="t1">Need more time?</div><div class="t2">One lifeline extension (needs David's OK)</div></div><span class="link">Extend</span></div>
+          <div class="row"><span><svg class="icon" style="width:20px;height:20px"><use href="#i-calendar"/></svg></span><div class="grow"><div class="t1">Reminder set</div><div class="t2">Email + push, 24h and 2h before</div></div></div>
+          <div class="row"><span><svg class="icon" style="width:20px;height:20px"><use href="#i-hourglass"/></svg></span><div class="grow"><div class="t1">Need more time?</div><div class="t2">One lifeline extension (needs David's OK)</div></div><span class="link">Extend</span></div>
           <div class="note">Demo: skip ahead to after the date.</div>
         </div>
         <div class="foot"><a class="btn primary block" href="#S-E5">▶ After the date</a></div>
@@ -1155,7 +1243,7 @@
         <div class="body">
           <div class="card center"><div style="font-size:30px;letter-spacing:6px">★★★★★</div><div class="muted" style="font-size:12px;margin-top:6px">Rate your date with David</div></div>
           <div class="field"><label>A line for us (private)</label><textarea class="textarea">Honestly the best first date in years. We're seeing each other again Friday.</textarea></div>
-          <div class="row"><span>🚩</span><div class="grow"><div class="t1">Report a concern</div><div class="t2">Safety issue, misconduct, or a bad actor</div></div><a class="link" href="#S-I1">Report</a></div>
+          <div class="row"><span><svg class="icon" style="width:20px;height:20px"><use href="#i-flag"/></svg></span><div class="grow"><div class="t1">Report a concern</div><div class="t2">Safety issue, misconduct, or a bad actor</div></div><a class="link" href="#S-I1">Report</a></div>
         </div>
         <div class="foot"><a class="btn move block" href="#S-E6">Submit feedback</a></div>
       </section>
@@ -1182,7 +1270,7 @@
 
       <section class="screen dark" id="S-E7" data-group="E · Post-show" data-title="Referral">
         <div class="body" style="justify-content:center;text-align:center;gap:18px;padding:40px 26px">
-          <div style="font-size:40px">💌</div>
+          <div style="font-size:40px"><svg class="icon" style="width:40px;height:40px;color:var(--move)"><use href="#i-mailheart"/></svg></div>
           <h2 class="scrn" style="font-size:30px;max-width:16ch;margin:0 auto">Know someone tired of wasting weekends?</h2>
           <p class="muted" style="max-width:30ch;margin:0 auto">You found your person here. The best thing you can do for a friend is send them in — they skip the queue, you both get a free session.</p>
           <div class="card" style="display:flex;align-items:center;justify-content:space-between"><span class="muted" style="font-size:13px">makeamove.app/r/<b style="color:var(--ink)">tolu</b></span><span class="link">Copy</span></div>
@@ -1236,13 +1324,13 @@
         </div>
         <div class="act" style="display:flex;gap:10px;padding:10px 18px 20px">
           <a class="btn ghost block" href="#S-F4">Stay<span class="sub">not feeling it</span></a>
-          <a class="btn move block" href="#S-F4">♥ Move<span class="sub">I want this</span></a>
+          <a class="btn move block" href="#S-F4"><svg class="icon"><use href="#i-heart"/></svg> Move<span class="sub">I want this</span></a>
         </div>
       </section>
 
       <section class="screen dark" id="S-F4" data-group="F · Async game" data-title="Async result + buy-in soft-hold">
         <div class="body" style="justify-content:center;text-align:center;gap:16px;padding:30px 24px">
-          <div style="font-size:36px">🎉</div>
+          <div style="font-size:36px"><svg class="icon" style="width:36px;height:36px;color:var(--bulb)"><use href="#i-party"/></svg></div>
           <h2 class="scrn" style="font-size:34px;color:var(--pass)">You passed · 78%</h2>
           <p class="muted" style="max-width:30ch;margin:0 auto;line-height:1.5">You cleared Samuel's 70% gate. He consented when you invited — so his <b>50% buy-in</b>, soft-held at consent, is now captured. It's a mutual match.</p>
           <div class="card" style="text-align:left">
@@ -1261,10 +1349,10 @@
           <div class="card pad-lg" style="background:linear-gradient(150deg,#121B38,#1A2547);color:var(--ink);border:none">
             <div class="muted" style="color:var(--ink-dim);font-size:12px">Session credits</div>
             <div class="big-num" style="font-size:48px;color:var(--bulb)">1</div>
-            <span class="tag" style="background:rgba(255,182,39,.18);color:var(--bulb-soft)">🎁 Free during launch</span>
+            <span class="tag" style="background:rgba(255,182,39,.18);color:var(--bulb-soft)"><svg class="icon"><use href="#i-gift"/></svg> Free during launch</span>
           </div>
           <div class="note gold">Free moratorium active — no charges until ~200 users or 3 months, whichever comes first. Every new user gets 1 free credit.</div>
-          <div class="row"><span>🧾</span><div class="grow"><div class="t1">Soft-hold · David session</div><div class="t2">Sat 21 Jun · captured on play</div></div><span class="tag">£0.00</span></div>
+          <div class="row"><span><svg class="icon" style="width:20px;height:20px"><use href="#i-receipt"/></svg></span><div class="grow"><div class="t1">Soft-hold · David session</div><div class="t2">Sat 21 Jun · captured on play</div></div><span class="tag">£0.00</span></div>
         </div>
         <div class="foot"><a class="btn primary block" href="#S-G2">Buy more credits</a></div>
       </section>
@@ -1305,7 +1393,7 @@
             <h2 class="scrn" style="font-size:22px">£19.00 refunded</h2>
             <div class="muted" style="font-size:13px">Confirmed disconnect — your forfeited hold was returned in full.</div>
           </div>
-          <div class="row"><span>🧾</span><div class="grow"><div class="t1">Ref · MM-48213</div><div class="t2">Issued by Bisi · audit-logged</div></div><span class="tag pass">Done</span></div>
+          <div class="row"><span><svg class="icon" style="width:20px;height:20px"><use href="#i-receipt"/></svg></span><div class="grow"><div class="t1">Ref · MM-48213</div><div class="t2">Issued by Bisi · audit-logged</div></div><span class="tag pass">Done</span></div>
           <div class="note info">Multi-currency, dual-side refunds run through a full audit trail. You'll also get an email receipt.</div>
         </div>
         <div class="foot"><a class="btn primary block" href="#S-B2">Back to app</a></div>
@@ -1315,12 +1403,12 @@
       <section class="screen paper" id="S-H1" data-group="H · Operator" data-title="Dashboard home (4 hats)">
         <div class="pbar" style="background:var(--stage-900);color:var(--ink);padding-bottom:14px"><div class="av g5 s40">B</div><div style="flex:1"><h1 style="font-size:18px">Operator console</h1><div class="muted" style="color:var(--ink-dim);font-size:11px">Bisi · Mon 09:00 · single ops role</div></div><span class="tag" style="background:rgba(255,182,39,.18);color:var(--bulb-soft)">MFA on</span></div>
         <div class="body">
-          <div class="note danger">⚠ 1 user report needs review first.</div>
-          <a class="row" href="#S-H2"><div class="av g2 s40">🛡</div><div class="grow"><div class="t1">Trust &amp; safety</div><div class="t2">1 new report · harassment</div></div><span class="tag danger">1</span></a>
-          <a class="row" href="#S-H3"><div class="av g1 s40">📊</div><div class="grow"><div class="t1">Question calibration</div><div class="t2">3 questions flagged by correlation engine</div></div><span class="tag warn">3</span></a>
-          <a class="row" href="#S-H4"><div class="av g4 s40">🔎</div><div class="grow"><div class="t1">False-negative audit</div><div class="t2">22 failed sessions queued (weekly)</div></div><span class="tag">22</span></a>
-          <a class="row" href="#S-H5"><div class="av g3 s40">🎫</div><div class="grow"><div class="t1">Support tickets</div><div class="t2">No-show dispute · scheduling query</div></div><span class="tag warn">2</span></a>
-          <a class="row" href="#S-H6"><div class="av g5 s40">⚙</div><div class="grow"><div class="t1">Configuration</div><div class="t2">Thresholds &amp; fees — admin-adjustable</div></div><span class="chev">›</span></a>
+          <div class="note danger"><svg class="icon"><use href="#i-warn"/></svg> 1 user report needs review first.</div>
+          <a class="row" href="#S-H2"><div class="av g2 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-shield"/></svg></div><div class="grow"><div class="t1">Trust &amp; safety</div><div class="t2">1 new report · harassment</div></div><span class="tag danger">1</span></a>
+          <a class="row" href="#S-H3"><div class="av g1 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-chart"/></svg></div><div class="grow"><div class="t1">Question calibration</div><div class="t2">3 questions flagged by correlation engine</div></div><span class="tag warn">3</span></a>
+          <a class="row" href="#S-H4"><div class="av g4 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-search"/></svg></div><div class="grow"><div class="t1">False-negative audit</div><div class="t2">22 failed sessions queued (weekly)</div></div><span class="tag">22</span></a>
+          <a class="row" href="#S-H5"><div class="av g3 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-ticket"/></svg></div><div class="grow"><div class="t1">Support tickets</div><div class="t2">No-show dispute · scheduling query</div></div><span class="tag warn">2</span></a>
+          <a class="row" href="#S-H6"><div class="av g5 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-gear"/></svg></div><div class="grow"><div class="t1">Configuration</div><div class="t2">Thresholds &amp; fees — admin-adjustable</div></div><span class="chev">›</span></a>
         </div>
       </section>
 
@@ -1594,8 +1682,10 @@
       const a=ageFrom(sel), n=document.getElementById('dobAge');
       if(n){
         if(a>=18){ n.className='note pass'; n.innerHTML='✓ You are '+a+' — over 18. Verified once via Onfido / Yoti at registration; nothing more is shared.'; }
-        else { n.className='note danger'; n.innerHTML='<b>You must be 18 or older.</b> That date makes you '+a+' — you can’t continue.'; }
+        else { n.className='note danger'; n.innerHTML='<b>You must be 18 or older.</b> That date makes you '+a+' — your application will be rejected.'; }
       }
+      const nx=document.getElementById('dobNext');
+      if(nx) nx.setAttribute('href', a>=18 ? '#S-Q3' : '#S-QREJ');   // under-18 → rejection screen
     }
     cal.addEventListener('click',e=>{
       const nav=e.target.closest('.cal-nav');
@@ -1617,7 +1707,7 @@
   /* ---- nationality branching (Q3) + path-aware numbering ----
      Nigeria → state of origin + genotype (11 questions total)
      other African nations → region of origin (10)
-     everywhere else → birth town (10) */
+     everywhere else → no extra origin question (9) */
   (function(){
     const AFRICAN=new Set(['Egypt','Ghana','Kenya','South Africa']);
     const natSel=document.getElementById('natSel');
@@ -1626,7 +1716,7 @@
       const n=natSel.value;
       if(n==='Nigeria') return ['S-Q3A','S-Q3B'];
       if(AFRICAN.has(n)) return ['S-Q3R'];
-      return ['S-Q3T'];
+      return [];
     }
     function renumber(){
       const path=['S-Q1','S-Q2','S-Q3',...branch(),'S-Q4','S-Q5','S-Q6','S-Q7','S-Q8','S-Q9'];
