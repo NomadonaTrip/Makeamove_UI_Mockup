@@ -530,19 +530,22 @@
         <div class="foot"><a class="btn primary block" href="#S-Q4">Next</a></div>
       </section>
 
-      <section class="screen paper" id="S-Q4" data-group="A · Onboarding" data-title="Q4 · Marital status">
+      <section class="screen paper" id="S-Q4" data-group="A · Onboarding" data-title="Q4 · Relationship status">
         <div class="pbar"><a class="back" id="q4back" href="#S-Q3">‹</a><h1 style="font-size:16px">Question 5 of 10</h1><span class="muted" style="font-size:12px">Status</span></div>
         <div class="body">
           <div class="stepdots"><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span></div>
           <span class="chip" style="align-self:flex-start">Status</span>
-          <h2 class="scrn" style="font-size:25px">What's your marital status?</h2>
+          <h2 class="scrn" style="font-size:25px">What's your relationship status?</h2>
           <div style="display:flex; flex-direction:column; gap:10px">
-            <div class="opt sel" onclick="pick(this)"><span class="dot"></span>Single</div>
-            <div class="opt" onclick="pick(this)"><span class="dot"></span>Divorced</div>
-            <div class="opt" onclick="pick(this)"><span class="dot"></span>Widowed</div>
+            <div class="opt" onclick="pick(this)"><span class="dot"></span>Engaged</div>
+            <div class="opt" onclick="pick(this)"><span class="dot"></span>Married</div>
+            <div class="opt" onclick="pick(this)"><span class="dot"></span>In a Civil Partnership</div>
+            <div class="opt sel" onclick="pick(this)"><span class="dot"></span>Divorced</div>
             <div class="opt" onclick="pick(this)"><span class="dot"></span>Separated</div>
+            <div class="opt" onclick="pick(this)"><span class="dot"></span>Widowed</div>
+            <div class="opt" onclick="pick(this)"><span class="dot"></span>In a complicated relationship</div>
           </div>
-          <div class="note">Married users aren't eligible — MakeaMove is for people genuinely free to meet someone new.</div>
+          <div class="note">We use this to match you with people at a compatible life stage.</div>
         </div>
         <div class="foot"><a class="btn primary block" href="#S-Q5">Next</a></div>
       </section>
@@ -681,96 +684,145 @@
             <span class="tag move">Must welcome a blended family</span><span class="tag">London only</span><span class="tag">Non-smoker</span><span class="tag" style="border:1px dashed var(--line-strong)"><svg class="icon" style="width:11px;height:11px"><use href="#i-plus"/></svg> add</span>
           </div>
           <div class="note info">Tell us a little more about yourself and your preferences — every answer sharpens who we put in front of you.</div>
-          <label class="muted" style="font-size:12px;font-weight:700">About you</label>
-          <a class="row" href="#S-P1"><div class="av g1 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-height"/></svg></div><div class="grow"><div class="t1">Your height</div><div class="t2">Tall, short or average?</div></div><span class="chev">›</span></a>
-          <a class="row" href="#S-P2"><div class="av g3 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-dumbbell"/></svg></div><div class="grow"><div class="t1">Your build</div><div class="t2">Fat, slim, average or athletic/muscular?</div></div><span class="chev">›</span></a>
-          <label class="muted" style="font-size:12px;font-weight:700">Partner preferences</label>
-          <a class="row" href="#S-P3"><div class="av g4 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-globe"/></svg></div><div class="grow"><div class="t1">Country &amp; tribe</div><div class="t2">From which country and tribe can you date?</div></div><span class="chev">›</span></a>
-          <a class="row" href="#S-P4"><div class="av g2 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-ring"/></svg></div><div class="grow"><div class="t1">Marital status</div><div class="t2">What marital status of a partner do you prefer?</div></div><span class="chev">›</span></a>
-          <a class="row" href="#S-P5"><div class="av g5 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-person"/></svg></div><div class="grow"><div class="t1">Body shape</div><div class="t2">What shape of a partner do you prefer?</div></div><span class="chev">›</span></a>
+          <label class="muted" style="font-size:12px;font-weight:700">Tell us more</label>
+          <a class="row" href="#S-P1"><div class="av g1 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-person"/></svg></div><div class="grow"><div class="t1">About you</div><div class="t2">Height, build, skin tone, education, income</div></div><span class="chev">›</span></a>
+          <a class="row" href="#S-P2"><div class="av g2 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-heart"/></svg></div><div class="grow"><div class="t1">Partner preferences</div><div class="t2">Who you can date — age, tribe, status, shape…</div></div><span class="chev">›</span></a>
+          <a class="row" href="#S-P3"><div class="av g3 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-sparkle"/></svg></div><div class="grow"><div class="t1">Personality &amp; lifestyle</div><div class="t2">Temperament, hobbies, likes &amp; turn-offs</div></div><span class="chev">›</span></a>
+          <a class="row" href="#S-P4"><div class="av g4 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-mailheart"/></svg></div><div class="grow"><div class="t1">Love &amp; intimacy</div><div class="t2">Romance, affection and expectations</div></div><span class="chev">›</span></a>
+          <a class="row" href="#S-P5"><div class="av g5 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-ring"/></svg></div><div class="grow"><div class="t1">Marriage &amp; family</div><div class="t2">Readiness, kids, wedding, family views</div></div><span class="chev">›</span></a>
         </div>
         <div class="foot"><a class="btn move block" href="#S-B1">Done · find my matches</a></div>
       </section>
 
-      <!-- ---- profile preference questions (from S-A9) ---- -->
-      <section class="screen paper" id="S-P1" data-group="A · Onboarding" data-title="Profile · Your height">
+      <!-- ---- profile preference questions (from S-A9) · covers the 30-question matchmaking form ---- -->
+      <section class="screen paper" id="S-P1" data-group="A · Onboarding" data-title="Profile · About you">
         <div class="pbar"><a class="back" href="#S-A9">‹</a><h1 style="font-size:16px">About you</h1></div>
         <div class="body">
           <span class="chip" style="align-self:flex-start">About you</span>
-          <h2 class="scrn" style="font-size:25px">Are you tall, short or average in height?</h2>
-          <div style="display:flex; flex-direction:column; gap:10px">
-            <div class="opt" onclick="pick(this)"><span class="dot"></span>Tall</div>
-            <div class="opt sel" onclick="pick(this)"><span class="dot"></span>Average</div>
-            <div class="opt" onclick="pick(this)"><span class="dot"></span>Short</div>
+          <h2 class="scrn" style="font-size:25px">The basics, honestly.</h2>
+          <div class="note">Shown to candidates alongside your photos — honest answers set honest expectations before the show.</div>
+          <div class="field"><label>How tall are you? <span id="htVal" style="float:right;font-weight:800;color:var(--move)">5′7″ · 170 cm</span></label>
+            <input type="range" class="hslider" min="140" max="210" value="170" oninput="htSync(this)" aria-label="Height in centimetres" style="width:100%;accent-color:var(--move);margin-top:6px">
           </div>
-          <div class="note">Shown to candidates alongside your photos — it helps set honest expectations before the show.</div>
+          <div class="field"><label>Are you fat, slim, average or athletic/muscular?</label>
+            <div style="display:flex;flex-direction:column;gap:8px"><div class="opt" onclick="pick(this)"><span class="dot"></span>Slim</div><div class="opt sel" onclick="pick(this)"><span class="dot"></span>Average</div><div class="opt" onclick="pick(this)"><span class="dot"></span>Athletic / muscular</div><div class="opt" onclick="pick(this)"><span class="dot"></span>Fat</div></div>
+          </div>
+          <div class="field"><label>What's your skin tone?</label>
+            <div style="display:flex;flex-direction:column;gap:8px"><div class="opt" onclick="pick(this)"><span class="dot"></span>White</div><div class="opt" onclick="pick(this)"><span class="dot"></span>Fair</div><div class="opt sel" onclick="pick(this)"><span class="dot"></span>Brown</div><div class="opt" onclick="pick(this)"><span class="dot"></span>Black</div></div>
+          </div>
+          <div class="field"><label>Average monthly income ($, £ or ₦)</label><input class="input" placeholder="e.g. £2,500"></div>
+          <div class="field"><label>Highest educational qualification</label>
+            <div class="select"><select aria-label="Highest educational qualification">
+              <option value="">Select…</option><option>Secondary school</option><option>Diploma / NCE</option>
+              <option selected>Bachelor's degree</option><option>Master's degree</option><option>Doctorate</option><option>Other</option>
+            </select></div>
+          </div>
         </div>
         <div class="foot"><a class="btn primary block" href="#S-A9">Save · back to profile</a></div>
       </section>
 
-      <section class="screen paper" id="S-P2" data-group="A · Onboarding" data-title="Profile · Your build">
-        <div class="pbar"><a class="back" href="#S-A9">‹</a><h1 style="font-size:16px">About you</h1></div>
-        <div class="body">
-          <span class="chip" style="align-self:flex-start">About you</span>
-          <h2 class="scrn" style="font-size:25px">Are you fat, slim, average or athletic/muscular?</h2>
-          <div style="display:flex; flex-direction:column; gap:10px">
-            <div class="opt" onclick="pick(this)"><span class="dot"></span>Slim</div>
-            <div class="opt sel" onclick="pick(this)"><span class="dot"></span>Average</div>
-            <div class="opt" onclick="pick(this)"><span class="dot"></span>Athletic / muscular</div>
-            <div class="opt" onclick="pick(this)"><span class="dot"></span>Fat</div>
-          </div>
-          <div class="note">Honesty wins here — your matches will meet you in person.</div>
-        </div>
-        <div class="foot"><a class="btn primary block" href="#S-A9">Save · back to profile</a></div>
-      </section>
-
-      <section class="screen paper" id="S-P3" data-group="A · Onboarding" data-title="Profile · Country &amp; tribe preference">
+      <section class="screen paper" id="S-P2" data-group="A · Onboarding" data-title="Profile · Partner preferences">
         <div class="pbar"><a class="back" href="#S-A9">‹</a><h1 style="font-size:16px">Partner preferences</h1></div>
         <div class="body">
           <span class="chip" style="align-self:flex-start">Partner preference</span>
-          <h2 class="scrn" style="font-size:25px">From which country and tribe can you date?</h2>
-          <div style="display:flex; flex-direction:column; gap:10px">
-            <div class="opt sel" onclick="pick(this)"><span class="dot"></span>Anywhere — no preference</div>
-            <div class="opt" onclick="pick(this)"><span class="dot"></span>My own country only</div>
-            <div class="opt" onclick="pick(this)"><span class="dot"></span>My own tribe only</div>
-            <div class="opt" onclick="pick(this)"><span class="dot"></span>Specific countries or tribes</div>
+          <h2 class="scrn" style="font-size:25px">Who can we put in front of you?</h2>
+          <div class="note info">These questions are multi-select — tap <b>every</b> option you can accept.</div>
+          <div class="field"><label>What age range do you prefer to date? <span style="font-weight:400;color:var(--t-dim)">(pick up to 3)</span></label>
+            <div style="display:flex;flex-wrap:wrap;gap:8px"><div class="opt" onclick="togCap(this,3)">21 – 25</div><div class="opt" onclick="togCap(this,3)">26 – 30</div><div class="opt" onclick="togCap(this,3)">31 – 35</div><div class="opt sel" onclick="togCap(this,3)">36 – 40</div><div class="opt sel" onclick="togCap(this,3)">41 – 45</div><div class="opt" onclick="togCap(this,3)">46 – 50</div><div class="opt" onclick="togCap(this,3)">51 – 60</div><div class="opt" onclick="togCap(this,3)">61 – 70</div><div class="opt" onclick="togCap(this,3)">70+</div></div>
+          </div>
+          <div class="field"><label>From which country and tribe can you date?</label>
+            <div style="display:flex;flex-direction:column;gap:8px"><div class="opt sel" onclick="pick(this)"><span class="dot"></span>Anywhere — no preference</div><div class="opt" onclick="pick(this)"><span class="dot"></span>My own country only</div><div class="opt" onclick="pick(this)"><span class="dot"></span>My own tribe only</div><div class="opt" onclick="pick(this)"><span class="dot"></span>Specific countries or tribes</div></div>
           </div>
           <div class="field"><label>Countries / tribes <span style="font-weight:400">(if specific)</span></label><input class="input" placeholder="e.g. Nigeria · Yoruba, Ghana · Ashanti…"></div>
-          <div class="note">A soft filter, not a dealbreaker — it shapes your candidate pool for cultural fit.</div>
+          <div class="field"><label>What marital status of a partner do you prefer?</label>
+            <div style="display:flex;flex-direction:column;gap:8px"><div class="opt sel" onclick="tog(this)">Single — never married</div><div class="opt sel" onclick="tog(this)">Divorced</div><div class="opt" onclick="tog(this)">Widowed</div><div class="opt" onclick="tog(this)">Separated</div></div>
+          </div>
+          <div class="field"><label>What shape of a partner do you prefer?</label>
+            <div style="display:flex;flex-direction:column;gap:8px"><div class="opt sel" onclick="tog(this)">Slim</div><div class="opt sel" onclick="tog(this)">Average</div><div class="opt sel" onclick="tog(this)">Athletic / muscular</div><div class="opt" onclick="tog(this)">Fat</div></div>
+          </div>
+          <div class="field"><label>Can you date someone who has been married before?</label>
+            <div style="display:flex;flex-direction:column;gap:8px"><div class="opt sel" onclick="pick(this)"><span class="dot"></span>Yes</div><div class="opt" onclick="pick(this)"><span class="dot"></span>No</div></div>
+          </div>
+          <div class="field"><label>Can you date someone who has a child — or two or more?</label>
+            <div style="display:flex;flex-direction:column;gap:8px"><div class="opt sel" onclick="pick(this)"><span class="dot"></span>Yes</div><div class="opt" onclick="pick(this)"><span class="dot"></span>No</div><div class="opt" onclick="pick(this)"><span class="dot"></span>Maybe — if it's not more than one child</div></div>
+          </div>
+          <div class="field"><label>Could you date a rich, average or jobless person?</label>
+            <div style="display:flex;flex-direction:column;gap:8px"><div class="opt sel" onclick="tog(this)">Rich</div><div class="opt sel" onclick="tog(this)">Average</div><div class="opt" onclick="tog(this)">Jobless</div><div class="opt" onclick="tog(this)">Indifferent</div></div>
+          </div>
+          <div class="field"><label>Which skin tones do you prefer?</label>
+            <div style="display:flex;flex-wrap:wrap;gap:8px"><div class="opt" onclick="tog(this)">White</div><div class="opt sel" onclick="tog(this)">Fair</div><div class="opt sel" onclick="tog(this)">Brown</div><div class="opt sel" onclick="tog(this)">Black</div></div>
+          </div>
+          <div class="field"><label>Lowest education you can accept</label>
+            <div class="select"><select aria-label="Lowest education you can accept">
+              <option selected>No preference</option><option>Secondary school</option><option>Diploma / NCE</option>
+              <option>Bachelor's degree</option><option>Master's degree</option>
+            </select></div>
+          </div>
+          <div class="field"><label>Describe the spouse you desire — physically &amp; generally</label><textarea class="textarea">Tall-ish, warm eyes, steady career, a man who plans and follows through — and laughs at himself.</textarea></div>
+          <div class="note">Soft filters shape your candidate pool; your genotype dealbreaker from onboarding is always enforced on top.</div>
         </div>
         <div class="foot"><a class="btn primary block" href="#S-A9">Save · back to profile</a></div>
       </section>
 
-      <section class="screen paper" id="S-P4" data-group="A · Onboarding" data-title="Profile · Partner marital status">
-        <div class="pbar"><a class="back" href="#S-A9">‹</a><h1 style="font-size:16px">Partner preferences</h1></div>
+      <section class="screen paper" id="S-P3" data-group="A · Onboarding" data-title="Profile · Personality &amp; lifestyle">
+        <div class="pbar"><a class="back" href="#S-A9">‹</a><h1 style="font-size:16px">Personality &amp; lifestyle</h1></div>
         <div class="body">
-          <span class="chip" style="align-self:flex-start">Partner preference</span>
-          <h2 class="scrn" style="font-size:25px">What marital status of a partner do you prefer?</h2>
-          <div style="display:flex; flex-direction:column; gap:10px">
-            <div class="opt sel" onclick="pick(this)"><span class="dot"></span>No preference</div>
-            <div class="opt" onclick="pick(this)"><span class="dot"></span>Single — never married</div>
-            <div class="opt" onclick="pick(this)"><span class="dot"></span>Divorced</div>
-            <div class="opt" onclick="pick(this)"><span class="dot"></span>Widowed</div>
-            <div class="opt" onclick="pick(this)"><span class="dot"></span>Separated</div>
+          <span class="chip" style="align-self:flex-start">Personality</span>
+          <h2 class="scrn" style="font-size:25px">How you move through the world.</h2>
+          <div class="field"><label>Are you an introvert, extrovert or in-between?</label>
+            <div style="display:flex;flex-direction:column;gap:8px"><div class="opt" onclick="pick(this)"><span class="dot"></span>Introvert</div><div class="opt" onclick="pick(this)"><span class="dot"></span>Extrovert</div><div class="opt sel" onclick="pick(this)"><span class="dot"></span>In between</div></div>
           </div>
-          <div class="note">Married users can't join MakeaMove, so everyone you meet is genuinely free to date.</div>
+          <div class="field"><label>Are you more outgoing, or more of an indoor person?</label>
+            <div style="display:flex;flex-direction:column;gap:8px"><div class="opt sel" onclick="pick(this)"><span class="dot"></span>More outgoing</div><div class="opt" onclick="pick(this)"><span class="dot"></span>More of an indoor person</div></div>
+          </div>
+          <div class="field"><label>Are you more calm, or do you get angry or irritated easily?</label>
+            <div style="display:flex;flex-direction:column;gap:8px"><div class="opt sel" onclick="pick(this)"><span class="dot"></span>More calm</div><div class="opt" onclick="pick(this)"><span class="dot"></span>I get angry or irritated easily</div><div class="opt" onclick="pick(this)"><span class="dot"></span>Neither, really</div></div>
+          </div>
+          <div class="field"><label>Name two or more of your hobbies</label><textarea class="textarea">Salsa classes, weekend hikes with the kids, amateur baking.</textarea></div>
+          <div class="field"><label>What are your likes and attractions?</label><textarea class="textarea">Wit, ambition, a man who plans. Good shoes don't hurt.</textarea></div>
+          <div class="field"><label>What are your dislikes or turn-offs?</label><textarea class="textarea">Lateness. Checking your phone mid-conversation.</textarea></div>
+          <div class="note">Seeds your <b>Lifestyle</b> and <b>Values</b> dimension weights — and gives the show sharper questions.</div>
         </div>
         <div class="foot"><a class="btn primary block" href="#S-A9">Save · back to profile</a></div>
       </section>
 
-      <section class="screen paper" id="S-P5" data-group="A · Onboarding" data-title="Profile · Partner body shape">
-        <div class="pbar"><a class="back" href="#S-A9">‹</a><h1 style="font-size:16px">Partner preferences</h1></div>
+      <section class="screen paper" id="S-P4" data-group="A · Onboarding" data-title="Profile · Love &amp; intimacy">
+        <div class="pbar"><a class="back" href="#S-A9">‹</a><h1 style="font-size:16px">Love &amp; intimacy</h1></div>
         <div class="body">
-          <span class="chip" style="align-self:flex-start">Partner preference</span>
-          <h2 class="scrn" style="font-size:25px">What shape of a partner do you prefer?</h2>
-          <div style="display:flex; flex-direction:column; gap:10px">
-            <div class="opt sel" onclick="pick(this)"><span class="dot"></span>No preference</div>
-            <div class="opt" onclick="pick(this)"><span class="dot"></span>Slim</div>
-            <div class="opt" onclick="pick(this)"><span class="dot"></span>Average</div>
-            <div class="opt" onclick="pick(this)"><span class="dot"></span>Athletic / muscular</div>
-            <div class="opt" onclick="pick(this)"><span class="dot"></span>Fat</div>
+          <span class="chip l3" style="align-self:flex-start">Intimacy · private</span>
+          <h2 class="scrn" style="font-size:25px">Romance, honestly.</h2>
+          <div class="note info">Never shown to matches — used only to score compatibility on the <b>Intimacy</b> dimension, consented separately.</div>
+          <div class="field"><label>How do you show romance and affection?</label><textarea class="textarea">Acts of service, long voice notes, remembering the small things.</textarea></div>
+          <div class="field"><label>Do you like sex a lot?</label>
+            <div style="display:flex;flex-direction:column;gap:8px"><div class="opt sel" onclick="pick(this)"><span class="dot"></span>Yes</div><div class="opt" onclick="pick(this)"><span class="dot"></span>No</div></div>
           </div>
-          <div class="note">A soft preference — chemistry on the show can always outvote a checkbox.</div>
+          <div class="field"><label>Do you prefer sex while dating, or can you wait till after marriage?</label>
+            <div style="display:flex;flex-direction:column;gap:8px"><div class="opt" onclick="pick(this)"><span class="dot"></span>Sex while dating</div><div class="opt" onclick="pick(this)"><span class="dot"></span>Wait till after marriage</div><div class="opt sel" onclick="pick(this)"><span class="dot"></span>Either works</div></div>
+          </div>
+        </div>
+        <div class="foot"><a class="btn primary block" href="#S-A9">Save · back to profile</a></div>
+      </section>
+
+      <section class="screen paper" id="S-P5" data-group="A · Onboarding" data-title="Profile · Marriage &amp; family">
+        <div class="pbar"><a class="back" href="#S-A9">‹</a><h1 style="font-size:16px">Marriage &amp; family</h1></div>
+        <div class="body">
+          <span class="chip" style="align-self:flex-start">Family</span>
+          <h2 class="scrn" style="font-size:25px">Where this is all heading.</h2>
+          <div class="field"><label>Are you eager and ready for marriage, or willing to wait?</label>
+            <div style="display:flex;flex-direction:column;gap:8px"><div class="opt sel" onclick="pick(this)"><span class="dot"></span>So eager — ready now</div><div class="opt" onclick="pick(this)"><span class="dot"></span>Willing to wait</div></div>
+          </div>
+          <div class="field"><label>How many kids do you wish to have?</label>
+            <div class="select"><select aria-label="How many kids do you wish to have">
+              <option>None</option><option>1</option><option selected>2</option><option>3</option><option>4 or more</option>
+            </select></div>
+          </div>
+          <div class="field"><label>Do you want a big wedding or a small one?</label>
+            <div style="display:flex;flex-direction:column;gap:8px"><div class="opt" onclick="pick(this)"><span class="dot"></span>Big wedding</div><div class="opt sel" onclick="pick(this)"><span class="dot"></span>Small wedding</div><div class="opt" onclick="pick(this)"><span class="dot"></span>Indifferent</div></div>
+          </div>
+          <div class="field"><label>Is your family receptive to other tribes?</label>
+            <div style="display:flex;flex-direction:column;gap:8px"><div class="opt sel" onclick="pick(this)"><span class="dot"></span>Yes</div><div class="opt" onclick="pick(this)"><span class="dot"></span>No</div><div class="opt" onclick="pick(this)"><span class="dot"></span>Can't say</div></div>
+          </div>
+          <div class="note">Feeds your <b>Family</b> dimension — the heaviest weight in the show for most players.</div>
         </div>
         <div class="foot"><a class="btn primary block" href="#S-A9">Save · back to profile</a></div>
       </section>
@@ -1643,6 +1695,18 @@
   }
   function pick(el){ const p=el.parentElement; [...p.children].forEach(c=>{ if(c.classList.contains('opt')) c.classList.remove('sel'); }); el.classList.add('sel'); }
   window.pick = pick;
+  window.tog = el => el.classList.toggle('sel');
+  window.togCap = (el,max) => {
+    if(!el.classList.contains('sel')){
+      const n=[...el.parentElement.children].filter(c=>c.classList.contains('sel')).length;
+      if(n>=max) return;
+    }
+    el.classList.toggle('sel');
+  };
+  window.htSync = el => {
+    const cm=+el.value, tin=Math.round(cm/2.54), ft=Math.floor(tin/12), inch=tin%12;
+    const t=document.getElementById('htVal'); if(t) t.textContent=`${ft}′${inch}″ · ${cm} cm`;
+  };
   window.addEventListener('hashchange', route);
   window.addEventListener('DOMContentLoaded', route);
 

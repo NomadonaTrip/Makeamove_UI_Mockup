@@ -1,12 +1,27 @@
-1. Remove "the onboarding gate" header from above the hero text
-2. Change "finish your profile" to "complete your profile"
-   Invite users to give us more information about their preferences
-   include the following questions as options:
-   a. From which country and tribe can you date
-   b. What marital status of a partner do you prefer
-   c. Are you tall, short or average in height?
-   d What shape of a partner do you prefer
-   e. Are you fat, slim, average or athletic/muscular
-   Take a look at the questions in the form, identify the questions that are not captured in the onboarding flow, categorize those questions and render them as buttons on the http://127.0.0.1:3000/index.html?vscode-livepreview=true#S-A9 page to replace the current placeholders. Each button enables the system collect some more information about the user.
-3. Remove the "Which town were you born in?" question from non-Nigerians
-4. Birth date: if age is less than 18 years, system informs the user they're too young and rejects their application.
+For Relationship Status, use these options:
+
+1. Engaged
+
+2. Married
+
+3. In a Civil Partnership
+
+4. Divorced
+
+5. Separated
+
+6. Widowed
+
+7. In a complicated relationship
+
+In the height subsection of the "The basics, honestly" page, height should be a numerical slider the user can adjust to specify their height.
+
+Change "Are you white, fair, brown or black question and its options. to "What's your skin tone?"
+
+Remove the "Are you rich, comfortable, average, struggling — or dependent on others?" and its options.
+
+In the Are you rich, comfortable, average, struggling — or dependent on others? section,
+
+add 51-60 as an option, 61-70, and 70+. Limit the number of selectable options to 3.
+
+Change "Which skin tones can you date?" to "which skin tones do you prefer?"
