@@ -451,7 +451,7 @@
         <div class="body">
           <div class="stepdots"><span class="sd on"></span><span class="sd on"></span><span class="sd on"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span><span class="sd"></span></div>
           <span class="chip" style="align-self:flex-start">Identity</span>
-          <h2 class="scrn" style="font-size:25px">What's your nationality?</h2>
+          <h2 class="scrn" style="font-size:25px">What's your country of citizenship?</h2>
           <p class="muted" style="font-size:13.5px; margin-top:-4px">Your country of citizenship — the country that issued your passport.</p>
           <div class="field"><label>Country of citizenship</label>
             <div class="select"><select id="natSel" aria-label="Country of citizenship">
@@ -537,6 +537,7 @@
           <span class="chip" style="align-self:flex-start">Status</span>
           <h2 class="scrn" style="font-size:25px">What's your relationship status?</h2>
           <div style="display:flex; flex-direction:column; gap:10px">
+            <div class="opt" onclick="pick(this)"><span class="dot"></span>Single</div>
             <div class="opt" onclick="pick(this)"><span class="dot"></span>Engaged</div>
             <div class="opt" onclick="pick(this)"><span class="dot"></span>Married</div>
             <div class="opt" onclick="pick(this)"><span class="dot"></span>In a Civil Partnership</div>
@@ -614,14 +615,17 @@
           <div class="field"><label>Ethnicity</label>
             <div class="select"><select aria-label="Ethnicity">
               <option value="">Select the closest fit…</option>
-              <option selected>Black / African heritage</option>
-              <option>White / European heritage</option>
+              <option selected>Black/African Descent</option>
+              <option>East Asian</option>
+              <option>Hispanic/Latino</option>
+              <option>Middle Eastern</option>
+              <option>Native American</option>
+              <option>Pacific Islander</option>
               <option>South Asian</option>
-              <option>East or Southeast Asian</option>
-              <option>Middle Eastern / North African</option>
-              <option>Hispanic / Latino</option>
-              <option>Mixed / multiple ethnicities</option>
-              <option>Prefer to self-describe</option>
+              <option>Southeast Asian</option>
+              <option>White/Caucasian</option>
+              <option>Other</option>
+              <option>Prefer not to say</option>
             </select></div>
           </div>
           <div class="note info">Used for cultural matching only — never shown as a filterable label. Sensitive data (GDPR Art. 9): encrypted and consented separately.</div>
