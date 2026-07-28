@@ -17,7 +17,16 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8791/index.html)",
       "mcp__plugin_playwright_playwright__browser_select_option",
       "Bash(python3 -m http.server 8123)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:8123/index.html)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:8123/index.html)",
+      "mcp__plugin_playwright_playwright__browser_wait_for",
+      "Read(//home/nomad/**)",
+      "Read(//home/nomad/.cache/**)",
+      "Bash(kill %1)",
+      "mcp__plugin_playwright_playwright__browser_run_code_unsafe",
+      "mcp__plugin_playwright_playwright__browser_close",
+      "Bash(python3 -m http.server 3210)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:3210/index_primetime.html)",
+      "Bash(pkill -f \"http.server 3210\")"
     ]
   }
 }
