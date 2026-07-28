@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>MakeaMove — Primetime Prototype (design-language pass)</title>
+<title>MakeaMove — End-to-End Clickable Prototype</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -25,14 +25,6 @@
     --display:"Big Shoulders Display", system-ui, sans-serif;
     --body:"Hanken Grotesk", system-ui, sans-serif;
     --r:14px;
-    /* PRIMETIME · light as material (design-language.md §3) */
-    --glow-move:0 0 24px rgba(255,45,111,.45), 0 0 64px rgba(255,45,111,.18);
-    --glow-bulb:0 0 18px rgba(255,182,39,.50), 0 0 48px rgba(255,182,39,.20);
-    --glow-spot:0 0 24px rgba(47,107,255,.45);
-    /* PRIMETIME · the Ticket (signature shape, §4) */
-    --ticket:polygon(14px 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 14px 100%, 0 50%);
-    /* PRIMETIME · choreography (§7) */
-    --beat:600ms; --flip:420ms; --ease-show:cubic-bezier(.16,1,.3,1);
   }
   *{box-sizing:border-box; margin:0; padding:0}
   .icon{width:1em;height:1em;display:inline-block;vertical-align:-.125em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
@@ -62,63 +54,12 @@
   .statusbar .r{display:flex; gap:6px; align-items:center; font-size:11px}
   .screenwrap{position:absolute; inset:0; overflow:hidden}
   .screen{position:absolute; inset:0; display:none; flex-direction:column; overflow-y:auto; overflow-x:hidden}
-  .screen.on{display:flex; animation:scin .38s var(--ease-show)}
-  /* PRIMETIME motion — a scene change is a lighting cue: houselights flash, set settles in */
-  @keyframes scin{0%{opacity:0; transform:scale(.985) translateY(8px); filter:brightness(2.2) saturate(.7)}
-    55%{filter:brightness(1.25) saturate(1)} 100%{opacity:1; transform:none; filter:none}}
+  .screen.on{display:flex; animation:scin .28s ease}
+  @keyframes scin{from{opacity:0; transform:translateX(8px)} to{opacity:1; transform:none}}
   .screen::-webkit-scrollbar{width:0}
   /* surface variants */
-  /* PRIMETIME §2.1 — a dark screen is lit, not colored: spotlight wash + LED dot-matrix wall */
-  .screen.dark{background-color:var(--stage-900); color:var(--ink);
-    background-image:
-      radial-gradient(90% 55% at 50% -8%, rgba(47,107,255,.18), transparent 62%),
-      radial-gradient(circle at 1.5px 1.5px, rgba(110,155,255,.11) 1.2px, transparent 1.9px);
-    background-size:auto, 16px 16px}
+  .screen.dark{background:var(--stage-900); color:var(--ink)}
   .screen.paper{background:var(--paper-soft); color:var(--t)}
-
-  /* ============ PRIMETIME AMBIENT STAGECRAFT (motion v2) ============ */
-  /* the set is never dead: searchlight beams drift across every dark screen */
-  .screen.dark::after{content:""; position:absolute; inset:0; pointer-events:none; opacity:.9;
-    background:
-      linear-gradient(112deg, transparent 42%, rgba(110,155,255,.09) 50%, transparent 58%),
-      linear-gradient(64deg,  transparent 40%, rgba(255,45,111,.08) 50%, transparent 60%);
-    background-size:220% 100%, 240% 100%;
-    animation:beamdrift 11s ease-in-out infinite alternate}
-  @keyframes beamdrift{0%{background-position:0% 0, 100% 0} 100%{background-position:100% 0, 0% 0}}
-  /* stray glimmers in the rig — tiny stars that twinkle */
-  .screen.dark::before{content:""; position:absolute; inset:0; pointer-events:none;
-    background:
-      radial-gradient(1.6px 1.6px at 12% 22%, rgba(255,255,255,.65), transparent),
-      radial-gradient(1.3px 1.3px at 78% 14%, rgba(255,211,122,.7), transparent),
-      radial-gradient(1.2px 1.2px at 32% 64%, rgba(110,155,255,.6), transparent),
-      radial-gradient(1.7px 1.7px at 88% 52%, rgba(255,122,166,.55), transparent),
-      radial-gradient(1.2px 1.2px at 56% 84%, rgba(255,255,255,.5), transparent),
-      radial-gradient(1.4px 1.4px at 8% 88%, rgba(255,211,122,.5), transparent);
-    animation:twinkle 3.6s ease-in-out infinite alternate}
-  @keyframes twinkle{0%{opacity:.25} 100%{opacity:1}}
-  /* every scene entrance is staged: the set dresses itself piece by piece */
-  .screen.on .body>*{animation:rise .55s var(--ease-show) both}
-  .screen.on .body>*:nth-child(2){animation-delay:.07s}
-  .screen.on .body>*:nth-child(3){animation-delay:.14s}
-  .screen.on .body>*:nth-child(4){animation-delay:.21s}
-  .screen.on .body>*:nth-child(5){animation-delay:.28s}
-  .screen.on .body>*:nth-child(6){animation-delay:.35s}
-  .screen.on .body>*:nth-child(7){animation-delay:.42s}
-  .screen.on .body>*:nth-child(8){animation-delay:.49s}
-  .screen.on .body>*:nth-child(n+9){animation-delay:.56s}
-  @keyframes rise{from{opacity:0; transform:translateY(18px)}}
-  /* rotating god-rays for hero/ceremony moments (clipped by .raywrap) */
-  .raywrap{position:absolute; inset:0; overflow:hidden; pointer-events:none}
-  .rays{position:absolute; left:50%; top:34%; width:220vmax; height:220vmax; border-radius:50%;
-    transform:translate(-50%,-50%);
-    background:repeating-conic-gradient(rgba(255,182,39,.06) 0 5deg, transparent 5deg 13deg);
-    animation:raysspin 36s linear infinite}
-  .rays.pink{background:repeating-conic-gradient(rgba(255,45,111,.055) 0 5deg, transparent 5deg 13deg)}
-  @keyframes raysspin{to{transform:translate(-50%,-50%) rotate(360deg)}}
-  /* ceremony confetti (spawned by JS on S-D5 entry) */
-  .confetti{position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:80}
-  .confetti i{position:absolute; top:-5%; width:9px; height:14px; animation:confall linear both}
-  @keyframes confall{0%{transform:translate(0,-20px) rotate(0)} 100%{transform:translate(var(--dx,0), 920px) rotate(var(--rr,680deg))}}
 
   /* ===== SHARED PRODUCT COMPONENTS ===== */
   /* top app bar */
@@ -136,59 +77,22 @@
   /* brand lockup */
   .brand{font-family:var(--display); font-weight:900; letter-spacing:.04em; text-transform:uppercase}
   .brand .a{color:var(--move)}
-  /* PRIMETIME — the marquee: brand as a lit sign (bulb run + pink neon rim) */
-  .marquee{position:relative; align-self:center; padding:20px 30px;
-    background:linear-gradient(180deg,var(--stage-800),var(--stage-850)); border-radius:16px;
-    box-shadow:0 0 0 2px rgba(255,45,111,.65), var(--glow-move)}
-  .marquee::before{content:""; position:absolute; inset:7px; border:3px dotted var(--bulb); border-radius:10px;
-    filter:drop-shadow(0 0 5px rgba(255,182,39,.85)); animation:marq 2.2s steps(2) infinite; pointer-events:none}
-  @keyframes marq{50%{border-color:var(--bulb-soft); opacity:.75}}
-  /* PRIMETIME — landing stage: spotlight beams sweeping the set
-     (.screen is already position:absolute, so it anchors the ::before) */
-  #S-A1::before{content:""; position:absolute; inset:0; pointer-events:none;
-    background:
-      linear-gradient(112deg, transparent 44%, rgba(110,155,255,.10) 49%, transparent 54%),
-      linear-gradient(68deg,  transparent 44%, rgba(255,45,111,.10) 49%, transparent 54%),
-      radial-gradient(70% 45% at 50% 108%, rgba(255,45,111,.14), transparent 65%)}
-  #S-A1 .body{position:relative}
-  /* the cold open: sign flashes on, then the show introduces itself line by line */
-  #S-A1 .marquee{animation:marqdrop .9s var(--ease-show) both}
-  @keyframes marqdrop{0%{transform:scale(.55) translateY(-46px); opacity:0; filter:brightness(3.2)}
-    55%{filter:brightness(1.9)} 100%{transform:none; opacity:1; filter:none}}
-  #S-A1 .pill-live{animation:rise .5s .3s var(--ease-show) both}
-  #S-A1 h2.scrn{animation:rise .6s .45s var(--ease-show) both}
-  #S-A1 p{animation:rise .6s .62s var(--ease-show) both}
-  #S-A1 .body>div:last-of-type{animation:rise .6s .8s var(--ease-show) both}
-  /* lobby countdown keeps a heartbeat */
-  #S-D1 div[style*="font-size:46px"]{animation:countbeat 1.05s ease-in-out infinite}
-  @keyframes countbeat{0%,100%{transform:scale(1); text-shadow:0 0 18px rgba(255,182,39,.35)}
-    50%{transform:scale(1.07); text-shadow:0 0 34px rgba(255,182,39,.7)}}
 
   /* buttons */
   .btn{display:flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; cursor:pointer;
     font-family:var(--display); font-weight:800; text-transform:uppercase; letter-spacing:.05em; font-size:15px;
     padding:15px 18px; border-radius:var(--r); border:none; line-height:1; color:#fff; transition:.15s; text-align:center}
   .btn:active{transform:translateY(1px)}
-  /* PRIMETIME §10 — no plastic gloss: flat fills + real glow */
-  .btn.primary{background:var(--spotlight); box-shadow:var(--glow-spot)}
-  .btn.move{background:var(--move); box-shadow:var(--glow-move)}
-  .btn.pass{background:var(--pass); color:#053524; box-shadow:0 0 24px rgba(43,209,139,.35)}
-  .btn.gold{background:var(--bulb); color:#2A1A05; box-shadow:var(--glow-bulb)}
+  .btn.primary{background:linear-gradient(180deg,var(--spotlight-soft),var(--spotlight)); box-shadow:0 10px 24px rgba(47,107,255,.35)}
+  .btn.move{background:linear-gradient(180deg,var(--move-soft),var(--move)); box-shadow:0 10px 24px rgba(255,45,111,.35)}
+  .btn.pass{background:linear-gradient(180deg,#7CF0C2,var(--pass)); color:#053524}
+  .btn.gold{background:linear-gradient(180deg,var(--bulb-soft),var(--bulb)); color:#2A1A05}
   .btn.ghost{background:transparent; border:1.5px solid var(--line-strong); color:var(--t)}
   .dark .btn.ghost{border-color:rgba(255,255,255,.22); color:var(--ink)}
   .btn.sm{font-size:12px; padding:10px 14px}
   .btn.block{width:100%}
   .btn .sub{display:block; font-family:var(--body); font-weight:600; font-size:11px; text-transform:none; opacity:.9; margin-top:3px; letter-spacing:0}
   .btnrow{display:flex; gap:10px} .btnrow .btn{flex:1}
-  /* PRIMETIME motion — hero CTAs breathe light; every button gets a shine sweep on hover */
-  .dark .btn.move,.dark .btn.gold,.dark .btn.pass{animation:rise .55s var(--ease-show) both, breathe 3s 1.2s ease-in-out infinite !important}
-  @keyframes breathe{50%{filter:brightness(1.18) saturate(1.12)}}
-  .btn{position:relative; overflow:hidden}
-  .btn::after{content:""; position:absolute; top:0; bottom:0; left:-70%; width:45%; transform:skewX(-20deg); pointer-events:none;
-    background:linear-gradient(105deg, transparent, rgba(255,255,255,.4), transparent)}
-  .btn:hover::after{animation:shine .65s ease}
-  @keyframes shine{to{left:125%}}
-  .btn:hover{transform:translateY(-1px)}
   .link{color:var(--spotlight); font-weight:700; text-decoration:none; font-size:13px; cursor:pointer}
   .center{text-align:center} .muted{color:var(--t-dim)} .dark .muted{color:var(--ink-dim)}
 
@@ -203,10 +107,9 @@
   .dark .row .grow .t2{color:var(--ink-dim)}
   .row .chev{color:var(--t-faint); font-size:18px}
 
-  /* avatar — PRIMETIME §6: players are on camera; rounded-square frame, glow = status */
-  .av{flex:0 0 auto; border-radius:26%; display:flex; align-items:center; justify-content:center; font-weight:800;
+  /* avatar */
+  .av{flex:0 0 auto; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800;
     font-family:var(--display); color:#fff; overflow:hidden; background-size:cover; background-position:center}
-  .dark .av{box-shadow:0 0 0 2px rgba(255,255,255,.14)}
   .av.g1{background:linear-gradient(150deg,#3A6CFF,#7A3AFF)} .av.g2{background:linear-gradient(150deg,#FF6FA3,#FF2D6F)}
   .av.g3{background:linear-gradient(150deg,#2BD18B,#0E9E63)}
   .av.g4{background:linear-gradient(150deg,#FFB627,#FF7A1A)} .av.g5{background:linear-gradient(150deg,#5B6685,#2B3350)}
@@ -240,14 +143,11 @@
   /* selectable option */
   .opt{display:flex; align-items:center; gap:12px; padding:14px; border:1.5px solid var(--line-strong); border-radius:12px;
     background:var(--paper); cursor:pointer; font-size:14px; font-weight:600; transition:.12s}
-  .opt:hover{border-color:var(--bulb)}
-  /* PRIMETIME §4 — a picked option is a locked Ticket: chamfered, solid amber, dark text (the Feud chip pattern) */
-  .opt.sel{clip-path:var(--ticket); border-color:transparent; background:var(--bulb); color:#2A1A05; padding-left:22px}
-  .opt.sel.move{background:var(--move); color:#fff}
+  .opt:hover{border-color:var(--spotlight)}
+  .opt.sel{border-color:var(--spotlight); background:rgba(47,107,255,.07)}
+  .opt.sel.move{border-color:var(--move); background:rgba(255,45,111,.07)}
   .opt .dot{width:20px;height:20px;border-radius:50%;border:2px solid var(--line-strong);flex:0 0 auto}
-  .opt.sel .dot{border-color:#2A1A05; background:transparent; box-shadow:none; position:relative}
-  .opt.sel .dot::after{content:"✓"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:900}
-  .opt.sel.move .dot{border-color:#fff}
+  .opt.sel .dot{border-color:var(--spotlight); background:var(--spotlight); box-shadow:inset 0 0 0 3px var(--paper)}
   /* styled select dropdown */
   .select{position:relative}
   .select select{appearance:none; -webkit-appearance:none; font-family:var(--body); font-size:15px; color:var(--t);
@@ -283,12 +183,9 @@
   .prog{height:7px; border-radius:5px; background:var(--paper-2); overflow:hidden}
   .dark .prog{background:rgba(255,255,255,.08)}
   .prog i{display:block; height:100%; background:linear-gradient(90deg,var(--spotlight-soft),var(--spotlight)); border-radius:5px; transition:width .4s}
-  /* PRIMETIME §6 — stepdots as a mini bulb-run (the one show cue allowed on paper) */
-  .stepdots{display:flex; gap:7px} .stepdots .sd{flex:0 0 auto; width:10px; height:10px; border-radius:50%; background:var(--paper-2)}
+  .stepdots{display:flex; gap:5px} .stepdots .sd{flex:1; height:5px; border-radius:3px; background:var(--paper-2)}
   .dark .stepdots .sd{background:rgba(255,255,255,.12)}
-  .stepdots .sd.on{background:var(--bulb); box-shadow:0 0 8px rgba(255,182,39,.75); animation:bulbblink 1.9s ease-in-out infinite}
-  .stepdots .sd.on:nth-child(even){animation-delay:.95s}
-  @keyframes bulbblink{50%{box-shadow:0 0 3px rgba(255,182,39,.3); filter:brightness(.82)}}
+  .stepdots .sd.on{background:var(--spotlight)}
 
   /* note / callout */
   .note{font-size:12.5px; line-height:1.5; padding:12px 14px; border-radius:11px; background:var(--paper-2); color:var(--t-dim)}
@@ -491,12 +388,10 @@
     <div class="screenwrap" id="screenwrap">
       <!-- ============ GROUP A · ONBOARDING ============ -->
       <section class="screen dark" id="S-A1" data-group="A · Onboarding" data-title="Landing / referral">
-        <div class="raywrap"><div class="rays pink"></div></div>
         <div class="body" style="justify-content:center; gap:22px; text-align:center; padding:60px 26px">
-          <div class="marquee">
+          <div>
             <div class="brand" style="font-size:34px">Make<span class="a">a</span>Move</div>
           </div>
-          <span class="pill-live" style="align-self:center"><span class="d"></span>Live matchmaking game show</span>
           <h2 class="scrn" style="font-size:40px; max-width:14ch; margin:0 auto">Stop Swiping, <span style="color:var(--move)">Start Matching</span></h2>
           <p class="muted" style="max-width:30ch; margin:0 auto; font-size:15px; line-height:1.5">Online Matchmaking Game Show that connects compatible partners.</p>
           <div style="display:flex; flex-direction:column; gap:10px; margin-top:8px">
@@ -1163,68 +1058,22 @@
           #S-D2 .turnflag b{color:var(--bulb)}
           #S-D2 .stage{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:12px; padding:6px 20px; min-height:0}
           #S-D2 .qchip{display:inline-flex}
-          /* PRIMETIME §4 — the question rides in a Ticket bar (the Millionaire lozenge) */
-          #S-D2 .qtext{font-family:var(--display); font-weight:800; font-size:23px; line-height:1.02; text-wrap:balance;
-            background:linear-gradient(180deg,var(--stage-700),var(--stage-800)); clip-path:var(--ticket);
-            padding:16px 30px; width:100%; max-width:360px}
-          #S-D2 .ans{font-size:15px; line-height:1.45; color:var(--ink); background:rgba(255,255,255,.05); border:1px solid rgba(255,182,39,.35); border-radius:14px; padding:14px; max-width:30ch}
+          #S-D2 .qtext{font-family:var(--display); font-weight:800; font-size:23px; line-height:1.02; max-width:16ch; text-wrap:balance}
+          #S-D2 .ans{font-size:15px; line-height:1.45; color:var(--ink); background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:14px; padding:14px; max-width:30ch}
           #S-D2 .ans .lbl{font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-faint); font-weight:700; margin-bottom:6px}
           #S-D2 .base{flex:0 0 auto; padding:8px 16px; border-top:1px solid rgba(255,255,255,.08)}
           #S-D2 .base .blbl{font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-faint); font-weight:700; margin-bottom:6px}
           #S-D2 .tokens{display:flex; gap:5px; flex-wrap:wrap; min-height:24px}
           #S-D2 .tok{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff}
           #S-D2 .tok.m{background:var(--move)} #S-D2 .tok.s{background:var(--stay)}
-          /* PRIMETIME §4 — Move/Stay are the two hero Tickets: Move glows pink, Stay is flat & muted */
-          #S-D2 .act{flex:0 0 auto; padding:10px 16px calc(16px + env(safe-area-inset-bottom)); display:flex; gap:10px;
-            filter:drop-shadow(0 4px 16px rgba(255,45,111,.30))}
-          #S-D2 .act .btn{flex:1; border-radius:0; clip-path:var(--ticket); box-shadow:none}
-          #S-D2 .act .btn.ghost{background:var(--stage-700); border:none; color:var(--ink-dim)}
+          #S-D2 .act{flex:0 0 auto; padding:10px 16px calc(16px + env(safe-area-inset-bottom)); display:flex; gap:10px}
+          #S-D2 .act .btn{flex:1}
           #S-D2 .reveal{position:absolute; inset:0; z-index:60; display:none; flex-direction:column; align-items:center; justify-content:center; gap:14px;
             background:radial-gradient(70% 50% at 50% 42%, rgba(10,14,26,.82), rgba(8,11,22,.96)); text-align:center; padding:30px}
           #S-D2 .reveal.on{display:flex; animation:scin .3s ease}
           #S-D2 .reveal .verdict{font-family:var(--display); font-weight:900; font-size:64px; line-height:.9}
           #S-D2 .reveal.move .verdict{color:var(--move); text-shadow:0 0 40px rgba(255,45,111,.55)}
           #S-D2 .reveal.stay .verdict{color:var(--stay-soft)}
-          /* PRIMETIME §7 — the locked beat: amber, held, everything else dimmed */
-          #S-D2 .reveal.lock .verdict{color:var(--bulb); text-shadow:0 0 40px rgba(255,182,39,.55); animation:slam .45s var(--ease-show) both, lockpulse .6s .5s ease infinite}
-          #S-D2 .reveal.lock #rnext{visibility:hidden}
-          @keyframes lockpulse{50%{opacity:.55}}
-          /* ---- PRIMETIME motion v2: the turn is a staged number ---- */
-          #S-D2 .qchip{animation:rise .45s var(--ease-show) both}
-          #S-D2 .qtext{animation:qflip var(--flip) .08s var(--ease-show) both}
-          @keyframes qflip{from{transform:perspective(700px) rotateX(82deg); opacity:0; filter:brightness(2)}}
-          #S-D2 .ans{animation:rise .5s .2s var(--ease-show) both}
-          #S-D2 .head{transition:.3s}
-          #S-D2 .head.lit{animation:litbreathe 2.4s ease-in-out infinite}
-          @keyframes litbreathe{50%{box-shadow:0 0 38px rgba(255,182,39,.34); border-color:var(--bulb-soft)}}
-          #S-D2 .tok{animation:tokpop .38s var(--ease-show) both}
-          @keyframes tokpop{from{transform:scale(.2) rotate(-90deg); opacity:0}}
-          #S-D2 .pct{transition:.2s}
-          /* the verdict SLAMS in, shockwave rings ripple, the room shakes for a MOVE */
-          #S-D2 .reveal .verdict{animation:slam .5s var(--ease-show) both}
-          @keyframes slam{from{transform:scale(2.6); opacity:0; filter:blur(10px) brightness(2.4)}}
-          #S-D2 .reveal.on.move{animation:scin .3s ease, roomshake .5s .32s}
-          @keyframes roomshake{0%,100%{transform:none} 20%{transform:translate(-7px,3px)} 40%{transform:translate(6px,-4px)}
-            60%{transform:translate(-4px,2px)} 80%{transform:translate(3px,-1px)}}
-          #S-D2 .reveal .ring{position:absolute; left:50%; top:42%; width:130px; height:130px; margin:-65px 0 0 -65px;
-            border-radius:50%; border:2.5px solid var(--bulb); opacity:0; pointer-events:none}
-          #S-D2 .reveal.move .ring{border-color:var(--move)}
-          #S-D2 .reveal.stay .ring{border-color:var(--stay-soft)}
-          #S-D2 .reveal.on .ring{animation:ringout 1.15s var(--ease-show) infinite}
-          #S-D2 .reveal.on .ring:nth-of-type(2){animation-delay:.38s}
-          @keyframes ringout{0%{transform:scale(.25); opacity:.85} 100%{transform:scale(3.1); opacity:0}}
-          /* heart burst on MOVE */
-          #S-D2 .burst{position:absolute; left:50%; top:42%; pointer-events:none}
-          #S-D2 .burst i{position:absolute; font-style:normal; opacity:0; font-size:19px; color:var(--move); text-shadow:0 0 12px rgba(255,45,111,.8)}
-          #S-D2 .burst i::before{content:"♥"}
-          #S-D2 .reveal.on.move .burst i{animation:heartfly 1s var(--ease-show) .28s both}
-          #S-D2 .burst i:nth-child(1){--fx:-130px; --fy:-90px} #S-D2 .burst i:nth-child(2){--fx:120px; --fy:-110px}
-          #S-D2 .burst i:nth-child(3){--fx:-160px; --fy:10px}  #S-D2 .burst i:nth-child(4){--fx:150px; --fy:30px}
-          #S-D2 .burst i:nth-child(5){--fx:-90px; --fy:120px}  #S-D2 .burst i:nth-child(6){--fx:100px; --fy:110px}
-          #S-D2 .burst i:nth-child(7){--fx:-40px; --fy:-150px} #S-D2 .burst i:nth-child(8){--fx:40px; --fy:150px}
-          #S-D2 .burst i:nth-child(9){--fx:190px; --fy:-40px}  #S-D2 .burst i:nth-child(10){--fx:-190px; --fy:-40px}
-          @keyframes heartfly{0%{transform:translate(0,0) scale(.3); opacity:1}
-            100%{transform:translate(var(--fx),var(--fy)) scale(1.35) rotate(18deg); opacity:0}}
           #S-D2 .reveal p{color:var(--ink-dim); font-size:14px; max-width:26ch}
           #S-D2 .esc{position:absolute; top:120px; left:50%; transform:translateX(-50%); z-index:40; background:linear-gradient(180deg,#FFA0BD,var(--move)); color:#fff; font-weight:700; font-size:12px; padding:8px 14px; border-radius:999px; box-shadow:0 8px 26px rgba(255,45,111,.5); opacity:0; transition:.35s; white-space:nowrap}
           #S-D2 .esc.on{opacity:1}
@@ -1238,7 +1087,7 @@
         <div class="stage" id="stage"></div>
         <div class="base"><div class="blbl">David's reactions to you ↓</div><div class="tokens" id="tokens"></div></div>
         <div class="act" id="act"></div>
-        <div class="reveal" id="reveal"><span class="ring"></span><span class="ring"></span><div class="burst"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="verdict" id="rverdict">MOVE</div><p id="rmsg"></p><a class="btn ghost sm" id="rnext" style="width:auto;padding:10px 22px">Continue ›</a></div>
+        <div class="reveal" id="reveal"><div class="verdict" id="rverdict">MOVE</div><p id="rmsg"></p><a class="btn ghost sm" id="rnext" style="width:auto;padding:10px 22px">Continue ›</a></div>
         <script>
         (function(){
           const W={Family:3.0,Values:1.5,Lifestyle:0.9,Finances:1.0,Ambition:0.6,Intimacy:1.4};
@@ -1255,19 +1104,10 @@
           let i=0, yA=0,yE=0,tA=0,tE=0, sd=0;
           const $=id=>document.getElementById(id);
           function pc(a,e){return a>0?Math.round(e/a*100):null;}
-          function tween(el,val){ // scores tick, they never snap (PRIMETIME §5 type & numerals)
-            if(val==null){ el.textContent='—'; el._v=null; return; }
-            const from=(el._v==null)?0:el._v; el._v=val;
-            if(from===val){ el.textContent=val+'%'; return; }
-            const t0=performance.now();
-            (function step(n){ const p=Math.min(1,(n-t0)/450);
-              el.textContent=Math.round(from+(val-from)*(1-Math.pow(1-p,3)))+'%';
-              if(p<1) requestAnimationFrame(step); })(t0);
-          }
           function paint(){
             const py=pc(yA,yE), pt=pc(tA,tE);
-            tween($('pctYou'),py); $('climbYou').style.width=(py||0)+'%';
-            tween($('pctThem'),pt); $('climbThem').style.width=(pt||0)+'%';
+            $('pctYou').textContent = py==null?'—':py+'%'; $('climbYou').style.width=(py||0)+'%';
+            $('pctThem').textContent = pt==null?'—':pt+'%'; $('climbThem').style.width=(pt||0)+'%';
           }
           function render(){
             if(i>=TURNS.length) return finish();
@@ -1288,18 +1128,13 @@
             paint();
           }
           function addTok(kind){ const d=document.createElement('div'); d.className='tok '+(kind==='move'?'m':'s'); d.innerHTML=kind==='move'?'<svg class="icon"><use href="#i-heart"/></svg>':'<svg class="icon"><use href="#i-x"/></svg>'; $('tokens').appendChild(d); }
-          function lock(){ // you answered -> LOCKED, hold the beat, then reveal David's verdict (PRIMETIME §7)
+          function lock(){ // you answered -> reveal David's verdict (interphase)
             const t=TURNS[i]; const v=t.verdict||'move'; yA+=W[t.dim]; if(v==='move') yE+=W[t.dim];
-            const r=$('reveal'); r.className='reveal on lock';
-            $('rverdict').textContent='LOCKED';
-            $('rmsg').textContent='Your answer is in. David is deciding…';
-            setTimeout(()=>{
-              addTok(v);
-              r.className='reveal on '+v;
-              $('rverdict').textContent=v==='move'?'MOVE':'STAY';
-              $('rmsg').innerHTML=v==='move'?'David <b style="color:var(--move)">moved</b> on your answer. You\'re being wanted — in real time.':'David held a <b>Stay</b> here. Honest, not cruel.';
-              paint();
-            }, 600);
+            addTok(v);
+            const r=$('reveal'); r.className='reveal on '+v;
+            $('rverdict').textContent=v==='move'?'MOVE':'STAY';
+            $('rmsg').innerHTML=v==='move'?'David <b style="color:var(--move)">moved</b> on your answer. You\'re being wanted — in real time.':'David held a <b>Stay</b> here. Honest, not cruel.';
+            paint();
             $('rnext').onclick=()=>{ r.className='reveal'; i++; render(); };
           }
           function react(kind){ // you reacted to David -> his score moves
@@ -1348,10 +1183,8 @@
       </section>
 
       <section class="screen dark" id="S-D5" data-group="D · The Show" data-title="✓ Pass · it's a match">
-        <div class="raywrap"><div class="rays"></div></div>
         <div class="body" style="justify-content:center;text-align:center;gap:16px;padding:30px 24px">
           <div style="font-size:40px"><svg class="icon" style="width:40px;height:40px;color:var(--bulb)"><use href="#i-party"/></svg></div>
-          <div class="eyebrow" style="color:var(--bulb);font-size:13px;letter-spacing:.22em">It's a match</div>
           <h2 class="scrn" style="font-size:40px;color:var(--pass);text-shadow:0 0 40px rgba(43,209,139,.4)">You passed.</h2>
           <div style="display:flex;justify-content:center;gap:24px">
             <div><div class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:.1em">You</div><div class="big-num" style="font-size:40px;color:var(--pass)" id="d5_you">84%</div></div>
@@ -1365,7 +1198,6 @@
 
       <section class="screen dark" id="S-D6" data-group="D · The Show" data-title="⚠ Near-miss · retry lifeline">
         <div class="body" style="justify-content:center;text-align:center;gap:14px;padding:30px 24px">
-          <div class="eyebrow" style="color:var(--bulb);font-size:13px;letter-spacing:.22em">Round results</div>
           <h2 class="scrn" style="font-size:30px">So close.</h2>
           <div style="display:flex;justify-content:center;gap:24px">
             <div><div class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:.1em">You</div><div class="big-num" style="font-size:38px" id="d6_you">72%</div></div>
@@ -1537,141 +1369,25 @@
         <div class="foot"><a class="btn move block" href="#S-F3">Begin · react to Samuel</a></div>
       </section>
 
-      <section class="screen dark" id="S-F3" data-group="F · Async game" data-title="Async play · the board (interactive)">
-        <style>
-          #S-F3{padding:0; overflow:hidden}
-          #S-F3 .fhead{flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; padding:40px 16px 6px}
-          #S-F3 .rec{display:inline-flex; align-items:center; gap:6px; font-family:var(--display); font-weight:700; font-size:10px;
-            letter-spacing:.18em; text-transform:uppercase; color:var(--ink-dim)}
-          #S-F3 .rec .rd{width:8px; height:8px; border-radius:50%; background:var(--danger); box-shadow:0 0 10px var(--danger); animation:lp 1.2s infinite}
-          /* the stakes banner — Samuel's gate, your climbing score */
-          #S-F3 .scorebar{flex:0 0 auto; margin:4px 14px 0; display:flex; align-items:center; gap:10px; padding:9px 14px;
-            background:linear-gradient(180deg,var(--stage-700),var(--stage-800)); clip-path:var(--ticket)}
-          #S-F3 .scorebar .who{display:flex; align-items:center; gap:8px; flex:1}
-          #S-F3 .scorebar .who .nm{font-weight:800; font-size:12.5px} #S-F3 .scorebar .who .sub2{font-size:10px; color:var(--ink-faint)}
-          #S-F3 .scorebar .gate{font-size:10px; color:var(--ink-faint); letter-spacing:.1em; text-transform:uppercase; text-align:right}
-          #S-F3 .scorebar .pctf{font-family:var(--display); font-weight:900; font-size:26px; color:var(--bulb); text-shadow:0 0 16px rgba(255,182,39,.45)}
-          /* THE BOARD — bulb-framed, five flip slots (the Feud object) */
-          #S-F3 .board{flex:0 0 auto; position:relative; margin:10px 14px 4px; padding:15px 13px;
-            background:linear-gradient(180deg,var(--stage-800),var(--stage-850)); border-radius:18px;
-            box-shadow:0 0 0 2px rgba(255,182,39,.55), var(--glow-bulb)}
-          #S-F3 .board::before{content:""; position:absolute; inset:6px; border:3px dotted var(--bulb); border-radius:12px;
-            filter:drop-shadow(0 0 5px rgba(255,182,39,.85)); animation:marq 2.2s steps(2) infinite; pointer-events:none}
-          #S-F3 .board.done::before{animation-duration:.45s}
-          #S-F3 .slots{display:flex; flex-direction:column; gap:7px}
-          #S-F3 .slot{height:42px; perspective:700px}
-          #S-F3 .slot .in{position:relative; width:100%; height:100%; transform-style:preserve-3d; transition:transform var(--flip) var(--ease-show)}
-          #S-F3 .slot.flip .in{transform:rotateX(180deg)}
-          #S-F3 .face{position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden;
-            display:flex; align-items:center; justify-content:center; border-radius:9px}
-          #S-F3 .face.front{background:linear-gradient(180deg,#27366B,var(--stage-700)); border:1px solid rgba(255,255,255,.15)}
-          #S-F3 .face.front b{width:34px; height:24px; border-radius:50%; background:radial-gradient(circle at 50% 35%,#0E1533,#060A1C);
-            border:1px solid rgba(255,255,255,.2); display:flex; align-items:center; justify-content:center;
-            font-family:var(--display); font-size:14px; color:var(--ink)}
-          #S-F3 .face.back{transform:rotateX(180deg); justify-content:space-between; padding:0 6px 0 12px;
-            font-family:var(--display); font-weight:800; text-transform:uppercase; letter-spacing:.05em; font-size:14px}
-          #S-F3 .slot.move .face.back{background:linear-gradient(180deg,#33437F,#232E5C); border:1px solid rgba(255,45,111,.4); color:var(--ink)}
-          #S-F3 .slot.move .face.back .pts{background:var(--bulb); color:#2A1A05; box-shadow:var(--glow-bulb)}
-          #S-F3 .slot.stay .face.back{background:linear-gradient(180deg,#232941,#181D31); border:1px solid rgba(255,255,255,.08); color:var(--ink-faint)}
-          #S-F3 .slot.stay .face.back .pts{background:rgba(255,255,255,.1); color:var(--ink-faint)}
-          #S-F3 .face.back .pts{min-width:44px; height:30px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:15px}
-          #S-F3 .face.back .hh{color:var(--move); margin-right:6px}
-          /* the floor — question + recorded answer + reaction tickets */
-          #S-F3 .stagef{flex:1; display:flex; flex-direction:column; gap:10px; padding:10px 18px 4px; justify-content:center; min-height:0; text-align:center; align-items:center}
-          #S-F3 .qbar{font-family:var(--display); font-weight:800; font-size:19.5px; line-height:1.05; width:100%;
-            background:linear-gradient(180deg,var(--stage-700),var(--stage-800)); clip-path:var(--ticket); padding:13px 26px;
-            animation:qflipF var(--flip) .06s var(--ease-show) both}
-          @keyframes qflipF{from{transform:perspective(700px) rotateX(82deg); opacity:0; filter:brightness(2)}}
-          #S-F3 .anscard{font-size:13.5px; line-height:1.45; background:rgba(255,255,255,.05); border:1px solid rgba(255,182,39,.35);
-            border-radius:12px; padding:11px 14px; max-width:32ch; animation:rise .5s .18s var(--ease-show) both}
-          #S-F3 .anscard .lb{font-size:9.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-faint); font-weight:700; margin-bottom:5px}
-          #S-F3 .wnote{font-size:11px; color:var(--bulb-soft); animation:rise .5s .26s var(--ease-show) both}
-          #S-F3 .actf{flex:0 0 auto; display:flex; gap:10px; padding:8px 16px calc(16px + env(safe-area-inset-bottom));
-            filter:drop-shadow(0 4px 16px rgba(255,45,111,.3))}
-          #S-F3 .actf .btn{flex:1; border-radius:0; clip-path:var(--ticket); box-shadow:none}
-          #S-F3 .actf .btn.ghost{background:var(--stage-700); border:none; color:var(--ink-dim)}
-          #S-F3 .actf .wait{flex:1; text-align:center; color:var(--ink-dim); font-size:13px; padding:14px}
-        </style>
-        <div class="fhead">
-          <span class="tag" style="background:rgba(255,255,255,.08);color:var(--ink-dim)">Async · Samuel's weights</span>
-          <span class="rec"><span class="rd"></span>Recorded</span>
-        </div>
-        <div class="scorebar">
-          <div class="who"><div class="av g3 s40">S</div><div><div class="nm">Samuel, 44</div><div class="sub2">his board · his rules</div></div></div>
-          <div><div class="pctf" id="fpct">0%</div><div class="gate">gate · 70%</div></div>
-        </div>
-        <div class="board" id="fboard">
-          <div class="slots">
-            <div class="slot"><div class="in"><div class="face front"><b>1</b></div><div class="face back"></div></div></div>
-            <div class="slot"><div class="in"><div class="face front"><b>2</b></div><div class="face back"></div></div></div>
-            <div class="slot"><div class="in"><div class="face front"><b>3</b></div><div class="face back"></div></div></div>
-            <div class="slot"><div class="in"><div class="face front"><b>4</b></div><div class="face back"></div></div></div>
-            <div class="slot"><div class="in"><div class="face front"><b>5</b></div><div class="face back"></div></div></div>
+      <section class="screen dark" id="S-F3" data-group="F · Async game" data-title="Async play · recorded answers">
+        <div class="body" style="gap:14px;padding:34px 20px 16px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span class="tag" style="background:rgba(255,255,255,.08);color:var(--ink-dim)">Async · Samuel's weights</span>
+            <span class="muted" style="font-size:12px">3 / 10</span>
           </div>
+          <div class="prog"><i style="width:30%"></i></div>
+          <span class="chip" style="align-self:flex-start">Family · Screening</span>
+          <div class="qtext" style="font-family:var(--display);font-weight:800;font-size:22px;line-height:1.05">When would you want your first child?</div>
+          <div class="card"><div class="ans-label" style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);font-weight:700;margin-bottom:6px">Samuel said (recorded)</div><div style="font-size:14px;line-height:1.45">"Within the first two years of marriage — I'm ready, I've been ready a while."</div></div>
+          <div class="note gold">High weight for Samuel. Your reaction here counts for a lot.</div>
         </div>
-        <div class="stagef" id="fstage"></div>
-        <div class="actf" id="fact"></div>
-        <script>
-        (function(){
-          const QF=[
-            {dim:'Family',   w:3.0, q:'When would you want your first child?', a:'"Within the first two years of marriage — I\'m ready, I\'ve been ready a while."', note:'Highest weight on Samuel\'s board. This one counts for a lot.'},
-            {dim:'Values',   w:1.5, q:'What would you never compromise on?', a:'"Sunday dinner with my mum. Non-negotiable, even during deadlines."', note:'High weight for Samuel.'},
-            {dim:'Lifestyle',w:0.9, q:'Describe your perfect weekend.', a:'"Sketching buildings in the morning, cooking something ambitious at night."', note:'Lighter weight — but it all adds up.'},
-            {dim:'Finances', w:1.0, q:'How do you handle money in a relationship?', a:'"Joint plan, open books. I budget like an architect — everything is load-bearing."', note:'Mid weight on his board.'},
-            {dim:'Intimacy', w:1.4, q:'What does closeness look like for you?', a:'"Small rituals. Tea made without asking. A hand on the shoulder in a crowd."', note:'Second-highest weight. Last slot on the board.'}
-          ];
-          const TOTW=QF.reduce((s,t)=>s+t.w,0);
-          let fi=0, fgot=0;
-          const $=id=>document.getElementById(id);
-          function ftween(el,val){ const from=(el._v==null)?0:el._v; el._v=val;
-            if(from===val){ el.textContent=val+'%'; return; }
-            const t0=performance.now();
-            (function step(n){ const p=Math.min(1,(n-t0)/500);
-              el.textContent=Math.round(from+(val-from)*(1-Math.pow(1-p,3)))+'%';
-              if(p<1) requestAnimationFrame(step); })(t0);
-          }
-          function frender(){
-            if(fi>=QF.length) return ffinish();
-            const t=QF[fi];
-            $('fstage').innerHTML='<span class="chip" style="animation:rise .4s var(--ease-show) both">'+t.dim+' · slot '+(fi+1)+' of 5</span>'
-              +'<div class="qbar">'+t.q+'</div>'
-              +'<div class="anscard"><div class="lb">Samuel said (recorded)</div>'+t.a+'</div>'
-              +'<div class="wnote">'+t.note+'</div>';
-            $('fact').innerHTML='<button class="btn ghost" onclick="FSHOW.react(\'stay\')">Stay<span class="sub">not feeling it</span></button>'
-              +'<button class="btn move" onclick="FSHOW.react(\'move\')"><svg class="icon"><use href="#i-heart"/></svg> Move<span class="sub">I want this</span></button>';
-          }
-          function freact(kind){
-            const t=QF[fi];
-            const slot=document.querySelectorAll('#S-F3 .slot')[fi];
-            const back=slot.querySelector('.face.back');
-            back.innerHTML = kind==='move'
-              ? '<span><span class="hh">♥</span>'+t.dim+'</span><span class="pts">'+Math.round(t.w*10)+'</span>'
-              : '<span style="letter-spacing:.12em">'+t.dim+' · stay</span><span class="pts">—</span>';
-            slot.classList.add('flip', kind);
-            if(kind==='move') fgot+=t.w;
-            ftween($('fpct'), Math.round(fgot/TOTW*100));
-            $('fact').innerHTML='<div class="wait">Slot '+(fi+1)+' locked — '+(kind==='move'?'<b style="color:var(--move)">Move</b>':'<b>Stay</b>')+' on Samuel\'s board</div>';
-            setTimeout(()=>{ fi++; frender(); }, 950);
-          }
-          function ffinish(){
-            const pct=Math.round(fgot/TOTW*100);
-            $('fboard').classList.add('done');
-            $('fstage').innerHTML='<div class="qbar" style="text-align:center">Board complete.</div>'
-              +'<div class="wnote">'+(pct>=70?'You cleared Samuel\'s gate — taking you to the result…':'Under the gate this run — here\'s how it works…')+'</div>';
-            $('fact').innerHTML='<div class="wait">Scoring '+pct+'% against a 70% gate…</div>';
-            setTimeout(()=>{ location.hash='S-F4'; }, 1700);
-          }
-          window.FSHOW={react:freact, reset(){ fi=0; fgot=0; $('fpct')._v=null; $('fpct').textContent='0%';
-            $('fboard').classList.remove('done');
-            document.querySelectorAll('#S-F3 .slot').forEach(s=>{ s.className='slot'; s.querySelector('.face.back').innerHTML=''; });
-            frender(); }};
-          frender();
-        })();
-        </script>
+        <div class="act" style="display:flex;gap:10px;padding:10px 18px 20px">
+          <a class="btn ghost block" href="#S-F4">Stay<span class="sub">not feeling it</span></a>
+          <a class="btn move block" href="#S-F4"><svg class="icon"><use href="#i-heart"/></svg> Move<span class="sub">I want this</span></a>
+        </div>
       </section>
 
       <section class="screen dark" id="S-F4" data-group="F · Async game" data-title="Async result + buy-in soft-hold">
-        <div class="raywrap"><div class="rays"></div></div>
         <div class="body" style="justify-content:center;text-align:center;gap:16px;padding:30px 24px">
           <div style="font-size:36px"><svg class="icon" style="width:36px;height:36px;color:var(--bulb)"><use href="#i-party"/></svg></div>
           <h2 class="scrn" style="font-size:34px;color:var(--pass)">You passed · 78%</h2>
@@ -2093,40 +1809,6 @@
     if(e.key==='ArrowRight' && !document.getElementById('index').classList.contains('on')) nextS();
     if(e.key==='ArrowLeft' && !document.getElementById('index').classList.contains('on')) prevS();
   });
-</script>
-<script>
-/* PRIMETIME motion v2 — ceremony confetti: gold rain when a match is made (S-D5) */
-(function(){
-  function confettiBurst(hostId){
-    const host=document.getElementById(hostId||'S-D5'); if(!host) return;
-    let layer=host.querySelector('.confetti');
-    if(!layer){ layer=document.createElement('div'); layer.className='confetti'; host.appendChild(layer); }
-    layer.innerHTML='';
-    const cols=['#FFB627','#FFD37A','#FF2D6F','#2BD18B','#6E9BFF'];
-    for(let k=0;k<70;k++){
-      const i=document.createElement('i');
-      i.style.left=(Math.random()*100)+'%';
-      i.style.background=cols[k%cols.length];
-      i.style.setProperty('--dx',(Math.random()*180-90)+'px');
-      i.style.setProperty('--rr',(420+Math.random()*720)+'deg');
-      i.style.animationDuration=(2.3+Math.random()*1.9)+'s';
-      i.style.animationDelay=(Math.random()*0.9)+'s';
-      if(k%3===0) i.style.borderRadius='50%';
-      if(k%4===0){ i.style.width='6px'; i.style.height='10px'; }
-      layer.appendChild(i);
-    }
-    setTimeout(()=>{ layer.innerHTML=''; }, 5400);
-  }
-  const CELEBRATE=['#S-D5','#S-F4'];
-  function onEnter(){
-    if(CELEBRATE.includes(location.hash)) confettiBurst(location.hash.slice(1));
-    /* the games rewind when you walk back on stage */
-    if(location.hash==='#S-D2' && window.DSHOW) DSHOW.reset();
-    if(location.hash==='#S-F3' && window.FSHOW) FSHOW.reset();
-  }
-  addEventListener('hashchange', onEnter);
-  onEnter();
-})();
 </script>
 </body>
 </html>
