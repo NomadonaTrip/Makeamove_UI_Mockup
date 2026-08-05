@@ -823,7 +823,7 @@ Expected: `{ ok:false, reason:'no gap prompt' }`.
       } <span class="src">[no data]</span></span></li>`;
     }).join('');
     wrap.innerHTML = `<div class="card" style="margin-top:4px">
-      <div class="eyebrow">✦ ${n} band${n===1?'':'s'} blank on your side</div>
+      <div class="eyebrow">✦ ${n} band${n===1?' is':'s are'} blank on your side</div>
       <ul class="why" style="margin-top:10px">${lines}</ul>
       <p class="muted" style="font-size:12.5px;line-height:1.5;margin:10px 0 0">
         Answering both means every future candidate is scored on all 5 bands
