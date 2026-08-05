@@ -28,10 +28,10 @@
 `file://` is blocked by the Playwright MCP browser. Serve the project instead, once, before Task 1:
 
 ```bash
-cd /mnt/e/TOOLMAKER/PYTHON/MakeaMoveUI_Mockup && python3 -m http.server 3000
+cd /mnt/e/TOOLMAKER/PYTHON/MakeaMoveUI_Mockup && python3 -m http.server 3300
 ```
 
-All assertions run at **1280×800** against `http://127.0.0.1:3000/index.html#S-B2` (or `#S-B3`). Every task's "run the check" step means: `browser_navigate` to that URL, `browser_resize` to 1280×800, then `browser_evaluate` the given function. Because the router is hash-based, navigating between `#S-B2` and `#S-B3` does not reload the page — call `location.reload()` in the evaluate step when a task needs fresh `sessionStorage`.
+All assertions run at **1280×800** against `http://127.0.0.1:3300/index.html#S-B2` (or `#S-B3`). Every task's "run the check" step means: `browser_navigate` to that URL, `browser_resize` to 1280×800, then `browser_evaluate` the given function. Because the router is hash-based, navigating between `#S-B2` and `#S-B3` does not reload the page — call `location.reload()` in the evaluate step when a task needs fresh `sessionStorage`.
 
 ## File Structure
 
@@ -79,7 +79,7 @@ This is the check the task must satisfy. Run it first, before writing any code, 
 
 - [ ] **Step 2: Run it to confirm it fails**
 
-Navigate to `http://127.0.0.1:3000/index.html#S-B2`, resize 1280×800, evaluate the above.
+Navigate to `http://127.0.0.1:3300/index.html#S-B2`, resize 1280×800, evaluate the above.
 Expected: `{ ok:false, reason:'CANDIDATES not defined' }`.
 
 - [ ] **Step 3: Add the fixture and helpers**
