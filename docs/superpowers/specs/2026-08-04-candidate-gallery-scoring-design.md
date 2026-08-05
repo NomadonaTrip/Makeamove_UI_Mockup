@@ -174,11 +174,11 @@ The top bar gains the user's own placeholder portrait beside the existing
 Each of the three live rows keeps its existing `.row` shell and 96×120 avatar
 block, with the initial letter replaced by a portrait. The text column gains:
 
-- **`FIT 74% · Strong`** with a thin meter.
+- **`FIT 76% · Strong`** with a thin meter.
 - **The two most decisive bullets** — the highest-weight observed match and,
   where one exists, the sharpest observed mismatch. Full bullets for all bands
   would make a three-candidate list a wall of text.
-- **`See all 11 reasons ›`** — the count is the total number of bullets across
+- **`See all 13 reasons ›`** — the count is the total number of bullets across
   all bands, and it opens `S-B3`.
 - A **✕ remove** control.
 
@@ -186,11 +186,11 @@ block, with the initial letter replaced by a portrait. The text column gains:
 ┌──────┬────────────────────────────────┐
 │      │ David, 41                      │
 │ [img]│ Deputy head · 2 kids · London  │
-│      │ FIT 74% · Strong  ▓▓▓▓▓▓▓▓░░░  │
+│      │ FIT 76% · Strong  ▓▓▓▓▓▓▓▓░░░  │
 │      │ ✓ Welcomes a blended family    │
 │      │ ✗ Wants no more children;      │
 │      │   you're open to one           │
-│      │ See all 11 reasons ›           │
+│      │ See all 13 reasons ›           │
 └──────┴────────────────────────────────┘
 ```
 
