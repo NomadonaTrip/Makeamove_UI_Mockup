@@ -334,6 +334,14 @@ Expected: `{ ok:false, missing:['.fit','.why','.mm-toast','.mm-sheet','.drawer']
 
 ```css
   /* ===== CANDIDATE GALLERY ===== */
+  /* Portrait fallback. `.av.gN` sets `background:` as a SHORTHAND, so an inline
+     `background-image:url(photo)` replaces the gradient outright and also resets
+     background-size/position. Pin a solid brand colour behind each gradient so a
+     portrait that fails to load shows colour, not an empty box. */
+  .av.g1{background-color:#3A6CFF} .av.g2{background-color:#FF2D6F}
+  .av.g3{background-color:#2BD18B} .av.g4{background-color:#FFB627}
+  .av[style*="url("]{background-size:cover; background-position:center}
+
   .fit{display:flex; align-items:center; gap:8px; margin-top:8px; font-size:12px; font-weight:700}
   .fit .n{font-family:var(--display); font-weight:900; font-size:15px; color:var(--t)}
   .dark .fit .n{color:var(--ink)}
@@ -1013,6 +1021,9 @@ target demographic. The user portrait reads slightly younger than the persona
 (a 40-year-old London project manager, mother of two); swap the ID if that
 matters for a stakeholder demo.
 
-If Unsplash is unreachable the `.av` gradient shows through, because the
-gradient class is retained on every portrait element — the gallery degrades to
-the current appearance rather than rendering empty boxes.
+If Unsplash is unreachable each portrait shows a solid brand colour rather than
+an empty box. Note the mechanism: `.av.gN` declares its gradient via the
+`background` SHORTHAND, so an inline `background-image:url(photo)` replaces the
+gradient entirely — retaining the class alone guarantees nothing. The fallback
+comes from the separate `background-color` pinned on each `.av.gN` in Task 2,
+which an inline `background-image` cannot override.
