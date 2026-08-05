@@ -309,6 +309,42 @@
   .tabbar a .ic{display:block; font-size:18px; margin-bottom:3px}
   .tabbar a.on{color:var(--spotlight)}
 
+  /* ===== CANDIDATE GALLERY ===== */
+  .fit{display:flex; align-items:center; gap:8px; margin-top:8px; font-size:12px; font-weight:700}
+  .fit .n{font-family:var(--display); font-weight:900; font-size:15px; color:var(--t)}
+  .dark .fit .n{color:var(--ink)}
+  .fit .prog{flex:1; min-width:48px}
+
+  .why{list-style:none; margin:8px 0 0; padding:0; display:flex; flex-direction:column; gap:6px}
+  .why li{display:flex; gap:7px; font-size:12px; line-height:1.45; color:var(--t-dim)}
+  .dark .why li{color:var(--ink-dim)}
+  .why li::before{flex:0 0 auto; font-weight:800; width:11px}
+  .why li.y::before{content:"\2713"; color:var(--pass)}
+  .why li.n::before{content:"\2717"; color:var(--move)}
+  .why li.o::before{content:"\25CB"; color:var(--t-faint)}
+  .why .src{opacity:.6; font-size:10.5px; white-space:nowrap}
+
+  .drawer{display:none} .drawer.open{display:flex; flex-direction:column; gap:10px}
+  .gone{display:none !important}
+
+  .mm-toast{position:absolute; left:18px; right:18px; bottom:74px; z-index:40;
+    display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:12px;
+    background:var(--stage-800); color:var(--ink); font-size:13px; font-weight:600;
+    box-shadow:0 10px 30px rgba(0,0,0,.3); opacity:0; transform:translateY(8px);
+    pointer-events:none; transition:opacity .25s, transform .25s}
+  .mm-toast.on{opacity:1; transform:none; pointer-events:auto}
+  .mm-toast button{margin-left:auto; background:none; border:none; cursor:pointer;
+    font-family:var(--display); font-weight:800; letter-spacing:.1em; text-transform:uppercase;
+    font-size:11px; color:var(--bulb)}
+
+  .mm-sheet{position:absolute; inset:0; z-index:50; display:none; align-items:flex-end;
+    background:rgba(8,12,26,.55)}
+  .mm-sheet.on{display:flex}
+  .mm-sheet .box{width:100%; background:var(--paper); border-radius:18px 18px 0 0;
+    padding:20px 18px calc(20px + env(safe-area-inset-bottom));
+    display:flex; flex-direction:column; gap:12px}
+  .dark .mm-sheet .box{background:var(--stage-850)}
+
   /* ===== SCREEN INDEX OVERLAY ===== */
   .index{position:fixed; inset:0; z-index:200; background:rgba(5,7,15,.86); backdrop-filter:blur(8px);
     display:none; padding:40px 18px; overflow-y:auto}
