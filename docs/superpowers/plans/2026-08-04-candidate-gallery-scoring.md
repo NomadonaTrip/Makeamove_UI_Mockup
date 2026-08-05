@@ -296,27 +296,32 @@ git commit -m "feat(gallery): add candidate fixtures and fit derivation helpers"
 
 - [ ] **Step 1: Write the browser assertion**
 
+`index.html` contains **three** `<style>` blocks — the main one at line 10 plus two screen-scoped blocks inside `S-D2` and `S-F3`. Scan all of them; indexing `document.styleSheets[length-1]` would read the `S-F3` block and fail no matter where the CSS is correctly placed.
+
 ```js
 () => {
   const need = ['.fit','.why','.mm-toast','.mm-sheet','.drawer'];
-  const found = need.filter(sel => {
-    const el = document.createElement('div');
-    el.className = sel.slice(1);
-    document.body.appendChild(el);
-    const has = getComputedStyle(el).display !== 'inline';  // any rule applied
-    el.remove();
-    return has;
-  });
-  const css = [...document.styleSheets[document.styleSheets.length-1].cssRules]
+  const css = [...document.styleSheets]
+    .flatMap(s => { try { return [...s.cssRules]; } catch(e){ return []; } })
     .map(r => r.selectorText || '').join(' ');
   const missing = need.filter(s => !css.includes(s));
-  return { ok: missing.length === 0, missing };
+  // each must also carry a .dark variant
+  const noDark = need.filter(s => !new RegExp('\\.dark\\s+\\' + s).test(css));
+  const okNoDark = noDark.every(s => s === '.drawer' || s === '.mm-toast');
+  return { ok: missing.length === 0 && okNoDark, missing, noDark };
 }
 ```
 
+Two of the five legitimately need no `.dark` rule, and the check names them explicitly rather than counting:
+
+- **`.drawer`** is a layout-only wrapper — it toggles `display` and has nothing colour-bearing to theme.
+- **`.mm-toast`** is already dark on both surfaces by design: it is built from `--stage-800` and `--ink`, so it reads as a dark pill over `paper` and over `dark` alike. That is the conventional treatment for a transient overlay.
+
+`.fit`, `.why` and `.mm-sheet` each carry text or panel colour, so each must have its `.dark` rule.
+
 - [ ] **Step 2: Run it to confirm it fails**
 
-Expected: `{ ok:false, missing:['.fit','.why','.mm-toast','.mm-sheet','.drawer'] }`.
+Expected: `{ ok:false, missing:['.fit','.why','.mm-toast','.mm-sheet','.drawer'], noDark:[…same five…] }`.
 
 - [ ] **Step 3: Add the CSS**
 
