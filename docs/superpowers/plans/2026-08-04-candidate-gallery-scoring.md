@@ -608,6 +608,19 @@ Insert immediately before the `.tabbar` div in `S-B2`:
 ```js
   let undoTimer = null, pendingUndo = null;
 
+  /* Only ONE removal may be pending at a time. `pendingUndo` and `undoTimer` are
+     single slots, so a second removal inside the 6s window would overwrite the
+     first — its commit never fires and that candidate disappears from live,
+     bench AND removed alike. Any other state-mutating action therefore finalises
+     the outstanding removal first. */
+  function flushPending(){
+    if (!pendingUndo) return;
+    clearTimeout(undoTimer);
+    const t = document.getElementById('mmToast');
+    if (t) t.classList.remove('on');
+    commitRemoval();
+  }
+
   function backfill(){
     while (state.live.length < 3 && state.bench.length){
       state.live.push(state.bench.shift());     // bench is fit-descending
@@ -623,6 +636,7 @@ Insert immediately before the `.tabbar` div in `S-B2`:
     undoTimer = setTimeout(() => { t.classList.remove('on'); commitRemoval(); }, UNDO_MS);
   }
   function remove(id){
+    flushPending();
     const i = state.live.indexOf(id);
     if (i === -1) return;
     state.live.splice(i, 1);
@@ -633,9 +647,13 @@ Insert immediately before the `.tabbar` div in `S-B2`:
     save(); render();
     toast(`${byId(id).name} removed.`, () => {
       // free undo: put him back, send the backfill to the front of the bench
+      // guard the unshift: a restore during the window may already have sent
+      // the backfilled candidate back to the bench, and a blind unshift would
+      // duplicate its id
       if (pendingUndo.backfilled){
         state.live = state.live.filter(x => x !== pendingUndo.backfilled);
-        state.bench.unshift(pendingUndo.backfilled);
+        if (!state.bench.includes(pendingUndo.backfilled))
+          state.bench.unshift(pendingUndo.backfilled);
       }
       state.live.splice(pendingUndo.index, 0, pendingUndo.id);
       pendingUndo = null; save(); render();
@@ -677,13 +695,14 @@ Insert immediately before the `.tabbar` div in `S-B2`:
     sheet.classList.add('on');
   }
   function restore(id){
+    flushPending();
     state.removed = state.removed.filter(x => x !== id);
     // hold the list at three: weakest live candidate returns to the bench front
     if (state.live.length >= 3){
       const weakest = state.live.slice().sort((a,b) => fit(byId(a)) - fit(byId(b)))[0];
       state.live = state.live.filter(x => x !== weakest);
-      state.bench.unshift(weakest);
-      state.bench.sort((a,b) => fit(byId(b)) - fit(byId(a)));
+      state.bench.push(weakest);
+      state.bench.sort((a,b) => fit(byId(b)) - fit(byId(a)));  // position set by sort
     }
     state.live.push(id);
     state.live.sort((a,b) => fit(byId(b)) - fit(byId(a)));
