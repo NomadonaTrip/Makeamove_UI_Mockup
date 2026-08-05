@@ -1273,6 +1273,7 @@
       a.addEventListener('click', () => sessionStorage.setItem('mm_cand_open', a.dataset.id)));
     renderDrawer();   // defined in Task 4
     renderGap();      // defined in Task 5
+    renderProfile();  // defined in Task 6
   }
   /* Sections the *user* has left blank. In the prototype these are fixtures;
      in production they would be read from the user's profile record. */
@@ -1425,32 +1426,74 @@
     save(); render();
   }
 
+  function renderProfile(){
+    const id = sessionStorage.getItem('mm_cand_open') || state.live[0];
+    const c = byId(id);
+    if (!c || !document.getElementById('b3body')) return;
+    document.getElementById('b3name').textContent = `${c.name}, ${c.age}`;
+    document.getElementById('b3hero').style.backgroundImage = `url('${heroPhoto(c)}')`;
+
+    const scored = BANDS.filter(b => c.bands[b.key] && c.bands[b.key].score != null).length;
+    const k = conf(c), f = fit(c);
+    const advisory = k < 40 ? `<div class="note danger advisory">! Surfaced partly at
+      random. Only ${scored} of 5 bands could be scored, so he is not meaningfully
+      ranked against your other candidates.</div>` : '';
+
+    /* A link only helps when HE has already answered — completing your side
+       then actually scores the band. If he is the missing side, the link would
+       promise an improvement the user cannot cause. */
+    const gapFor = (key, bd) =>
+      bd.blankOwner === 'you' ? USER_GAPS.find(g => g.band === key) : null;
+
+    document.getElementById('b3body').innerHTML = `
+      <div class="card">
+        <div class="eyebrow">Overall fit</div>
+        <div class="fit" style="margin-top:6px"><span class="n" style="font-size:26px">${f}%</span>
+          <span class="muted">${scoreLabel(f)} · ${confLabel(c)} confidence</span></div>
+        <div class="prog" style="margin-top:8px"><i style="width:${f}%"></i></div>
+        <div class="muted completeness" style="font-size:12px;margin-top:8px">Scored on
+          ${scored} of 5 bands · he's completed ${Math.round(k)}% of his profile</div>
+      </div>
+      ${advisory}
+      <div class="note pass">✓ Dealbreakers cleared — genotype AA, marital status
+        eligible, and welcomes a blended family.</div>
+      ${BANDS.map(b => {
+        const bd = c.bands[b.key] || { score:null, bullets:[] };
+        const blank = bd.score == null;
+        const gap = blank && gapFor(b.key, bd);
+        return `<div class="card band" ${blank ? 'style="opacity:.72"' : ''}>
+          <div style="display:flex;align-items:baseline;gap:8px">
+            <b class="bname" style="font-size:13.5px">${b.name}</b>
+            <span class="muted" style="font-size:11px;margin-left:auto">${
+              blank ? '— · Not enough data'
+                    : `${bd.score}% · ${scoreLabel(bd.score)}`}</span>
+          </div>
+          ${blank ? '' : `<div class="prog" style="margin-top:8px"><i style="width:${bd.score}%"></i></div>`}
+          <ul class="why">${bd.bullets.map(bulletHTML).join('')}</ul>
+          ${gap ? `<a class="link" href="${gap.screen}" style="font-size:12px;margin-top:8px;display:inline-block">Blank because you haven't answered ${gap.name}. Answer it ›</a>` : ''}
+        </div>`;
+      }).join('')}`;
+  }
+  window.addEventListener('hashchange', () => {
+    if (location.hash === '#S-B3') renderProfile();
+  });
+
   load();
   document.addEventListener('DOMContentLoaded', render);
   if (document.readyState !== 'loading') render();
 
   Object.assign(window, { CANDIDATES, BANDS, RESTORE_PRICE, UNDO_MS, USER_GAPS,
     fit, conf, scoreLabel, confLabel, bulletCount, PHOTO, cardPhoto, facePhoto, heroPhoto,
-    render, state, byId, save, load, remove, restore, confirmRestore });
+    render, state, byId, save, load, remove, restore, confirmRestore, renderProfile });
 })();
 </script>
       </section>
 
       <section class="screen paper" id="S-B3" data-group="B · Matching" data-title="Candidate profile (sparse)">
-        <div class="pbar"><a class="back" href="#S-B2">‹</a><h1>David, 41</h1></div>
+        <div class="pbar"><a class="back" href="#S-B2">‹</a><h1 id="b3name">Candidate</h1></div>
         <div class="body">
-          <div class="av g1" style="width:100%;height:200px;border-radius:16px;font-size:60px">D</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <span class="tag">Deputy head</span><span class="tag">2 kids</span><span class="tag">London</span><span class="tag pass">AA · genotype-safe</span>
-          </div>
-          <div class="card">
-            <div class="eyebrow" style="color:var(--spotlight)">Why you matched</div>
-            <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px;font-size:13.5px">
-              <div style="display:flex;gap:8px"><span class="tag pass">✓</span> Welcomes a blended family — your top dealbreaker</div>
-              <div style="display:flex;gap:8px"><span class="tag pass">✓</span> Marriage intent within 2 years</div>
-              <div style="display:flex;gap:8px"><span class="tag pass">✓</span> London-based — no geography mismatch</div>
-            </div>
-          </div>
+          <div class="av g1" id="b3hero" style="width:100%;height:200px;border-radius:16px"></div>
+          <div id="b3body" style="display:flex;flex-direction:column;gap:14px"></div>
           <div class="note">Full bio, extra photos and his answers stay hidden until he accepts. You're choosing who to invite — not judging a wall of text.</div>
         </div>
         <div class="foot">
