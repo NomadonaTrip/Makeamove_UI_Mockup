@@ -31,7 +31,11 @@
 cd /mnt/e/TOOLMAKER/PYTHON/MakeaMoveUI_Mockup && python3 -m http.server 3300
 ```
 
-All assertions run at **1280×800** against `http://127.0.0.1:3300/index.html#S-B2` (or `#S-B3`). Every task's "run the check" step means: `browser_navigate` to that URL, `browser_resize` to 1280×800, then `browser_evaluate` the given function. Because the router is hash-based, navigating between `#S-B2` and `#S-B3` does not reload the page — call `location.reload()` in the evaluate step when a task needs fresh `sessionStorage`.
+All assertions run at **1280×800** against `http://127.0.0.1:3300/index.html#S-B2` (or `#S-B3`). Every task's "run the check" step means: `browser_navigate` to that URL, `browser_resize` to 1280×800, then `browser_evaluate` the given function.
+
+**Never call `location.reload()` inside an evaluated function** — it destroys the execution context mid-call and the evaluate fails with "Execution context was destroyed" rather than returning a result. When an assertion needs fresh state, reset it from *outside* the evaluated function: `browser_navigate` to a cache-busted URL, then a separate `browser_evaluate` running `sessionStorage.clear()`, then run the assertion body. The assertions below are written to be run that way; where one begins by resetting state, do that reset as its own step.
+
+Because the router is hash-based, switching between `#S-B2` and `#S-B3` does not reload the page — assigning `location.hash` is enough to change screens.
 
 ## File Structure
 
@@ -854,9 +858,9 @@ git commit -m "feat(gallery): add gap-driven profile enrichment prompt"
 - [ ] **Step 1: Write the browser assertion**
 
 ```js
+// Precondition, run as SEPARATE steps before this one: navigate to a
+// cache-busted #S-B2 URL, then evaluate `sessionStorage.clear()`.
 async () => {
-  location.hash = '#S-B2'; location.reload();
-  await new Promise(r => setTimeout(r, 600));
   const open = async id => {
     sessionStorage.setItem('mm_cand_open', id);
     location.hash = '#S-B2'; location.hash = '#S-B3';
