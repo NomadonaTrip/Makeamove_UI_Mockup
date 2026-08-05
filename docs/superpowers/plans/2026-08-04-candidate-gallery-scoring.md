@@ -165,7 +165,7 @@ Insert this `<script>` immediately before `</section>` at the end of `S-B2`:
            is the one band that earns an actionable link on S-B3. */
         person:{ score:null, blankOwner:'you', bullets:[
           B('o','You have not completed Personality & lifestyle','no data'),
-          B('o','He answered all 8 questions — the missing side is yours','profile')
+          B('o','He answered all 6 questions — the missing side is yours','profile')
         ]},
         love:{ score:65, bullets:[
           B('y','You both rate quality time as your first love language','profile'),
