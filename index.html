@@ -992,7 +992,7 @@
       </section>
 
       <section class="screen paper" id="S-B2" data-group="B · Matching" data-title="Candidate gallery">
-        <div class="pbar"><span class="brand" style="font-size:18px">Make<span class="a">a</span>Move</span><a class="act" href="#S-G1">Credits ›</a><a class="av g2 s28" href="#S-A9" style="background-image:url('https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=400&amp;q=70&amp;fm=jpg&amp;crop=faces&amp;fit=crop')" aria-label="Your profile"></a></div>
+        <div class="pbar"><span class="brand" style="font-size:18px">Make<span class="a">a</span>Move</span><a class="act" href="#S-G1">Credits ›</a><a class="av g2 s28" href="#S-A9" style="background-image:url('https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=80&amp;h=80&amp;fit=crop&amp;crop=faces&amp;q=70&amp;fm=jpg');background-size:cover;background-position:center" aria-label="Your profile"></a></div>
         <div class="body">
           <div class="note pass" style="display:flex;align-items:center;gap:10px"><svg class="icon" style="width:22px;height:22px"><use href="#i-party"/></svg><div><b id="b2count">You have 3 pre-matches.</b><br><span style="font-size:12px">Each one cleared every dealbreaker you set.</span></div></div>
           <h2 class="scrn" style="font-size:24px">Your candidates</h2>
@@ -1009,8 +1009,14 @@
 (function(){
   const RESTORE_PRICE = 3;      // £ — cross-check vs Badoo before launch
   const UNDO_MS = 6000;
-  const PHOTO = id =>
-    `https://images.unsplash.com/photo-${id}?w=400&q=70&fm=jpg&crop=faces&fit=crop`;
+  /* Ask Unsplash to face-crop to the ASPECT OF THE SLOT. A square-ish source
+     dropped into a tall 96x264 column gets ~45% of its width cropped away and
+     slices the face off, so each usage requests its own dimensions. */
+  const PHOTO = (pid, w, h) =>
+    `https://images.unsplash.com/photo-${pid}?w=${w}&h=${h}&fit=crop&crop=faces&q=70&fm=jpg`;
+  const cardPhoto = c => PHOTO(c.pid, 200, 540);   // tall gallery column
+  const facePhoto = c => PHOTO(c.pid,  80,  80);   // small round-square avatar
+  const heroPhoto = c => PHOTO(c.pid, 900, 420);   // wide S-B3 hero
 
   const BANDS = [
     { key:'family', name:'Family & intent',        w:30 },
@@ -1049,7 +1055,7 @@
   const CANDIDATES = [
     { id:'david', name:'David', age:41, city:'London',
       blurb:'Deputy head · 2 kids · London',
-      photo:PHOTO('1531901599143-df5010ab9438'),
+      pid:'1531901599143-df5010ab9438',
       bands:{
         family:{ score:74, bullets:[
           B('y','You set "must welcome a blended family" as a dealbreaker · he answered "open to children from a previous marriage"','onboarding'),
@@ -1080,7 +1086,7 @@
 
     { id:'samuel', name:'Samuel', age:44, city:'London',
       blurb:'Architect · wants kids · London',
-      photo:PHOTO('1596580817363-a4a8f67d4bc8'),
+      pid:'1596580817363-a4a8f67d4bc8',
       bands:{
         family:{ score:59, bullets:[
           B('y','He answered "welcomes a blended family" — your dealbreaker','onboarding'),
@@ -1106,7 +1112,7 @@
 
     { id:'marcus', name:'Marcus', age:39, city:'Reading',
       blurb:'GP · blended-family open · Reading',
-      photo:PHOTO('1605980776566-0486c3ac7617'),
+      pid:'1605980776566-0486c3ac7617',
       bands:{
         family:{ score:66, bullets:[
           B('y','He answered "blended-family open" — your dealbreaker','onboarding'),
@@ -1132,31 +1138,31 @@
 
     { id:'tunde', name:'Tunde', age:43, city:'Croydon',
       blurb:'Structural engineer · 1 kid · Croydon',
-      photo:PHOTO('1614023342667-6f060e9d1e04'),
+      pid:'1614023342667-6f060e9d1e04',
       bands:benchBands(62,'y','You live in London · he lives in Croydon — same metro area',
                        52,'You are 40 · he is 43 — inside your stated 38–48 range') },
 
     { id:'emeka', name:'Emeka', age:40, city:'Luton',
       blurb:'Pharmacist · no kids · Luton',
-      photo:PHOTO('1565884280295-98eb83e41c65'),
+      pid:'1565884280295-98eb83e41c65',
       bands:benchBands(56,'n','You live in London · he lives in Luton — about 30 miles apart',
                        54,'You are 40 · he is 40 — inside your stated 38–48 range') },
 
     { id:'kwame', name:'Kwame', age:45, city:'Birmingham',
       blurb:'Secondary teacher · 3 kids · Birmingham',
-      photo:PHOTO('1584119164246-461d43e9bab3'),
+      pid:'1584119164246-461d43e9bab3',
       bands:benchBands(44,'n','You live in London · he lives in Birmingham — about 120 miles apart',
                        62,'You are 40 · he is 45 — inside your stated 38–48 range') },
 
     { id:'ifeanyi', name:'Ifeanyi', age:38, city:'Manchester',
       blurb:'Data analyst · no kids · Manchester',
-      photo:PHOTO('1522529599102-193c0d76b5b6'),
+      pid:'1522529599102-193c0d76b5b6',
       bands:benchBands(40,'n','You live in London · he lives in Manchester — about 200 miles apart',
                        60,'You are 40 · he is 38 — inside your stated 38–48 range') },
 
     { id:'bode', name:'Bode', age:42, city:'Dublin',
       blurb:'Logistics manager · 2 kids · Dublin',
-      photo:PHOTO('1617244147299-5ef406921c35'),
+      pid:'1617244147299-5ef406921c35',
       bands:benchBands(38,'n','You live in the UK · he lives in Ireland — different country',
                        61,'You are 40 · he is 42 — inside your stated 38–48 range') }
   ];
@@ -1223,7 +1229,7 @@
     const lowTag = cl === 'Low'
       ? '<span class="tag warn" style="margin-left:6px">Low confidence</span>' : '';
     return `<div class="row cand" data-id="${c.id}" style="padding:0;overflow:hidden;align-items:stretch">
-      <div class="av ${GRAD(c)}" style="width:96px;height:auto;min-height:120px;border-radius:0;background-image:url('${c.photo}')"></div>
+      <div class="av ${GRAD(c)}" style="width:96px;height:auto;min-height:120px;border-radius:0;background-image:url('${cardPhoto(c)}');background-size:cover;background-position:center"></div>
       <div class="grow" style="padding:12px">
         <div class="t1">${c.name}, ${c.age}${lowTag}</div>
         <div class="t2">${c.blurb}</div>
@@ -1260,7 +1266,7 @@
   if (document.readyState !== 'loading') render();
 
   Object.assign(window, { CANDIDATES, BANDS, RESTORE_PRICE, UNDO_MS,
-    fit, conf, scoreLabel, confLabel, bulletCount, PHOTO,
+    fit, conf, scoreLabel, confLabel, bulletCount, PHOTO, cardPhoto, facePhoto, heroPhoto,
     render, state, byId, save, load });
 })();
 </script>
