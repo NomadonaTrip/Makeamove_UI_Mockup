@@ -309,6 +309,48 @@
   .tabbar a .ic{display:block; font-size:18px; margin-bottom:3px}
   .tabbar a.on{color:var(--spotlight)}
 
+  /* ===== CANDIDATE GALLERY ===== */
+  /* Portrait fallback. `.av.gN` sets `background:` as a SHORTHAND, so an inline
+     `background-image:url(photo)` replaces the gradient outright and also resets
+     background-size/position. Pin a solid brand colour behind each gradient so a
+     portrait that fails to load shows colour, not an empty box. */
+  .av.g1{background-color:#3A6CFF} .av.g2{background-color:#FF2D6F}
+  .av.g3{background-color:#2BD18B} .av.g4{background-color:#FFB627}
+  .av[style*="url("]{background-size:cover; background-position:center}
+  .fit{display:flex; align-items:center; gap:8px; margin-top:8px; font-size:12px; font-weight:700}
+  .fit .n{font-family:var(--display); font-weight:900; font-size:15px; color:var(--t)}
+  .dark .fit .n{color:var(--ink)}
+  .fit .prog{flex:1; min-width:48px}
+
+  .why{list-style:none; margin:8px 0 0; padding:0; display:flex; flex-direction:column; gap:6px}
+  .why li{display:flex; gap:7px; font-size:12px; line-height:1.45; color:var(--t-dim)}
+  .dark .why li{color:var(--ink-dim)}
+  .why li::before{flex:0 0 auto; font-weight:800; width:11px}
+  .why li.y::before{content:"\2713"; color:var(--pass)}
+  .why li.n::before{content:"\2717"; color:var(--move)}
+  .why li.o::before{content:"\25CB"; color:var(--t-faint)}
+  .why .src{opacity:.6; font-size:10.5px; white-space:nowrap}
+
+  .drawer{display:none} .drawer.open{display:flex; flex-direction:column; gap:10px}
+
+  .mm-toast{position:fixed; left:18px; right:18px; bottom:74px; z-index:40;
+    display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:12px;
+    background:var(--stage-800); color:var(--ink); font-size:13px; font-weight:600;
+    box-shadow:0 10px 30px rgba(0,0,0,.3); opacity:0; transform:translateY(8px);
+    pointer-events:none; transition:opacity .25s, transform .25s}
+  .mm-toast.on{opacity:1; transform:none; pointer-events:auto}
+  .mm-toast button{margin-left:auto; background:none; border:none; cursor:pointer;
+    font-family:var(--display); font-weight:800; letter-spacing:.1em; text-transform:uppercase;
+    font-size:11px; color:var(--bulb)}
+
+  .mm-sheet{position:fixed; inset:0; z-index:50; display:none; align-items:flex-end;
+    background:rgba(8,12,26,.55)}
+  .mm-sheet.on{display:flex}
+  .mm-sheet .box{width:100%; background:var(--paper); border-radius:18px 18px 0 0;
+    padding:20px 18px calc(20px + env(safe-area-inset-bottom));
+    display:flex; flex-direction:column; gap:12px}
+  .dark .mm-sheet .box{background:var(--stage-850)}
+
   /* ===== SCREEN INDEX OVERLAY ===== */
   .index{position:fixed; inset:0; z-index:200; background:rgba(5,7,15,.86); backdrop-filter:blur(8px);
     display:none; padding:40px 18px; overflow-y:auto}
@@ -956,50 +998,536 @@
       </section>
 
       <section class="screen paper" id="S-B2" data-group="B · Matching" data-title="Candidate gallery">
-        <div class="pbar"><span class="brand" style="font-size:18px">Make<span class="a">a</span>Move</span><a class="act" href="#S-G1">Credits ›</a></div>
+        <div class="pbar"><span class="brand" style="font-size:18px">Make<span class="a">a</span>Move</span><a class="act" href="#S-G1">Credits ›</a><a class="av g2 s28" href="#S-A9" style="background-image:url('https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=80&amp;h=80&amp;fit=crop&amp;crop=faces&amp;q=70&amp;fm=jpg')" aria-label="Your profile"></a></div>
         <div class="body">
-          <div class="note pass" style="display:flex;align-items:center;gap:10px"><svg class="icon" style="width:22px;height:22px"><use href="#i-party"/></svg><div><b>You have 3 pre-matches.</b><br><span style="font-size:12px">Each one cleared every dealbreaker you set.</span></div></div>
+          <div class="note pass" style="display:flex;align-items:center;gap:10px"><svg class="icon" style="width:22px;height:22px"><use href="#i-party"/></svg><div><b id="b2count">You have 3 pre-matches.</b><br><span style="font-size:12px">Each one cleared every dealbreaker you set.</span></div></div>
           <h2 class="scrn" style="font-size:24px">Your candidates</h2>
           <p class="muted" style="font-size:12.5px;margin-top:-6px">Photo and a few details now — full profiles unlock only after they accept your invite. No bios to doom-scroll.</p>
-          <a class="row" href="#S-B3" style="padding:0;overflow:hidden">
-            <div class="av g1" style="width:96px;height:120px;border-radius:0;font-size:30px">D</div>
-            <div class="grow" style="padding:12px 6px"><div class="t1">David, 41</div><div class="t2">Deputy head · 2 kids · London</div><div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><span class="tag pass">Family fit</span><span class="tag">AA</span></div></div>
-            <span class="chev" style="padding-right:12px">›</span>
-          </a>
-          <a class="row" href="#S-B3" style="padding:0;overflow:hidden">
-            <div class="av g3" style="width:96px;height:120px;border-radius:0;font-size:30px">S</div>
-            <div class="grow" style="padding:12px 6px"><div class="t1">Samuel, 44</div><div class="t2">Architect · wants kids · London</div><div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><span class="tag pass">Values fit</span><span class="tag">AA</span></div></div>
-            <span class="chev" style="padding-right:12px">›</span>
-          </a>
-          <a class="row" href="#S-B3" style="padding:0;overflow:hidden">
-            <div class="av g4" style="width:96px;height:120px;border-radius:0;font-size:30px">M</div>
-            <div class="grow" style="padding:12px 6px"><div class="t1">Marcus, 39</div><div class="t2">GP · blended-family open · Reading</div><div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><span class="tag pass">Family fit</span><span class="tag">AA</span></div></div>
-            <span class="chev" style="padding-right:12px">›</span>
-          </a>
-          <a class="row" href="#S-A9"><div class="av g2 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-sparkle"/></svg></div><div class="grow"><div class="t1">Enrich your profile</div><div class="t2">Optional — you're already matched. Richer answers sharpen future lists.</div></div><span class="chev">›</span></a>
+          <div id="b2list" style="display:flex;flex-direction:column;gap:12px"></div>
+          <div id="b2drawerwrap"></div>
+          <div id="b2gap"></div>
         </div>
+        <div class="mm-toast" id="mmToast"><span id="mmToastMsg"></span><button id="mmUndo">Undo</button></div>
+        <div class="mm-sheet" id="mmSheet"><div class="box">
+          <h3 class="scrn" style="font-size:19px;margin:0" id="mmSheetTitle"></h3>
+          <p class="muted" style="font-size:13px;margin:0" id="mmSheetBody"></p>
+          <button class="btn move block" id="mmSheetGo"></button>
+          <button class="btn ghost block" id="mmSheetNo">Not now</button>
+        </div></div>
         <div class="tabbar"><a class="on" href="#S-B2"><span class="ic"><svg class="icon"><use href="#i-heart"/></svg></span>Matches</a><a href="#S-C2"><span class="ic"><svg class="icon"><use href="#i-mail"/></svg></span>Invites</a><a href="#S-G1"><span class="ic"><svg class="icon"><use href="#i-diamond"/></svg></span>Credits</a><a href="#S-A9"><span class="ic"><svg class="icon"><use href="#i-user"/></svg></span>Profile</a></div>
+        <script>
+/* ===== CANDIDATE GALLERY ENGINE (S-B2 / S-B3) =====
+   Fixtures, not a real matching engine. Fit and confidence are DERIVED from
+   band scores at render time so editing a band moves the headline number. */
+(function(){
+  const RESTORE_PRICE = 3;      // £ — cross-check vs Badoo before launch
+  const UNDO_MS = 6000;
+  /* Ask Unsplash to face-crop to the ASPECT OF THE SLOT. A square-ish source
+     dropped into a tall 96x264 column gets ~45% of its width cropped away and
+     slices the face off, so each usage requests its own dimensions. */
+  const PHOTO = (pid, w, h) =>
+    `https://images.unsplash.com/photo-${pid}?w=${w}&h=${h}&fit=crop&crop=faces&q=70&fm=jpg`;
+  const cardPhoto = c => PHOTO(c.pid, 200, 540);   // tall gallery column
+  const facePhoto = c => PHOTO(c.pid,  80,  80);   // small round-square avatar
+  const heroPhoto = c => PHOTO(c.pid, 900, 420);   // wide S-B3 hero
+
+  const BANDS = [
+    { key:'family', name:'Family & intent',        w:30 },
+    { key:'geo',    name:'Geography',              w:20 },
+    { key:'stage',  name:'Life stage',             w:15 },
+    { key:'person', name:'Personality & lifestyle',w:20 },
+    { key:'love',   name:'Love & intimacy',        w:15 }
+  ];
+
+  /* bullet: s = 'y' match | 'n' mismatch | 'o' no data; src = source tag */
+  const B = (s,t,src) => ({ s, t, src });
+
+  /* Bench candidates all share a shape: only the two onboarding-derived bands
+     score, which is exactly the cold-start case the prototype demonstrates. */
+  function benchBands(geoScore, geoState, geoText, stageScore, stageText, eduBullet){
+    return {
+      family:{ score:null, blankOwner:'them', bullets:[
+        B('o','He has not completed Marriage & family','no data'),
+        B('o','You have 2 children · he has not said whether he wants more','no data')
+      ]},
+      geo:{ score:geoScore, bullets:[
+        B(geoState, geoText,'onboarding'),
+        B('o','Neither of you has given a travel radius','no data')
+      ]},
+      stage:{ score:stageScore, bullets:[ B('y', stageText,'onboarding'), eduBullet ] },
+      person:{ score:null, blankOwner:'them', bullets:[
+        B('o','He has not completed Personality & lifestyle','no data'),
+        B('o','He has not played a show, so no gameplay signal exists','no data')
+      ]},
+      love:{ score:null, blankOwner:'them', bullets:[
+        B('o','He has not completed Love & intimacy','no data')
+      ]}
+    };
+  }
+
+  const CANDIDATES = [
+    { id:'david', name:'David', age:41, city:'London',
+      blurb:'Deputy head · 2 kids · London',
+      pid:'1531901599143-df5010ab9438',
+      bands:{
+        family:{ score:74, bullets:[
+          B('y','You set "must welcome a blended family" as a dealbreaker · he answered "open to children from a previous marriage"','onboarding'),
+          B('y','You have 2 children · he has 2 children','onboarding'),
+          B('y','You want marriage within 2 years · he answered "within 2 years"','profile'),
+          B('n','You are open to one more child · he answered "no more children"','profile')
+        ]},
+        geo:{ score:84, bullets:[
+          B('y','You live in London · he lives in London — same city','onboarding'),
+          B('o','Neither of you has given a travel radius','no data')
+        ]},
+        stage:{ score:70, bullets:[
+          B('y','You are 40 · he is 41 — inside your stated 38–48 range','onboarding'),
+          B('y','You are employed full time · he is employed full time','onboarding'),
+          B('y','You both hold a postgraduate qualification','profile')
+        ]},
+        /* blankOwner 'you' — HE answered; the gap is on the user's side, so this
+           is the one band that earns an actionable link on S-B3. */
+        person:{ score:null, blankOwner:'you', bullets:[
+          B('o','You have not completed Personality & lifestyle','no data'),
+          B('o','He answered all 6 questions — the missing side is yours','profile')
+        ]},
+        /* blankOwner 'you' — like his person band, HE answered and the user did
+           not. Scoring this band would contradict USER_GAPS, which says the user
+           has not completed Love & intimacy. */
+        love:{ score:null, blankOwner:'you', bullets:[
+          B('o','You have not completed Love & intimacy','no data'),
+          B('o','He answered all 3 questions — the missing side is yours','profile')
+        ]}
+      }},
+
+    { id:'samuel', name:'Samuel', age:44, city:'London',
+      blurb:'Architect · wants kids · London',
+      pid:'1596580817363-a4a8f67d4bc8',
+      bands:{
+        family:{ score:59, bullets:[
+          B('y','He answered "welcomes a blended family" — your dealbreaker','onboarding'),
+          B('n','You are open to one more child · he has none and wants two','profile'),
+          B('y','You want marriage within 2 years · he answered "within 3 years"','profile')
+        ]},
+        geo:{ score:84, bullets:[
+          B('y','You live in London · he lives in London — same city','onboarding'),
+          B('o','Neither of you has given a travel radius','no data')
+        ]},
+        stage:{ score:66, bullets:[
+          B('y','You are 40 · he is 44 — inside your stated 38–48 range','onboarding'),
+          B('y','You are both in work · you full time, he self-employed','onboarding')
+        ]},
+        person:{ score:null, blankOwner:'them', bullets:[
+          B('o','He has not completed Personality & lifestyle','no data'),
+          B('o','He has not played a show, so no gameplay signal exists','no data')
+        ]},
+        love:{ score:null, blankOwner:'them', bullets:[
+          B('o','He has not completed Love & intimacy','no data')
+        ]}
+      }},
+
+    { id:'marcus', name:'Marcus', age:39, city:'Reading',
+      blurb:'GP · blended-family open · Reading',
+      pid:'1605980776566-0486c3ac7617',
+      bands:{
+        family:{ score:66, bullets:[
+          B('y','He answered "blended-family open" — your dealbreaker','onboarding'),
+          B('y','You have 2 children · he has 1 child','onboarding'),
+          B('o','He has not given a marriage timeline','no data')
+        ]},
+        geo:{ score:55, bullets:[
+          B('n','You live in London · he lives in Reading — about 40 miles apart','onboarding'),
+          B('o','Neither of you has given a travel radius','no data')
+        ]},
+        stage:{ score:60, bullets:[
+          B('y','You are 40 · he is 39 — inside your stated 38–48 range','onboarding'),
+          B('y','You are employed full time · he is employed full time','onboarding')
+        ]},
+        person:{ score:null, blankOwner:'them', bullets:[
+          B('o','He has not completed Personality & lifestyle','no data'),
+          B('o','He has not played a show, so no gameplay signal exists','no data')
+        ]},
+        love:{ score:null, blankOwner:'them', bullets:[
+          B('o','He has not completed Love & intimacy','no data')
+        ]}
+      }},
+
+    { id:'tunde', name:'Tunde', age:43, city:'Croydon',
+      blurb:'Structural engineer · 1 kid · Croydon',
+      pid:'1614023342667-6f060e9d1e04',
+      bands:benchBands(62,'y','You live in London · he lives in Croydon — same metro area',
+                       50,'You are 40 · he is 43 — inside your stated 38–48 range',
+                       B('o','He has not given his education level','no data')) },
+
+    { id:'emeka', name:'Emeka', age:40, city:'Luton',
+      blurb:'Pharmacist · no kids · Luton',
+      pid:'1565884280295-98eb83e41c65',
+      bands:benchBands(56,'n','You live in London · he lives in Luton — about 30 miles apart',
+                       54,'You are 40 · he is 40 — inside your stated 38–48 range',
+                       B('o','He has not given his education level','no data')) },
+
+    { id:'kwame', name:'Kwame', age:45, city:'Birmingham',
+      blurb:'Secondary teacher · 3 kids · Birmingham',
+      pid:'1584119164246-461d43e9bab3',
+      bands:benchBands(44,'n','You live in London · he lives in Birmingham — about 120 miles apart',
+                       58,'You are 40 · he is 45 — inside your stated 38–48 range',
+                       B('y','You both hold a postgraduate qualification','profile')) },
+
+    { id:'ifeanyi', name:'Ifeanyi', age:38, city:'Manchester',
+      blurb:'Data analyst · no kids · Manchester',
+      pid:'1522529599102-193c0d76b5b6',
+      bands:benchBands(40,'n','You live in London · he lives in Manchester — about 200 miles apart',
+                       60,'You are 40 · he is 38 — inside your stated 38–48 range',
+                       B('y','You are both employed full time','onboarding')) },
+
+    { id:'bode', name:'Bode', age:42, city:'Dublin',
+      blurb:'Logistics manager · 2 kids · Dublin',
+      pid:'1617244147299-5ef406921c35',
+      bands:benchBands(38,'n','You live in the UK · he lives in Ireland — different country',
+                       62,'You are 40 · he is 42 — inside your stated 38–48 range',
+                       B('y','You both hold a postgraduate qualification','profile')) }
+  ];
+
+  /* ---- derivations ---- */
+  function conf(c){                       // scored weight, out of 100
+    return BANDS.reduce((s,b) =>
+      s + (c.bands[b.key] && c.bands[b.key].score != null ? b.w : 0), 0);
+  }
+  function fit(c){                        // weighted mean over scored bands
+    let sw = 0, tot = 0;
+    BANDS.forEach(b => {
+      const bd = c.bands[b.key];
+      if (bd && bd.score != null) { sw += b.w; tot += b.w * bd.score; }
+    });
+    return sw ? Math.round(tot / sw) : 0;
+  }
+  const scoreLabel = n => n >= 70 ? 'Strong' : n >= 50 ? 'Moderate' : 'Weak';
+  const confLabel  = c => { const k = conf(c);
+    return k >= 70 ? 'High' : k >= 40 ? 'Medium' : 'Low'; };
+  const bulletCount = c => BANDS.reduce((n,b) =>
+    n + ((c.bands[b.key] && c.bands[b.key].bullets) || []).length, 0);
+
+  /* ---- state ---- */
+  const KEY = 'mm_cand';
+  const DEFAULT = { live:['david','samuel','marcus'],
+                    bench:['tunde','emeka','kwame','ifeanyi','bode'],
+                    removed:[] };
+  let state;
+  const byId = id => CANDIDATES.find(c => c.id === id);
+  function load(){
+    try { state = JSON.parse(sessionStorage.getItem(KEY)) || {...DEFAULT}; }
+    catch(e){ state = {...DEFAULT}; }
+    if (!state.live || !state.bench || !state.removed) state = {...DEFAULT};
+    if (state.pending){ state.removed.push(state.pending.id); state.pending = null; save(); }
+  }
+  const save = () => sessionStorage.setItem(KEY, JSON.stringify(state));
+
+  /* ---- rendering ---- */
+  function bulletHTML(b){
+    return `<li class="${b.s}"><span>${b.t} <span class="src">[${b.src}]</span></span></li>`;
+  }
+  /* The card carries only the two most decisive bullets: the highest-weight
+     observed match, plus the sharpest observed mismatch if one exists. */
+  function topBullets(c){
+    const ordered = BANDS.slice().sort((a,b) => b.w - a.w);
+    let match = null, miss = null;
+    ordered.forEach(b => {
+      const bd = c.bands[b.key];
+      if (!bd) return;
+      bd.bullets.forEach(x => {
+        if (x.s === 'y' && !match) match = x;
+        if (x.s === 'n' && !miss)  miss  = x;
+      });
+    });
+    return [match, miss].filter(Boolean).slice(0,2);
+  }
+  /* Keep a gradient class on every portrait: if Unsplash is unreachable a
+     solid brand colour shows through (see the .av.gN{background-color} rules
+     — don't delete them), so the gallery degrades gracefully rather than
+     rendering empty boxes. */
+  const GRAD = c => 'g' + (1 + (CANDIDATES.indexOf(c) % 4));
+
+  function cardHTML(c){
+    const f = fit(c), lab = scoreLabel(f), cl = confLabel(c);
+    const lowTag = cl === 'Low'
+      ? '<span class="tag warn" style="margin-left:6px">Low confidence</span>' : '';
+    return `<div class="row cand" data-id="${c.id}" style="padding:0;overflow:hidden;align-items:stretch">
+      <div class="av ${GRAD(c)}" style="width:96px;height:auto;min-height:120px;border-radius:0;background-image:url('${cardPhoto(c)}')"></div>
+      <div class="grow" style="padding:12px">
+        <div class="t1">${c.name}, ${c.age}${lowTag}</div>
+        <div class="t2">${c.blurb}</div>
+        <div class="fit"><span class="n">${f}%</span><span class="muted">${lab}</span>
+          <span class="prog"><i style="width:${f}%"></i></span></div>
+        <ul class="why">${topBullets(c).map(bulletHTML).join('')}</ul>
+        <a class="link seeall" href="#S-B3" data-id="${c.id}"
+           style="font-size:12px;margin-top:8px;display:inline-block">See all ${bulletCount(c)} reasons ›</a>
+      </div>
+      <button class="cand-x" data-id="${c.id}" aria-label="Remove ${c.name}"
+        style="flex:0 0 auto;background:none;border:none;cursor:pointer;padding:10px 12px;align-self:flex-start;color:var(--t-faint);font-size:16px">✕</button>
+    </div>`;
+  }
+  function render(){
+    const list = document.getElementById('b2list');
+    if (!list) return;
+    list.innerHTML = state.live.map(id => cardHTML(byId(id))).join('');
+    const n = state.live.length;
+    const count = document.getElementById('b2count');
+    if (count) count.textContent = `You have ${n} pre-match${n === 1 ? '' : 'es'}.`;
+    list.querySelectorAll('.cand-x').forEach(btn =>
+      btn.addEventListener('click', () => remove(btn.dataset.id)));
+    list.querySelectorAll('.seeall').forEach(a =>
+      a.addEventListener('click', () => sessionStorage.setItem('mm_cand_open', a.dataset.id)));
+    renderDrawer();   // defined in Task 4
+    renderGap();      // defined in Task 5
+    renderProfile();  // defined in Task 6
+  }
+  /* Sections the *user* has left blank. In the prototype these are fixtures;
+     in production they would be read from the user's profile record. */
+  const USER_GAPS = [
+    { band:'person', name:'Personality & lifestyle', screen:'#S-P3', qs:6 },
+    { band:'love',   name:'Love & intimacy',         screen:'#S-P4', qs:3 }
+  ];
+
+  /* A candidate only counts if HE answered and the user did not — otherwise
+     completing your side changes nothing for him, and claiming otherwise
+     would be a lie. */
+  const userBlocks = (id, band) => {
+    const bd = byId(id).bands[band];
+    return !!bd && bd.score == null && bd.blankOwner === 'you';
+  };
+  /* How many live candidates is THIS gap actually blocking? */
+  function blocking(gap){
+    return state.live.filter(id => userBlocks(id, gap.band)).length;
+  }
+
+  function renderGap(){
+    const wrap = document.getElementById('b2gap');
+    if (!wrap) return;
+    const n = USER_GAPS.length, live = state.live.length;
+    if (!n){
+      wrap.innerHTML = `<div class="note pass">All 5 bands scored on your side.
+        Nothing else is needed from you.</div>`;
+      return;
+    }
+    const totalQs = USER_GAPS.reduce((s,g) => s + g.qs, 0);
+    const mins = Math.max(1, Math.round(totalQs * 0.25));
+    const [first, ...rest] = USER_GAPS;
+    const lines = USER_GAPS.map(g => {
+      const k = blocking(g);
+      return `<li class="${k ? 'n' : 'o'}"><span><b>${g.name}</b> — ${
+        k ? `blocking ${k} of your ${live} candidate${live===1?'':'s'} from a full score`
+          : `not blocking any of your current candidates`
+      } <span class="src">[no data]</span></span></li>`;
+    }).join('');
+    /* distinct candidates, not gap-hits: one candidate blocked on two gaps is
+       still one candidate */
+    const helped = new Set(
+      USER_GAPS.flatMap(g => state.live.filter(id => userBlocks(id, g.band)))
+    ).size;
+    wrap.innerHTML = `<div class="card" style="margin-top:4px">
+      <div class="eyebrow">✦ ${n} band${n===1?'':'s'} ${n===1?'is':'are'} blank on your side</div>
+      <ul class="why" style="margin-top:10px">${lines}</ul>
+      <p class="muted" style="font-size:12.5px;line-height:1.5;margin:10px 0 0">
+        ${helped
+          ? `Answering ${n===1?'it':'both'} would complete the picture for the ${
+              helped === 1 ? 'one candidate whose' : `${helped} candidates whose`
+            } side is already filled in — and for future candidates who have answered theirs.`
+          : `None of your current candidates has answered ${n===1?'it':'these'} either, so
+             answering now would not change their scores — but any future candidate who has
+             answered theirs would be scored on all 5 bands.`}</p>
+      <div class="muted" style="font-size:11.5px;margin-top:6px">
+        ~${totalQs} questions · about ${mins} minutes</div>
+      <a class="btn primary block" href="${first.screen}" style="margin-top:12px">Answer ${first.name} ›</a>
+      ${rest.map(g => `<a class="link center" href="${g.screen}" style="margin-top:8px;display:block">${g.name} ›</a>`).join('')}
+      <div class="note" style="margin-top:12px">Optional, always. You're already
+        matched — this only sharpens who we put in front of you next.</div>
+    </div>`;
+  }
+
+  let undoTimer = null, pendingUndo = null, drawerOpen = true;
+
+  /* Only ONE removal may be pending at a time. `pendingUndo` and `undoTimer` are
+     single slots, so a second removal inside the 6s window would overwrite the
+     first — its commit never fires and that candidate disappears from live,
+     bench AND removed alike. Any other state-mutating action therefore finalises
+     the outstanding removal first. */
+  function flushPending(){
+    if (!pendingUndo) return;
+    clearTimeout(undoTimer);
+    const t = document.getElementById('mmToast');
+    if (t) t.classList.remove('on');
+    commitRemoval();
+  }
+
+  function backfill(){
+    while (state.live.length < 3 && state.bench.length){
+      state.live.push(state.bench.shift());     // bench is fit-descending
+    }
+  }
+  function toast(msg, onUndo){
+    const t  = document.getElementById('mmToast');
+    const btn = document.getElementById('mmUndo');
+    document.getElementById('mmToastMsg').textContent = msg;
+    t.classList.add('on');
+    btn.onclick = () => { clearTimeout(undoTimer); t.classList.remove('on'); onUndo(); };
+    clearTimeout(undoTimer);
+    undoTimer = setTimeout(() => { t.classList.remove('on'); commitRemoval(); }, UNDO_MS);
+  }
+  function remove(id){
+    flushPending();
+    const i = state.live.indexOf(id);
+    if (i === -1) return;
+    state.live.splice(i, 1);
+    pendingUndo = { id, index:i, backfilled:null };
+    const benchTop = state.bench[0];
+    backfill();
+    if (state.live.includes(benchTop)) pendingUndo.backfilled = benchTop;
+    state.pending = pendingUndo;
+    save(); render();
+    toast(`${byId(id).name} removed.`, () => {
+      // free undo: put him back, send the backfill to the front of the bench
+      if (pendingUndo.backfilled){
+        state.live = state.live.filter(x => x !== pendingUndo.backfilled);
+        if (!state.bench.includes(pendingUndo.backfilled))
+          state.bench.unshift(pendingUndo.backfilled);
+      }
+      state.live.splice(pendingUndo.index, 0, pendingUndo.id);
+      pendingUndo = null; state.pending = null; save(); render();
+    });
+  }
+  function commitRemoval(){
+    if (!pendingUndo) return;
+    state.removed.push(pendingUndo.id);
+    pendingUndo = null; state.pending = null; save(); render();
+  }
+  function renderDrawer(){
+    const wrap = document.getElementById('b2drawerwrap');
+    if (!wrap) return;
+    if (!state.removed.length){ wrap.innerHTML = ''; return; }
+    const open = drawerOpen;
+    wrap.innerHTML = `
+      <div class="eyebrow drawer-toggle" style="margin-top:6px;cursor:pointer">${open ? '▾' : '▸'} Removed (${state.removed.length})</div>
+      <div class="drawer ${open ? 'open' : ''}">${state.removed.map(id => {
+        const c = byId(id);
+        return `<div class="row" data-id="${id}">
+          <div class="av s40 ${GRAD(c)}" style="background-image:url('${facePhoto(c)}')"></div>
+          <div class="grow"><div class="t1">${c.name}, ${c.age}</div>
+            <div class="t2">Fit ${fit(c)}% · removed by you</div></div>
+          <button class="btn sm ghost restore" data-id="${id}">Restore · £${RESTORE_PRICE}</button>
+        </div>`;
+      }).join('')}</div>`;
+    wrap.querySelectorAll('.restore').forEach(b =>
+      b.addEventListener('click', () => confirmRestore(b.dataset.id)));
+    const toggle = wrap.querySelector('.drawer-toggle');
+    if (toggle) toggle.addEventListener('click', () => {
+      drawerOpen = !drawerOpen;
+      renderDrawer();
+    });
+  }
+  function confirmRestore(id){
+    const c = byId(id), sheet = document.getElementById('mmSheet');
+    document.getElementById('mmSheetTitle').textContent = `Restore ${c.name}?`;
+    document.getElementById('mmSheetBody').textContent =
+      `£${RESTORE_PRICE} one-off. This is not a session credit — your credits stay untouched. ` +
+      `${c.name} returns to your list and your weakest current candidate goes back to the pool.`;
+    const go = document.getElementById('mmSheetGo');
+    go.textContent = `Pay £${RESTORE_PRICE} · restore ${c.name}`;
+    go.onclick = () => { restore(id); sheet.classList.remove('on'); };
+    document.getElementById('mmSheetNo').onclick = () => sheet.classList.remove('on');
+    sheet.classList.add('on');
+  }
+  const byFit = (a,b) => fit(byId(b)) - fit(byId(a));   // fit-descending
+  function restore(id){
+    flushPending();
+    state.removed = state.removed.filter(x => x !== id);
+    // hold the list at three: weakest live candidate returns to the bench front
+    if (state.live.length >= 3){
+      const weakest = [...state.live].sort(byFit).pop();
+      state.live = state.live.filter(x => x !== weakest);
+      state.bench.push(weakest);
+      state.bench.sort(byFit);
+    }
+    state.live.push(id);
+    state.live.sort(byFit);
+    save(); render();
+  }
+
+  function renderProfile(){
+    const id = sessionStorage.getItem('mm_cand_open') || state.live[0];
+    const c = byId(id);
+    if (!c || !document.getElementById('b3body')) return;
+    document.getElementById('b3name').textContent = `${c.name}, ${c.age}`;
+    document.getElementById('b3hero').style.backgroundImage = `url('${heroPhoto(c)}')`;
+
+    const scored = BANDS.filter(b => c.bands[b.key] && c.bands[b.key].score != null).length;
+    const k = conf(c), f = fit(c);
+    const theirGap = BANDS.reduce((s,b) => {
+      const bd = c.bands[b.key];
+      return s + (bd && bd.score == null && bd.blankOwner === 'them' ? b.w : 0);
+    }, 0);
+    const advisory = k < 40 ? `<div class="note danger advisory">! Surfaced partly at
+      random. Only ${scored} of 5 bands could be scored, so he is not meaningfully
+      ranked against your other candidates.</div>` : '';
+
+    /* A link only helps when HE has already answered — completing your side
+       then actually scores the band. If he is the missing side, the link would
+       promise an improvement the user cannot cause. */
+    const gapFor = (key, bd) =>
+      bd.blankOwner === 'you' ? USER_GAPS.find(g => g.band === key) : null;
+
+    document.getElementById('b3body').innerHTML = `
+      <div class="card">
+        <div class="eyebrow">Overall fit</div>
+        <div class="fit" style="margin-top:6px"><span class="n" style="font-size:26px">${f}%</span>
+          <span class="muted">${scoreLabel(f)} · ${confLabel(c)} confidence</span></div>
+        <div class="prog" style="margin-top:8px"><i style="width:${f}%"></i></div>
+        <div class="muted completeness" style="font-size:12px;margin-top:8px">Scored on
+          ${scored} of 5 bands · he's completed ${100 - theirGap}% of his profile</div>
+      </div>
+      ${advisory}
+      <div class="note pass">✓ Dealbreakers cleared — genotype AA, marital status
+        eligible, and welcomes a blended family.</div>
+      ${BANDS.map(b => {
+        const bd = c.bands[b.key] || { score:null, bullets:[] };
+        const blank = bd.score == null;
+        const gap = blank && gapFor(b.key, bd);
+        return `<div class="card band" ${blank ? 'style="opacity:.72"' : ''}>
+          <div style="display:flex;align-items:baseline;gap:8px">
+            <b class="bname" style="font-size:13.5px">${b.name}</b>
+            <span class="muted" style="font-size:11px;margin-left:auto">${
+              blank ? '— · Not enough data'
+                    : `${bd.score}% · ${scoreLabel(bd.score)}`}</span>
+          </div>
+          ${blank ? '' : `<div class="prog" style="margin-top:8px"><i style="width:${bd.score}%"></i></div>`}
+          <ul class="why">${bd.bullets.map(bulletHTML).join('')}</ul>
+          ${gap ? `<a class="link" href="${gap.screen}" style="font-size:12px;margin-top:8px;display:inline-block">Blank because you haven't answered ${gap.name}. Answer it ›</a>` : ''}
+        </div>`;
+      }).join('')}`;
+  }
+  window.addEventListener('hashchange', () => {
+    if (location.hash === '#S-B3') renderProfile();
+  });
+
+  load();
+  document.addEventListener('DOMContentLoaded', render);
+  if (document.readyState !== 'loading') render();
+
+  Object.assign(window, { CANDIDATES, BANDS, RESTORE_PRICE, UNDO_MS, USER_GAPS,
+    fit, conf, scoreLabel, confLabel, bulletCount, PHOTO, cardPhoto, facePhoto, heroPhoto,
+    render, state, byId, save, load, remove, restore, confirmRestore, renderProfile });
+})();
+</script>
       </section>
 
       <section class="screen paper" id="S-B3" data-group="B · Matching" data-title="Candidate profile (sparse)">
-        <div class="pbar"><a class="back" href="#S-B2">‹</a><h1>David, 41</h1></div>
+        <div class="pbar"><a class="back" href="#S-B2">‹</a><h1 id="b3name">Candidate</h1></div>
         <div class="body">
-          <div class="av g1" style="width:100%;height:200px;border-radius:16px;font-size:60px">D</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <span class="tag">Deputy head</span><span class="tag">2 kids</span><span class="tag">London</span><span class="tag pass">AA · genotype-safe</span>
-          </div>
-          <div class="card">
-            <div class="eyebrow" style="color:var(--spotlight)">Why you matched</div>
-            <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px;font-size:13.5px">
-              <div style="display:flex;gap:8px"><span class="tag pass">✓</span> Welcomes a blended family — your top dealbreaker</div>
-              <div style="display:flex;gap:8px"><span class="tag pass">✓</span> Marriage intent within 2 years</div>
-              <div style="display:flex;gap:8px"><span class="tag pass">✓</span> London-based — no geography mismatch</div>
-            </div>
-          </div>
+          <div class="av g1" id="b3hero" style="width:100%;height:200px;border-radius:16px"></div>
+          <div id="b3body" style="display:flex;flex-direction:column;gap:14px"></div>
           <div class="note">Full bio, extra photos and his answers stay hidden until he accepts. You're choosing who to invite — not judging a wall of text.</div>
         </div>
         <div class="foot">
-          <a class="btn move block" href="#S-C1">Invite David to the show</a>
+          <a class="btn move block" href="#S-C1">Invite him to the show</a>
           <a class="link center" href="#S-B2">Back to candidates</a>
         </div>
       </section>
