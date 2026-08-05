@@ -85,7 +85,7 @@ candidates for silence rather than for mismatch.
   random** rather than ranked, and the UI says so explicitly. This is the
   honest description of cold-start behaviour: with only onboarding data
   available, there is not enough signal to rank.
-- Demo scores sit deliberately in the **48–74** range. `S-B2` carries a line
+- Demo scores sit deliberately in the **48–76** range. `S-B2` carries a line
   explaining the pool is young and that scores rise as more people join,
   enrich their profiles, and play shows.
 
@@ -313,9 +313,9 @@ demonstrates the proximity rule of thumb:
 | 1 | David, 41 | Deputy head · 2 kids · London | 76 | Medium |
 | 2 | Samuel, 44 | Architect · wants kids · London | 68 | Medium |
 | 3 | Marcus, 39 | GP · blended-family open · Reading | 61 | Medium |
-| 4 | Tunde, 43 | Structural engineer · 1 kid · Croydon | 58 | Low |
+| 4 | Tunde, 43 | Structural engineer · 1 kid · Croydon | 57 | Low |
 | 5 | Emeka, 40 | Pharmacist · no kids · Luton | 55 | Low |
-| 6 | Kwame, 45 | Secondary teacher · 3 kids · Birmingham | 52 | Low |
+| 6 | Kwame, 45 | Secondary teacher · 3 kids · Birmingham | 50 | Low |
 | 7 | Ifeanyi, 38 | Data analyst · no kids · Manchester | 49 | Low |
 | 8 | Bode, 42 | Logistics manager · 2 kids · Dublin | 48 | Low |
 

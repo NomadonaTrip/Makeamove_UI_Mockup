@@ -64,9 +64,9 @@ This is the check the task must satisfy. Run it first, before writing any code, 
 () => {
   if (!window.CANDIDATES) return { ok:false, reason:'CANDIDATES not defined' };
   const byId = Object.fromEntries(CANDIDATES.map(c => [c.id, fit(c)]));
-  const expected = { david:74, samuel:68, marcus:61, tunde:58,
-                     emeka:55, kwame:52, ifeanyi:49, bode:48 };
-  const confExpected = { david:'High', samuel:'Medium', marcus:'Medium',
+  const expected = { david:76, samuel:68, marcus:61, tunde:57,
+                     emeka:55, kwame:50, ifeanyi:49, bode:48 };
+  const confExpected = { david:'Medium', samuel:'Medium', marcus:'Medium',
                          tunde:'Low', emeka:'Low', kwame:'Low',
                          ifeanyi:'Low', bode:'Low' };
   const bad = Object.entries(expected).filter(([k,v]) => byId[k] !== v);
@@ -284,7 +284,7 @@ Insert this `<script>` immediately before `</section>` at the end of `S-B2`:
 
 - [ ] **Step 4: Run the assertion again**
 
-Expected: `ok:true`, `weightSum:100`, and `computed` matching `{david:76, samuel:68, marcus:61, tunde:58, emeka:55, kwame:52, ifeanyi:49, bode:48}`.
+Expected: `ok:true`, `weightSum:100`, and `computed` matching `{david:76, samuel:68, marcus:61, tunde:57, emeka:55, kwame:50, ifeanyi:49, bode:48}`.
 
 If a number is off by one, adjust that candidate's band scores — do **not** hardcode the fit value. The derivation is the point.
 
