@@ -120,8 +120,9 @@ appears once, at the top of the breakdown, only when the candidate's overall
 confidence is below 40%. A single blank band does not trigger it — a candidate
 can have one band blank and still be confidently ranked on the rest.
 
-Worked example — David, whose Personality & lifestyle band is blank. Weight 20
-of 100 is unscored, leaving confidence at 80%, so no advisory applies:
+Worked example — David, whose Personality & lifestyle and Love & intimacy bands
+are both blank on the *user's* side. Weight 35 of 100 is unscored, leaving
+confidence at 65%, so no advisory applies (the threshold is 40%):
 
 ```
 FAMILY & INTENT                    74% · Strong
@@ -309,7 +310,7 @@ demonstrates the proximity rule of thumb:
 
 | # | Name | Detail | Fit | Confidence |
 |---|---|---|---|---|
-| 1 | David, 41 | Deputy head · 2 kids · London | 74 | High |
+| 1 | David, 41 | Deputy head · 2 kids · London | 76 | Medium |
 | 2 | Samuel, 44 | Architect · wants kids · London | 68 | Medium |
 | 3 | Marcus, 39 | GP · blended-family open · Reading | 61 | Medium |
 | 4 | Tunde, 43 | Structural engineer · 1 kid · Croydon | 58 | Low |

@@ -284,7 +284,7 @@ Insert this `<script>` immediately before `</section>` at the end of `S-B2`:
 
 - [ ] **Step 4: Run the assertion again**
 
-Expected: `ok:true`, `weightSum:100`, and `computed` matching `{david:74, samuel:68, marcus:61, tunde:58, emeka:55, kwame:52, ifeanyi:49, bode:48}`.
+Expected: `ok:true`, `weightSum:100`, and `computed` matching `{david:76, samuel:68, marcus:61, tunde:58, emeka:55, kwame:52, ifeanyi:49, bode:48}`.
 
 If a number is off by one, adjust that candidate's band scores — do **not** hardcode the fit value. The derivation is the point.
 
@@ -419,7 +419,7 @@ git commit -m "feat(gallery): add fit meter, evidence list, toast, sheet and dra
   const link = first.querySelector('.seeall').textContent;
   const userAv = document.querySelector('#S-B2 .pbar .av');
   return {
-    ok: bg.includes('images.unsplash.com') && fitTxt === '74%' &&
+    ok: bg.includes('images.unsplash.com') && fitTxt === '76%' &&
         bullets === 2 && /See all \d+ reasons/.test(link) && !!userAv &&
         getComputedStyle(userAv).backgroundImage.includes('unsplash'),
     bg: bg.slice(0,60), fitTxt, bullets, link, userAvatar: !!userAv
@@ -538,7 +538,7 @@ Add `render`, `state`, `byId`, `save`, `load` to the `Object.assign(window, …)
 
 - [ ] **Step 5: Run the assertion again**
 
-Expected: `ok:true`, `fitTxt:'74%'`, `bullets:2`, `link:'See all 13 reasons ›'` (David has 4+2+3+2+2 bullets across his five bands), `userAvatar:true`.
+Expected: `ok:true`, `fitTxt:'76%'`, `bullets:2`, `link:'See all 13 reasons ›'` (David has 4+2+3+2+2 bullets across his five bands), `userAvatar:true`.
 
 Then take a screenshot at 1280×800 and confirm visually: three portraits load (not empty boxes), the meters read left-to-right, and the ✕ sits top-right of each card.
 
@@ -768,7 +768,7 @@ The user's own blank sections suppress a band for *every* candidate at once. Tho
         /Optional, always/.test(txt) &&
         !/must|required|complete your profile to/i.test(txt) &&
         /Personality & lifestyle — blocking 1 of your 3 candidates/.test(txt) &&
-        /Love & intimacy — not blocking anyone yet/.test(txt),
+        /Love & intimacy — blocking 1 of your 3 candidates/.test(txt),
     txt: txt.slice(0,320), links
   };
 }
@@ -789,8 +789,8 @@ Expected: `{ ok:false, reason:'no gap prompt' }`.
   /* Sections the *user* has left blank. In the prototype these are fixtures;
      in production they would be read from the user's profile record. */
   const USER_GAPS = [
-    { band:'person', name:'Personality & lifestyle', screen:'#S-P3', qs:8 },
-    { band:'love',   name:'Love & intimacy',         screen:'#S-P4', qs:6 }
+    { band:'person', name:'Personality & lifestyle', screen:'#S-P3', qs:6 },
+    { band:'love',   name:'Love & intimacy',         screen:'#S-P4', qs:3 }
   ];
 
   /* How many live candidates is THIS gap actually blocking? A candidate only
@@ -819,7 +819,7 @@ Expected: `{ ok:false, reason:'no gap prompt' }`.
       const k = blocking(g);
       return `<li class="${k ? 'n' : 'o'}"><span><b>${g.name}</b> — ${
         k ? `blocking ${k} of your ${live} candidate${live===1?'':'s'} from a full score`
-          : `not blocking anyone yet; none of your candidates has answered theirs either`
+          : `not blocking any of your current candidates`
       } <span class="src">[no data]</span></span></li>`;
     }).join('');
     wrap.innerHTML = `<div class="card" style="margin-top:4px">
@@ -899,7 +899,7 @@ async () => {
   const d = await open('david'), m = await open('marcus');
   return {
     ok: d.count === 5 && d.names[0] === 'Family & intent' && d.hero &&
-        d.blank === 1 && !d.advisory && /Scored on 4 of 5 bands/.test(d.meter) &&
+        d.blank === 2 && !d.advisory && /Scored on 3 of 5 bands/.test(d.meter) &&
         d.gapLink === true &&
         m.blank === 2 && !m.advisory && /Scored on 3 of 5 bands/.test(m.meter) &&
         m.gapLink === false,
