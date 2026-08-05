@@ -1092,9 +1092,12 @@
           B('o','You have not completed Personality & lifestyle','no data'),
           B('o','He answered all 8 questions — the missing side is yours','profile')
         ]},
-        love:{ score:65, bullets:[
-          B('y','You both rate quality time as your first love language','profile'),
-          B('n','You want daily contact · he answered "a few times a week"','profile')
+        /* blankOwner 'you' — like his person band, HE answered and the user did
+           not. Scoring this band would contradict USER_GAPS, which says the user
+           has not completed Love & intimacy. */
+        love:{ score:null, blankOwner:'you', bullets:[
+          B('o','You have not completed Love & intimacy','no data'),
+          B('o','He answered all 3 questions — the missing side is yours','profile')
         ]}
       }},
 
@@ -1274,8 +1277,8 @@
   /* Sections the *user* has left blank. In the prototype these are fixtures;
      in production they would be read from the user's profile record. */
   const USER_GAPS = [
-    { band:'person', name:'Personality & lifestyle', screen:'#S-P3', qs:8 },
-    { band:'love',   name:'Love & intimacy',         screen:'#S-P4', qs:6 }
+    { band:'person', name:'Personality & lifestyle', screen:'#S-P3', qs:6 },
+    { band:'love',   name:'Love & intimacy',         screen:'#S-P4', qs:3 }
   ];
 
   /* How many live candidates is THIS gap actually blocking? A candidate only
@@ -1304,7 +1307,7 @@
       const k = blocking(g);
       return `<li class="${k ? 'n' : 'o'}"><span><b>${g.name}</b> — ${
         k ? `blocking ${k} of your ${live} candidate${live===1?'':'s'} from a full score`
-          : `not blocking anyone yet; none of your candidates has answered theirs either`
+          : `not blocking any of your current candidates`
       } <span class="src">[no data]</span></span></li>`;
     }).join('');
     wrap.innerHTML = `<div class="card" style="margin-top:4px">
