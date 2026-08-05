@@ -310,6 +310,13 @@
   .tabbar a.on{color:var(--spotlight)}
 
   /* ===== CANDIDATE GALLERY ===== */
+  /* Portrait fallback. `.av.gN` sets `background:` as a SHORTHAND, so an inline
+     `background-image:url(photo)` replaces the gradient outright and also resets
+     background-size/position. Pin a solid brand colour behind each gradient so a
+     portrait that fails to load shows colour, not an empty box. */
+  .av.g1{background-color:#3A6CFF} .av.g2{background-color:#FF2D6F}
+  .av.g3{background-color:#2BD18B} .av.g4{background-color:#FFB627}
+  .av[style*="url("]{background-size:cover; background-position:center}
   .fit{display:flex; align-items:center; gap:8px; margin-top:8px; font-size:12px; font-weight:700}
   .fit .n{font-family:var(--display); font-weight:900; font-size:15px; color:var(--t)}
   .dark .fit .n{color:var(--ink)}
@@ -992,7 +999,7 @@
       </section>
 
       <section class="screen paper" id="S-B2" data-group="B · Matching" data-title="Candidate gallery">
-        <div class="pbar"><span class="brand" style="font-size:18px">Make<span class="a">a</span>Move</span><a class="act" href="#S-G1">Credits ›</a><a class="av g2 s28" href="#S-A9" style="background-image:url('https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=80&amp;h=80&amp;fit=crop&amp;crop=faces&amp;q=70&amp;fm=jpg');background-size:cover;background-position:center" aria-label="Your profile"></a></div>
+        <div class="pbar"><span class="brand" style="font-size:18px">Make<span class="a">a</span>Move</span><a class="act" href="#S-G1">Credits ›</a><a class="av g2 s28" href="#S-A9" style="background-image:url('https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=80&amp;h=80&amp;fit=crop&amp;crop=faces&amp;q=70&amp;fm=jpg')" aria-label="Your profile"></a></div>
         <div class="body">
           <div class="note pass" style="display:flex;align-items:center;gap:10px"><svg class="icon" style="width:22px;height:22px"><use href="#i-party"/></svg><div><b id="b2count">You have 3 pre-matches.</b><br><span style="font-size:12px">Each one cleared every dealbreaker you set.</span></div></div>
           <h2 class="scrn" style="font-size:24px">Your candidates</h2>
@@ -1229,7 +1236,7 @@
     const lowTag = cl === 'Low'
       ? '<span class="tag warn" style="margin-left:6px">Low confidence</span>' : '';
     return `<div class="row cand" data-id="${c.id}" style="padding:0;overflow:hidden;align-items:stretch">
-      <div class="av ${GRAD(c)}" style="width:96px;height:auto;min-height:120px;border-radius:0;background-image:url('${cardPhoto(c)}');background-size:cover;background-position:center"></div>
+      <div class="av ${GRAD(c)}" style="width:96px;height:auto;min-height:120px;border-radius:0;background-image:url('${cardPhoto(c)}')"></div>
       <div class="grow" style="padding:12px">
         <div class="t1">${c.name}, ${c.age}${lowTag}</div>
         <div class="t2">${c.blurb}</div>
