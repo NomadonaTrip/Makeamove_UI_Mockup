@@ -94,8 +94,14 @@ Insert this `<script>` immediately before `</section>` at the end of `S-B2`:
 (function(){
   const RESTORE_PRICE = 3;      // £ — cross-check vs Badoo before launch
   const UNDO_MS = 6000;
-  const PHOTO = id =>
-    `https://images.unsplash.com/photo-${id}?w=400&q=70&fm=jpg&crop=faces&fit=crop`;
+  /* Ask Unsplash to face-crop to the ASPECT OF THE SLOT. A square-ish source
+     dropped into a tall 96x264 column gets ~45% of its width cropped away and
+     slices the face off, so each usage requests its own dimensions. */
+  const PHOTO = (pid, w, h) =>
+    `https://images.unsplash.com/photo-${pid}?w=${w}&h=${h}&fit=crop&crop=faces&q=70&fm=jpg`;
+  const cardPhoto = c => PHOTO(c.pid, 200, 540);   // tall gallery column
+  const facePhoto = c => PHOTO(c.pid,  80,  80);   // small round-square avatar
+  const heroPhoto = c => PHOTO(c.pid, 900, 420);   // wide S-B3 hero
 
   const BANDS = [
     { key:'family', name:'Family & intent',        w:30 },
@@ -134,7 +140,7 @@ Insert this `<script>` immediately before `</section>` at the end of `S-B2`:
   const CANDIDATES = [
     { id:'david', name:'David', age:41, city:'London',
       blurb:'Deputy head · 2 kids · London',
-      photo:PHOTO('1531901599143-df5010ab9438'),
+      pid:'1531901599143-df5010ab9438',
       bands:{
         family:{ score:74, bullets:[
           B('y','You set "must welcome a blended family" as a dealbreaker · he answered "open to children from a previous marriage"','onboarding'),
@@ -165,7 +171,7 @@ Insert this `<script>` immediately before `</section>` at the end of `S-B2`:
 
     { id:'samuel', name:'Samuel', age:44, city:'London',
       blurb:'Architect · wants kids · London',
-      photo:PHOTO('1596580817363-a4a8f67d4bc8'),
+      pid:'1596580817363-a4a8f67d4bc8',
       bands:{
         family:{ score:59, bullets:[
           B('y','He answered "welcomes a blended family" — your dealbreaker','onboarding'),
@@ -191,7 +197,7 @@ Insert this `<script>` immediately before `</section>` at the end of `S-B2`:
 
     { id:'marcus', name:'Marcus', age:39, city:'Reading',
       blurb:'GP · blended-family open · Reading',
-      photo:PHOTO('1605980776566-0486c3ac7617'),
+      pid:'1605980776566-0486c3ac7617',
       bands:{
         family:{ score:66, bullets:[
           B('y','He answered "blended-family open" — your dealbreaker','onboarding'),
@@ -217,31 +223,31 @@ Insert this `<script>` immediately before `</section>` at the end of `S-B2`:
 
     { id:'tunde', name:'Tunde', age:43, city:'Croydon',
       blurb:'Structural engineer · 1 kid · Croydon',
-      photo:PHOTO('1614023342667-6f060e9d1e04'),
+      pid:'1614023342667-6f060e9d1e04',
       bands:benchBands(62,'y','You live in London · he lives in Croydon — same metro area',
                        52,'You are 40 · he is 43 — inside your stated 38–48 range') },
 
     { id:'emeka', name:'Emeka', age:40, city:'Luton',
       blurb:'Pharmacist · no kids · Luton',
-      photo:PHOTO('1565884280295-98eb83e41c65'),
+      pid:'1565884280295-98eb83e41c65',
       bands:benchBands(56,'n','You live in London · he lives in Luton — about 30 miles apart',
                        54,'You are 40 · he is 40 — inside your stated 38–48 range') },
 
     { id:'kwame', name:'Kwame', age:45, city:'Birmingham',
       blurb:'Secondary teacher · 3 kids · Birmingham',
-      photo:PHOTO('1584119164246-461d43e9bab3'),
+      pid:'1584119164246-461d43e9bab3',
       bands:benchBands(44,'n','You live in London · he lives in Birmingham — about 120 miles apart',
                        62,'You are 40 · he is 45 — inside your stated 38–48 range') },
 
     { id:'ifeanyi', name:'Ifeanyi', age:38, city:'Manchester',
       blurb:'Data analyst · no kids · Manchester',
-      photo:PHOTO('1522529599102-193c0d76b5b6'),
+      pid:'1522529599102-193c0d76b5b6',
       bands:benchBands(40,'n','You live in London · he lives in Manchester — about 200 miles apart',
                        60,'You are 40 · he is 38 — inside your stated 38–48 range') },
 
     { id:'bode', name:'Bode', age:42, city:'Dublin',
       blurb:'Logistics manager · 2 kids · Dublin',
-      photo:PHOTO('1617244147299-5ef406921c35'),
+      pid:'1617244147299-5ef406921c35',
       bands:benchBands(38,'n','You live in the UK · he lives in Ireland — different country',
                        61,'You are 40 · he is 42 — inside your stated 38–48 range') }
   ];
@@ -266,7 +272,8 @@ Insert this `<script>` immediately before `</section>` at the end of `S-B2`:
     n + ((c.bands[b.key] && c.bands[b.key].bullets) || []).length, 0);
 
   Object.assign(window, { CANDIDATES, BANDS, RESTORE_PRICE, UNDO_MS,
-    fit, conf, scoreLabel, confLabel, bulletCount, PHOTO });
+    fit, conf, scoreLabel, confLabel, bulletCount,
+    PHOTO, cardPhoto, facePhoto, heroPhoto });
 })();
 </script>
 ```
@@ -427,7 +434,7 @@ Change the `.note.pass` on line 961 so the count is dynamic — replace `<b>You 
 Add the user's portrait to the top bar. Replace line 959 with:
 
 ```html
-        <div class="pbar"><span class="brand" style="font-size:18px">Make<span class="a">a</span>Move</span><a class="act" href="#S-G1">Credits ›</a><a class="av g2 s28" href="#S-A9" style="background-image:url('https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=400&amp;q=70&amp;fm=jpg&amp;crop=faces&amp;fit=crop')" aria-label="Your profile"></a></div>
+        <div class="pbar"><span class="brand" style="font-size:18px">Make<span class="a">a</span>Move</span><a class="act" href="#S-G1">Credits ›</a><a class="av g2 s28" href="#S-A9" style="background-image:url('https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=80&amp;h=80&amp;fit=crop&amp;crop=faces&amp;q=70&amp;fm=jpg')" aria-label="Your profile"></a></div>
 ```
 
 - [ ] **Step 4: Add the render logic**
@@ -478,7 +485,7 @@ Append inside the Task 1 IIFE, before the `Object.assign(window, …)` line:
     const lowTag = cl === 'Low'
       ? '<span class="tag warn" style="margin-left:6px">Low confidence</span>' : '';
     return `<div class="row cand" data-id="${c.id}" style="padding:0;overflow:hidden;align-items:stretch">
-      <div class="av ${GRAD(c)}" style="width:96px;height:auto;min-height:120px;border-radius:0;background-image:url('${c.photo}')"></div>
+      <div class="av ${GRAD(c)}" style="width:96px;height:auto;min-height:120px;border-radius:0;background-image:url('${cardPhoto(c)}')"></div>
       <div class="grow" style="padding:12px">
         <div class="t1">${c.name}, ${c.age}${lowTag}</div>
         <div class="t2">${c.blurb}</div>
@@ -636,7 +643,7 @@ Insert immediately before the `.tabbar` div in `S-B2`:
       <div class="drawer open">${state.removed.map(id => {
         const c = byId(id);
         return `<div class="row" data-id="${id}">
-          <div class="av s40 ${GRAD(c)}" style="background-image:url('${c.photo}')"></div>
+          <div class="av s40 ${GRAD(c)}" style="background-image:url('${cardPhoto(c)}')"></div>
           <div class="grow"><div class="t1">${c.name}, ${c.age}</div>
             <div class="t2">Fit ${fit(c)}% · removed by you</div></div>
           <button class="btn sm ghost restore" data-id="${id}">Restore · £${RESTORE_PRICE}</button>
@@ -902,7 +909,7 @@ Leave the `.foot` block (lines 1001–1004) untouched — the invite CTA into `S
     const c = byId(id);
     if (!c || !document.getElementById('b3body')) return;
     document.getElementById('b3name').textContent = `${c.name}, ${c.age}`;
-    document.getElementById('b3hero').style.backgroundImage = `url('${c.photo}')`;
+    document.getElementById('b3hero').style.backgroundImage = `url('${heroPhoto(c)}')`;
 
     const scored = BANDS.filter(b => c.bands[b.key] && c.bands[b.key].score != null).length;
     const k = conf(c), f = fit(c);
@@ -987,7 +994,7 @@ git commit -m "feat(gallery): add full band breakdown with evidence on candidate
 
 ## Portrait reference
 
-Verified 200-OK on 2026-08-04. All use the suffix `?w=400&q=70&fm=jpg&crop=faces&fit=crop`.
+Verified 200-OK on 2026-08-04. Each usage requests its own dimensions via `PHOTO(pid, w, h)` so Unsplash face-crops to that slot's aspect: `cardPhoto` 200x540, `facePhoto` 80x80, `heroPhoto` 900x420.
 
 | Candidate | Unsplash photo ID |
 |---|---|
