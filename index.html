@@ -1271,7 +1271,56 @@
     renderDrawer();   // defined in Task 4
     renderGap();      // defined in Task 5
   }
-  function renderGap(){}         // replaced in Task 5
+  /* Sections the *user* has left blank. In the prototype these are fixtures;
+     in production they would be read from the user's profile record. */
+  const USER_GAPS = [
+    { band:'person', name:'Personality & lifestyle', screen:'#S-P3', qs:8 },
+    { band:'love',   name:'Love & intimacy',         screen:'#S-P4', qs:6 }
+  ];
+
+  /* How many live candidates is THIS gap actually blocking? A candidate only
+     counts if he answered and the user did not — otherwise completing your
+     side changes nothing for him, and claiming otherwise would be a lie. */
+  function blocking(gap){
+    return state.live.filter(id => {
+      const bd = byId(id).bands[gap.band];
+      return bd && bd.score == null && bd.blankOwner === 'you';
+    }).length;
+  }
+
+  function renderGap(){
+    const wrap = document.getElementById('b2gap');
+    if (!wrap) return;
+    const n = USER_GAPS.length, live = state.live.length;
+    if (!n){
+      wrap.innerHTML = `<div class="note pass">All 5 bands scored on your side.
+        Nothing else is needed from you.</div>`;
+      return;
+    }
+    const totalQs = USER_GAPS.reduce((s,g) => s + g.qs, 0);
+    const mins = Math.max(1, Math.round(totalQs * 0.25));
+    const [first, ...rest] = USER_GAPS;
+    const lines = USER_GAPS.map(g => {
+      const k = blocking(g);
+      return `<li class="${k ? 'n' : 'o'}"><span><b>${g.name}</b> — ${
+        k ? `blocking ${k} of your ${live} candidate${live===1?'':'s'} from a full score`
+          : `not blocking anyone yet; none of your candidates has answered theirs either`
+      } <span class="src">[no data]</span></span></li>`;
+    }).join('');
+    wrap.innerHTML = `<div class="card" style="margin-top:4px">
+      <div class="eyebrow">✦ ${n} band${n===1?'':'s'} ${n===1?'is':'are'} blank on your side</div>
+      <ul class="why" style="margin-top:10px">${lines}</ul>
+      <p class="muted" style="font-size:12.5px;line-height:1.5;margin:10px 0 0">
+        Answering both means every future candidate is scored on all 5 bands
+        instead of 3.</p>
+      <div class="muted" style="font-size:11.5px;margin-top:6px">
+        ~${totalQs} questions · about ${mins} minutes</div>
+      <a class="btn primary block" href="${first.screen}" style="margin-top:12px">Answer ${first.name} ›</a>
+      ${rest.map(g => `<a class="link center" href="${g.screen}" style="margin-top:8px;display:block">${g.name} ›</a>`).join('')}
+      <div class="note" style="margin-top:12px">Optional, always. You're already
+        matched — this only sharpens who we put in front of you next.</div>
+    </div>`;
+  }
 
   let undoTimer = null, pendingUndo = null;
 
@@ -1377,7 +1426,7 @@
   document.addEventListener('DOMContentLoaded', render);
   if (document.readyState !== 'loading') render();
 
-  Object.assign(window, { CANDIDATES, BANDS, RESTORE_PRICE, UNDO_MS,
+  Object.assign(window, { CANDIDATES, BANDS, RESTORE_PRICE, UNDO_MS, USER_GAPS,
     fit, conf, scoreLabel, confLabel, bulletCount, PHOTO, cardPhoto, facePhoto, heroPhoto,
     render, state, byId, save, load, remove, restore, confirmRestore });
 })();
