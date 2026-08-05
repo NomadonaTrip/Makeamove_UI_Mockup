@@ -979,6 +979,188 @@
           <a class="row" href="#S-A9"><div class="av g2 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-sparkle"/></svg></div><div class="grow"><div class="t1">Enrich your profile</div><div class="t2">Optional — you're already matched. Richer answers sharpen future lists.</div></div><span class="chev">›</span></a>
         </div>
         <div class="tabbar"><a class="on" href="#S-B2"><span class="ic"><svg class="icon"><use href="#i-heart"/></svg></span>Matches</a><a href="#S-C2"><span class="ic"><svg class="icon"><use href="#i-mail"/></svg></span>Invites</a><a href="#S-G1"><span class="ic"><svg class="icon"><use href="#i-diamond"/></svg></span>Credits</a><a href="#S-A9"><span class="ic"><svg class="icon"><use href="#i-user"/></svg></span>Profile</a></div>
+        <script>
+/* ===== CANDIDATE GALLERY ENGINE (S-B2 / S-B3) =====
+   Fixtures, not a real matching engine. Fit and confidence are DERIVED from
+   band scores at render time so editing a band moves the headline number. */
+(function(){
+  const RESTORE_PRICE = 3;      // £ — cross-check vs Badoo before launch
+  const UNDO_MS = 6000;
+  const PHOTO = id =>
+    `https://images.unsplash.com/photo-${id}?w=400&q=70&fm=jpg&crop=faces&fit=crop`;
+
+  const BANDS = [
+    { key:'family', name:'Family & intent',        w:30 },
+    { key:'geo',    name:'Geography',              w:20 },
+    { key:'stage',  name:'Life stage',             w:15 },
+    { key:'person', name:'Personality & lifestyle',w:20 },
+    { key:'love',   name:'Love & intimacy',        w:15 }
+  ];
+
+  /* bullet: s = 'y' match | 'n' mismatch | 'o' no data; src = source tag */
+  const B = (s,t,src) => ({ s, t, src });
+
+  /* Bench candidates all share a shape: only the two onboarding-derived bands
+     score, which is exactly the cold-start case the prototype demonstrates. */
+  function benchBands(geoScore, geoState, geoText, stageScore, stageText){
+    return {
+      family:{ score:null, blankOwner:'them', bullets:[
+        B('o','He has not completed Marriage & family','no data'),
+        B('o','Neither side has supplied enough to compare on children','no data')
+      ]},
+      geo:{ score:geoScore, bullets:[
+        B(geoState, geoText,'onboarding'),
+        B('o','Neither of you has given a travel radius','no data')
+      ]},
+      stage:{ score:stageScore, bullets:[ B('y', stageText,'onboarding') ]},
+      person:{ score:null, blankOwner:'them', bullets:[
+        B('o','He has not completed Personality & lifestyle','no data'),
+        B('o','He has not played a show, so no gameplay signal exists','no data')
+      ]},
+      love:{ score:null, blankOwner:'them', bullets:[
+        B('o','He has not completed Love & intimacy','no data')
+      ]}
+    };
+  }
+
+  const CANDIDATES = [
+    { id:'david', name:'David', age:41, city:'London',
+      blurb:'Deputy head · 2 kids · London',
+      photo:PHOTO('1531901599143-df5010ab9438'),
+      bands:{
+        family:{ score:74, bullets:[
+          B('y','You set "must welcome a blended family" as a dealbreaker · he answered "open to children from a previous marriage"','onboarding'),
+          B('y','You have 2 children · he has 2 children','onboarding'),
+          B('y','You want marriage within 2 years · he answered "within 2 years"','profile'),
+          B('n','You are open to one more child · he answered "no more children"','profile')
+        ]},
+        geo:{ score:84, bullets:[
+          B('y','You live in London · he lives in London — same city','onboarding'),
+          B('o','Neither of you has given a travel radius','no data')
+        ]},
+        stage:{ score:70, bullets:[
+          B('y','You are 40 · he is 41 — inside your stated 38–48 range','onboarding'),
+          B('y','You are employed full time · he is employed full time','onboarding'),
+          B('y','You both hold a postgraduate qualification','profile')
+        ]},
+        /* blankOwner 'you' — HE answered; the gap is on the user's side, so this
+           is the one band that earns an actionable link on S-B3. */
+        person:{ score:null, blankOwner:'you', bullets:[
+          B('o','You have not completed Personality & lifestyle','no data'),
+          B('o','He answered all 8 questions — the missing side is yours','profile')
+        ]},
+        love:{ score:65, bullets:[
+          B('y','You both rate quality time as your first love language','profile'),
+          B('n','You want daily contact · he answered "a few times a week"','profile')
+        ]}
+      }},
+
+    { id:'samuel', name:'Samuel', age:44, city:'London',
+      blurb:'Architect · wants kids · London',
+      photo:PHOTO('1596580817363-a4a8f67d4bc8'),
+      bands:{
+        family:{ score:59, bullets:[
+          B('y','He answered "welcomes a blended family" — your dealbreaker','onboarding'),
+          B('n','You have 2 children and want no more · he has none and wants two','profile'),
+          B('y','You want marriage within 2 years · he answered "within 3 years"','profile')
+        ]},
+        geo:{ score:84, bullets:[
+          B('y','You live in London · he lives in London — same city','onboarding'),
+          B('o','Neither of you has given a travel radius','no data')
+        ]},
+        stage:{ score:66, bullets:[
+          B('y','You are 40 · he is 44 — inside your stated 38–48 range','onboarding'),
+          B('y','You are employed full time · he is self-employed','onboarding')
+        ]},
+        person:{ score:null, blankOwner:'them', bullets:[
+          B('o','He has not completed Personality & lifestyle','no data'),
+          B('o','He has not played a show, so no gameplay signal exists','no data')
+        ]},
+        love:{ score:null, blankOwner:'them', bullets:[
+          B('o','He has not completed Love & intimacy','no data')
+        ]}
+      }},
+
+    { id:'marcus', name:'Marcus', age:39, city:'Reading',
+      blurb:'GP · blended-family open · Reading',
+      photo:PHOTO('1605980776566-0486c3ac7617'),
+      bands:{
+        family:{ score:66, bullets:[
+          B('y','He answered "blended-family open" — your dealbreaker','onboarding'),
+          B('y','You have 2 children · he has 1 child','onboarding'),
+          B('o','He has not given a marriage timeline','no data')
+        ]},
+        geo:{ score:55, bullets:[
+          B('n','You live in London · he lives in Reading — about 40 miles apart','onboarding'),
+          B('o','Neither of you has given a travel radius','no data')
+        ]},
+        stage:{ score:60, bullets:[
+          B('y','You are 40 · he is 39 — inside your stated 38–48 range','onboarding'),
+          B('y','You are employed full time · he is employed full time','onboarding')
+        ]},
+        person:{ score:null, blankOwner:'them', bullets:[
+          B('o','He has not completed Personality & lifestyle','no data'),
+          B('o','He has not played a show, so no gameplay signal exists','no data')
+        ]},
+        love:{ score:null, blankOwner:'them', bullets:[
+          B('o','He has not completed Love & intimacy','no data')
+        ]}
+      }},
+
+    { id:'tunde', name:'Tunde', age:43, city:'Croydon',
+      blurb:'Structural engineer · 1 kid · Croydon',
+      photo:PHOTO('1614023342667-6f060e9d1e04'),
+      bands:benchBands(62,'y','You live in London · he lives in Croydon — same metro area',
+                       52,'You are 40 · he is 43 — inside your stated 38–48 range') },
+
+    { id:'emeka', name:'Emeka', age:40, city:'Luton',
+      blurb:'Pharmacist · no kids · Luton',
+      photo:PHOTO('1565884280295-98eb83e41c65'),
+      bands:benchBands(56,'n','You live in London · he lives in Luton — about 30 miles apart',
+                       54,'You are 40 · he is 40 — inside your stated 38–48 range') },
+
+    { id:'kwame', name:'Kwame', age:45, city:'Birmingham',
+      blurb:'Secondary teacher · 3 kids · Birmingham',
+      photo:PHOTO('1584119164246-461d43e9bab3'),
+      bands:benchBands(44,'n','You live in London · he lives in Birmingham — about 120 miles apart',
+                       62,'You are 40 · he is 45 — inside your stated 38–48 range') },
+
+    { id:'ifeanyi', name:'Ifeanyi', age:38, city:'Manchester',
+      blurb:'Data analyst · no kids · Manchester',
+      photo:PHOTO('1522529599102-193c0d76b5b6'),
+      bands:benchBands(40,'n','You live in London · he lives in Manchester — about 200 miles apart',
+                       60,'You are 40 · he is 38 — inside your stated 38–48 range') },
+
+    { id:'bode', name:'Bode', age:42, city:'Dublin',
+      blurb:'Logistics manager · 2 kids · Dublin',
+      photo:PHOTO('1617244147299-5ef406921c35'),
+      bands:benchBands(38,'n','You live in the UK · he lives in Ireland — different country',
+                       61,'You are 40 · he is 42 — inside your stated 38–48 range') }
+  ];
+
+  /* ---- derivations ---- */
+  function conf(c){                       // scored weight, out of 100
+    return BANDS.reduce((s,b) =>
+      s + (c.bands[b.key] && c.bands[b.key].score != null ? b.w : 0), 0);
+  }
+  function fit(c){                        // weighted mean over scored bands
+    let sw = 0, tot = 0;
+    BANDS.forEach(b => {
+      const bd = c.bands[b.key];
+      if (bd && bd.score != null) { sw += b.w; tot += b.w * bd.score; }
+    });
+    return sw ? Math.round(tot / sw) : 0;
+  }
+  const scoreLabel = n => n >= 70 ? 'Strong' : n >= 50 ? 'Moderate' : 'Weak';
+  const confLabel  = c => { const k = conf(c);
+    return k >= 70 ? 'High' : k >= 40 ? 'Medium' : 'Low'; };
+  const bulletCount = c => BANDS.reduce((n,b) =>
+    n + ((c.bands[b.key] && c.bands[b.key].bullets) || []).length, 0);
+
+  Object.assign(window, { CANDIDATES, BANDS, RESTORE_PRICE, UNDO_MS,
+    fit, conf, scoreLabel, confLabel, bulletCount, PHOTO });
+})();
+</script>
       </section>
 
       <section class="screen paper" id="S-B3" data-group="B · Matching" data-title="Candidate profile (sparse)">
