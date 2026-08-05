@@ -1317,7 +1317,14 @@
           : `not blocking any of your current candidates`
       } <span class="src">[no data]</span></span></li>`;
     }).join('');
-    const helped = USER_GAPS.reduce((s,g) => s + blocking(g), 0);
+    /* distinct candidates, not gap-hits: one candidate blocked on two gaps is
+       still one candidate */
+    const helped = new Set(
+      USER_GAPS.flatMap(g => state.live.filter(id => {
+        const bd = byId(id).bands[g.band];
+        return bd && bd.score == null && bd.blankOwner === 'you';
+      }))
+    ).size;
     wrap.innerHTML = `<div class="card" style="margin-top:4px">
       <div class="eyebrow">✦ ${n} band${n===1?'':'s'} ${n===1?'is':'are'} blank on your side</div>
       <ul class="why" style="margin-top:10px">${lines}</ul>
