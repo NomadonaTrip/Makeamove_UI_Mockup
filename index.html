@@ -1008,6 +1008,13 @@
           <div id="b2drawerwrap"></div>
           <div id="b2gap"></div>
         </div>
+        <div class="mm-toast" id="mmToast"><span id="mmToastMsg"></span><button id="mmUndo">Undo</button></div>
+        <div class="mm-sheet" id="mmSheet"><div class="box">
+          <h3 class="scrn" style="font-size:19px;margin:0" id="mmSheetTitle"></h3>
+          <p class="muted" style="font-size:13px;margin:0" id="mmSheetBody"></p>
+          <button class="btn move block" id="mmSheetGo"></button>
+          <button class="btn ghost block" id="mmSheetNo">Not now</button>
+        </div></div>
         <div class="tabbar"><a class="on" href="#S-B2"><span class="ic"><svg class="icon"><use href="#i-heart"/></svg></span>Matches</a><a href="#S-C2"><span class="ic"><svg class="icon"><use href="#i-mail"/></svg></span>Invites</a><a href="#S-G1"><span class="ic"><svg class="icon"><use href="#i-diamond"/></svg></span>Credits</a><a href="#S-A9"><span class="ic"><svg class="icon"><use href="#i-user"/></svg></span>Profile</a></div>
         <script>
 /* ===== CANDIDATE GALLERY ENGINE (S-B2 / S-B3) =====
@@ -1264,9 +1271,91 @@
     renderDrawer();   // defined in Task 4
     renderGap();      // defined in Task 5
   }
-  function remove(id){}          // replaced in Task 3 step 5 / Task 4
-  function renderDrawer(){}      // replaced in Task 4
   function renderGap(){}         // replaced in Task 5
+
+  let undoTimer = null, pendingUndo = null;
+
+  function backfill(){
+    while (state.live.length < 3 && state.bench.length){
+      state.live.push(state.bench.shift());     // bench is fit-descending
+    }
+  }
+  function toast(msg, onUndo){
+    const t  = document.getElementById('mmToast');
+    const btn = document.getElementById('mmUndo');
+    document.getElementById('mmToastMsg').textContent = msg;
+    t.classList.add('on');
+    btn.onclick = () => { clearTimeout(undoTimer); t.classList.remove('on'); onUndo(); };
+    clearTimeout(undoTimer);
+    undoTimer = setTimeout(() => { t.classList.remove('on'); commitRemoval(); }, UNDO_MS);
+  }
+  function remove(id){
+    const i = state.live.indexOf(id);
+    if (i === -1) return;
+    state.live.splice(i, 1);
+    pendingUndo = { id, index:i, backfilled:null };
+    const benchTop = state.bench[0];
+    backfill();
+    if (state.live.includes(benchTop)) pendingUndo.backfilled = benchTop;
+    save(); render();
+    toast(`${byId(id).name} removed.`, () => {
+      // free undo: put him back, send the backfill to the front of the bench
+      if (pendingUndo.backfilled){
+        state.live = state.live.filter(x => x !== pendingUndo.backfilled);
+        state.bench.unshift(pendingUndo.backfilled);
+      }
+      state.live.splice(pendingUndo.index, 0, pendingUndo.id);
+      pendingUndo = null; save(); render();
+    });
+  }
+  function commitRemoval(){
+    if (!pendingUndo) return;
+    state.removed.push(pendingUndo.id);
+    pendingUndo = null; save(); render();
+  }
+  function renderDrawer(){
+    const wrap = document.getElementById('b2drawerwrap');
+    if (!wrap) return;
+    if (!state.removed.length){ wrap.innerHTML = ''; return; }
+    wrap.innerHTML = `
+      <div class="eyebrow" style="margin-top:6px">Removed (${state.removed.length})</div>
+      <div class="drawer open">${state.removed.map(id => {
+        const c = byId(id);
+        return `<div class="row" data-id="${id}">
+          <div class="av s40 ${GRAD(c)}" style="background-image:url('${facePhoto(c)}')"></div>
+          <div class="grow"><div class="t1">${c.name}, ${c.age}</div>
+            <div class="t2">Fit ${fit(c)}% · removed by you</div></div>
+          <button class="btn sm ghost restore" data-id="${id}">Restore · £${RESTORE_PRICE}</button>
+        </div>`;
+      }).join('')}</div>`;
+    wrap.querySelectorAll('.restore').forEach(b =>
+      b.addEventListener('click', () => confirmRestore(b.dataset.id)));
+  }
+  function confirmRestore(id){
+    const c = byId(id), sheet = document.getElementById('mmSheet');
+    document.getElementById('mmSheetTitle').textContent = `Restore ${c.name}?`;
+    document.getElementById('mmSheetBody').textContent =
+      `£${RESTORE_PRICE} one-off. This is not a session credit — your credits stay untouched. ` +
+      `${c.name} returns to your list and your weakest current candidate goes back to the pool.`;
+    const go = document.getElementById('mmSheetGo');
+    go.textContent = `Pay £${RESTORE_PRICE} · restore ${c.name}`;
+    go.onclick = () => { restore(id); sheet.classList.remove('on'); };
+    document.getElementById('mmSheetNo').onclick = () => sheet.classList.remove('on');
+    sheet.classList.add('on');
+  }
+  function restore(id){
+    state.removed = state.removed.filter(x => x !== id);
+    // hold the list at three: weakest live candidate returns to the bench front
+    if (state.live.length >= 3){
+      const weakest = state.live.slice().sort((a,b) => fit(byId(a)) - fit(byId(b)))[0];
+      state.live = state.live.filter(x => x !== weakest);
+      state.bench.unshift(weakest);
+      state.bench.sort((a,b) => fit(byId(b)) - fit(byId(a)));
+    }
+    state.live.push(id);
+    state.live.sort((a,b) => fit(byId(b)) - fit(byId(a)));
+    save(); render();
+  }
 
   load();
   document.addEventListener('DOMContentLoaded', render);
@@ -1274,7 +1363,7 @@
 
   Object.assign(window, { CANDIDATES, BANDS, RESTORE_PRICE, UNDO_MS,
     fit, conf, scoreLabel, confLabel, bulletCount, PHOTO, cardPhoto, facePhoto, heroPhoto,
-    render, state, byId, save, load });
+    render, state, byId, save, load, remove, restore, confirmRestore });
 })();
 </script>
       </section>
