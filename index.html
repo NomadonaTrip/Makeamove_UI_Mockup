@@ -992,27 +992,14 @@
       </section>
 
       <section class="screen paper" id="S-B2" data-group="B · Matching" data-title="Candidate gallery">
-        <div class="pbar"><span class="brand" style="font-size:18px">Make<span class="a">a</span>Move</span><a class="act" href="#S-G1">Credits ›</a></div>
+        <div class="pbar"><span class="brand" style="font-size:18px">Make<span class="a">a</span>Move</span><a class="act" href="#S-G1">Credits ›</a><a class="av g2 s28" href="#S-A9" style="background-image:url('https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=400&amp;q=70&amp;fm=jpg&amp;crop=faces&amp;fit=crop')" aria-label="Your profile"></a></div>
         <div class="body">
-          <div class="note pass" style="display:flex;align-items:center;gap:10px"><svg class="icon" style="width:22px;height:22px"><use href="#i-party"/></svg><div><b>You have 3 pre-matches.</b><br><span style="font-size:12px">Each one cleared every dealbreaker you set.</span></div></div>
+          <div class="note pass" style="display:flex;align-items:center;gap:10px"><svg class="icon" style="width:22px;height:22px"><use href="#i-party"/></svg><div><b id="b2count">You have 3 pre-matches.</b><br><span style="font-size:12px">Each one cleared every dealbreaker you set.</span></div></div>
           <h2 class="scrn" style="font-size:24px">Your candidates</h2>
           <p class="muted" style="font-size:12.5px;margin-top:-6px">Photo and a few details now — full profiles unlock only after they accept your invite. No bios to doom-scroll.</p>
-          <a class="row" href="#S-B3" style="padding:0;overflow:hidden">
-            <div class="av g1" style="width:96px;height:120px;border-radius:0;font-size:30px">D</div>
-            <div class="grow" style="padding:12px 6px"><div class="t1">David, 41</div><div class="t2">Deputy head · 2 kids · London</div><div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><span class="tag pass">Family fit</span><span class="tag">AA</span></div></div>
-            <span class="chev" style="padding-right:12px">›</span>
-          </a>
-          <a class="row" href="#S-B3" style="padding:0;overflow:hidden">
-            <div class="av g3" style="width:96px;height:120px;border-radius:0;font-size:30px">S</div>
-            <div class="grow" style="padding:12px 6px"><div class="t1">Samuel, 44</div><div class="t2">Architect · wants kids · London</div><div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><span class="tag pass">Values fit</span><span class="tag">AA</span></div></div>
-            <span class="chev" style="padding-right:12px">›</span>
-          </a>
-          <a class="row" href="#S-B3" style="padding:0;overflow:hidden">
-            <div class="av g4" style="width:96px;height:120px;border-radius:0;font-size:30px">M</div>
-            <div class="grow" style="padding:12px 6px"><div class="t1">Marcus, 39</div><div class="t2">GP · blended-family open · Reading</div><div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><span class="tag pass">Family fit</span><span class="tag">AA</span></div></div>
-            <span class="chev" style="padding-right:12px">›</span>
-          </a>
-          <a class="row" href="#S-A9"><div class="av g2 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-sparkle"/></svg></div><div class="grow"><div class="t1">Enrich your profile</div><div class="t2">Optional — you're already matched. Richer answers sharpen future lists.</div></div><span class="chev">›</span></a>
+          <div id="b2list" style="display:flex;flex-direction:column;gap:12px"></div>
+          <div id="b2drawerwrap"></div>
+          <div id="b2gap"></div>
         </div>
         <div class="tabbar"><a class="on" href="#S-B2"><span class="ic"><svg class="icon"><use href="#i-heart"/></svg></span>Matches</a><a href="#S-C2"><span class="ic"><svg class="icon"><use href="#i-mail"/></svg></span>Invites</a><a href="#S-G1"><span class="ic"><svg class="icon"><use href="#i-diamond"/></svg></span>Credits</a><a href="#S-A9"><span class="ic"><svg class="icon"><use href="#i-user"/></svg></span>Profile</a></div>
         <script>
@@ -1193,8 +1180,88 @@
   const bulletCount = c => BANDS.reduce((n,b) =>
     n + ((c.bands[b.key] && c.bands[b.key].bullets) || []).length, 0);
 
+  /* ---- state ---- */
+  const KEY = 'mm_cand';
+  const DEFAULT = { live:['david','samuel','marcus'],
+                    bench:['tunde','emeka','kwame','ifeanyi','bode'],
+                    removed:[] };
+  let state;
+  const byId = id => CANDIDATES.find(c => c.id === id);
+  function load(){
+    try { state = JSON.parse(sessionStorage.getItem(KEY)) || {...DEFAULT}; }
+    catch(e){ state = {...DEFAULT}; }
+    if (!state.live || !state.bench || !state.removed) state = {...DEFAULT};
+  }
+  const save = () => sessionStorage.setItem(KEY, JSON.stringify(state));
+
+  /* ---- rendering ---- */
+  function bulletHTML(b){
+    return `<li class="${b.s}"><span>${b.t} <span class="src">[${b.src}]</span></span></li>`;
+  }
+  /* The card carries only the two most decisive bullets: the highest-weight
+     observed match, plus the sharpest observed mismatch if one exists. */
+  function topBullets(c){
+    const ordered = BANDS.slice().sort((a,b) => b.w - a.w);
+    let match = null, miss = null;
+    ordered.forEach(b => {
+      const bd = c.bands[b.key];
+      if (!bd) return;
+      bd.bullets.forEach(x => {
+        if (x.s === 'y' && !match) match = x;
+        if (x.s === 'n' && !miss)  miss  = x;
+      });
+    });
+    return [match, miss].filter(Boolean).slice(0,2);
+  }
+  /* Keep a gradient class on every portrait: if Unsplash is unreachable the
+     gradient shows through, so the gallery degrades to its previous look
+     rather than rendering empty boxes. */
+  const GRAD = c => 'g' + (1 + (CANDIDATES.indexOf(c) % 4));
+
+  function cardHTML(c){
+    const f = fit(c), lab = scoreLabel(f), cl = confLabel(c);
+    const lowTag = cl === 'Low'
+      ? '<span class="tag warn" style="margin-left:6px">Low confidence</span>' : '';
+    return `<div class="row cand" data-id="${c.id}" style="padding:0;overflow:hidden;align-items:stretch">
+      <div class="av ${GRAD(c)}" style="width:96px;height:auto;min-height:120px;border-radius:0;background-image:url('${c.photo}')"></div>
+      <div class="grow" style="padding:12px">
+        <div class="t1">${c.name}, ${c.age}${lowTag}</div>
+        <div class="t2">${c.blurb}</div>
+        <div class="fit"><span class="n">${f}%</span><span class="muted">${lab}</span>
+          <span class="prog"><i style="width:${f}%"></i></span></div>
+        <ul class="why">${topBullets(c).map(bulletHTML).join('')}</ul>
+        <a class="link seeall" href="#S-B3" data-id="${c.id}"
+           style="font-size:12px;margin-top:8px;display:inline-block">See all ${bulletCount(c)} reasons ›</a>
+      </div>
+      <button class="cand-x" data-id="${c.id}" aria-label="Remove ${c.name}"
+        style="flex:0 0 auto;background:none;border:none;cursor:pointer;padding:10px 12px;align-self:flex-start;color:var(--t-faint);font-size:16px">✕</button>
+    </div>`;
+  }
+  function render(){
+    const list = document.getElementById('b2list');
+    if (!list) return;
+    list.innerHTML = state.live.map(id => cardHTML(byId(id))).join('');
+    const n = state.live.length;
+    const count = document.getElementById('b2count');
+    if (count) count.textContent = `You have ${n} pre-match${n === 1 ? '' : 'es'}.`;
+    list.querySelectorAll('.cand-x').forEach(btn =>
+      btn.addEventListener('click', () => remove(btn.dataset.id)));
+    list.querySelectorAll('.seeall').forEach(a =>
+      a.addEventListener('click', () => sessionStorage.setItem('mm_cand_open', a.dataset.id)));
+    renderDrawer();   // defined in Task 4
+    renderGap();      // defined in Task 5
+  }
+  function remove(id){}          // replaced in Task 3 step 5 / Task 4
+  function renderDrawer(){}      // replaced in Task 4
+  function renderGap(){}         // replaced in Task 5
+
+  load();
+  document.addEventListener('DOMContentLoaded', render);
+  if (document.readyState !== 'loading') render();
+
   Object.assign(window, { CANDIDATES, BANDS, RESTORE_PRICE, UNDO_MS,
-    fit, conf, scoreLabel, confLabel, bulletCount, PHOTO });
+    fit, conf, scoreLabel, confLabel, bulletCount, PHOTO,
+    render, state, byId, save, load });
 })();
 </script>
       </section>
