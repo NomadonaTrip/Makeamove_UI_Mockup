@@ -332,9 +332,8 @@
   .why .src{opacity:.6; font-size:10.5px; white-space:nowrap}
 
   .drawer{display:none} .drawer.open{display:flex; flex-direction:column; gap:10px}
-  .gone{display:none !important}
 
-  .mm-toast{position:absolute; left:18px; right:18px; bottom:74px; z-index:40;
+  .mm-toast{position:fixed; left:18px; right:18px; bottom:74px; z-index:40;
     display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:12px;
     background:var(--stage-800); color:var(--ink); font-size:13px; font-weight:600;
     box-shadow:0 10px 30px rgba(0,0,0,.3); opacity:0; transform:translateY(8px);
@@ -344,7 +343,7 @@
     font-family:var(--display); font-weight:800; letter-spacing:.1em; text-transform:uppercase;
     font-size:11px; color:var(--bulb)}
 
-  .mm-sheet{position:absolute; inset:0; z-index:50; display:none; align-items:flex-end;
+  .mm-sheet{position:fixed; inset:0; z-index:50; display:none; align-items:flex-end;
     background:rgba(8,12,26,.55)}
   .mm-sheet.on{display:flex}
   .mm-sheet .box{width:100%; background:var(--paper); border-radius:18px 18px 0 0;
@@ -1045,17 +1044,17 @@
 
   /* Bench candidates all share a shape: only the two onboarding-derived bands
      score, which is exactly the cold-start case the prototype demonstrates. */
-  function benchBands(geoScore, geoState, geoText, stageScore, stageText){
+  function benchBands(geoScore, geoState, geoText, stageScore, stageText, eduBullet){
     return {
       family:{ score:null, blankOwner:'them', bullets:[
         B('o','He has not completed Marriage & family','no data'),
-        B('o','Neither side has supplied enough to compare on children','no data')
+        B('o','You have 2 children · he has not said whether he wants more','no data')
       ]},
       geo:{ score:geoScore, bullets:[
         B(geoState, geoText,'onboarding'),
         B('o','Neither of you has given a travel radius','no data')
       ]},
-      stage:{ score:stageScore, bullets:[ B('y', stageText,'onboarding') ]},
+      stage:{ score:stageScore, bullets:[ B('y', stageText,'onboarding'), eduBullet ] },
       person:{ score:null, blankOwner:'them', bullets:[
         B('o','He has not completed Personality & lifestyle','no data'),
         B('o','He has not played a show, so no gameplay signal exists','no data')
@@ -1107,7 +1106,7 @@
       bands:{
         family:{ score:59, bullets:[
           B('y','He answered "welcomes a blended family" — your dealbreaker','onboarding'),
-          B('n','You have 2 children and want no more · he has none and wants two','profile'),
+          B('n','You are open to one more child · he has none and wants two','profile'),
           B('y','You want marriage within 2 years · he answered "within 3 years"','profile')
         ]},
         geo:{ score:84, bullets:[
@@ -1116,7 +1115,7 @@
         ]},
         stage:{ score:66, bullets:[
           B('y','You are 40 · he is 44 — inside your stated 38–48 range','onboarding'),
-          B('y','You are employed full time · he is self-employed','onboarding')
+          B('y','You are both in work · you full time, he self-employed','onboarding')
         ]},
         person:{ score:null, blankOwner:'them', bullets:[
           B('o','He has not completed Personality & lifestyle','no data'),
@@ -1157,31 +1156,36 @@
       blurb:'Structural engineer · 1 kid · Croydon',
       pid:'1614023342667-6f060e9d1e04',
       bands:benchBands(62,'y','You live in London · he lives in Croydon — same metro area',
-                       52,'You are 40 · he is 43 — inside your stated 38–48 range') },
+                       50,'You are 40 · he is 43 — inside your stated 38–48 range',
+                       B('o','He has not given his education level','no data')) },
 
     { id:'emeka', name:'Emeka', age:40, city:'Luton',
       blurb:'Pharmacist · no kids · Luton',
       pid:'1565884280295-98eb83e41c65',
       bands:benchBands(56,'n','You live in London · he lives in Luton — about 30 miles apart',
-                       54,'You are 40 · he is 40 — inside your stated 38–48 range') },
+                       54,'You are 40 · he is 40 — inside your stated 38–48 range',
+                       B('o','He has not given his education level','no data')) },
 
     { id:'kwame', name:'Kwame', age:45, city:'Birmingham',
       blurb:'Secondary teacher · 3 kids · Birmingham',
       pid:'1584119164246-461d43e9bab3',
       bands:benchBands(44,'n','You live in London · he lives in Birmingham — about 120 miles apart',
-                       62,'You are 40 · he is 45 — inside your stated 38–48 range') },
+                       58,'You are 40 · he is 45 — inside your stated 38–48 range',
+                       B('y','You both hold a postgraduate qualification','profile')) },
 
     { id:'ifeanyi', name:'Ifeanyi', age:38, city:'Manchester',
       blurb:'Data analyst · no kids · Manchester',
       pid:'1522529599102-193c0d76b5b6',
       bands:benchBands(40,'n','You live in London · he lives in Manchester — about 200 miles apart',
-                       60,'You are 40 · he is 38 — inside your stated 38–48 range') },
+                       60,'You are 40 · he is 38 — inside your stated 38–48 range',
+                       B('y','You are both employed full time','onboarding')) },
 
     { id:'bode', name:'Bode', age:42, city:'Dublin',
       blurb:'Logistics manager · 2 kids · Dublin',
       pid:'1617244147299-5ef406921c35',
       bands:benchBands(38,'n','You live in the UK · he lives in Ireland — different country',
-                       61,'You are 40 · he is 42 — inside your stated 38–48 range') }
+                       62,'You are 40 · he is 42 — inside your stated 38–48 range',
+                       B('y','You both hold a postgraduate qualification','profile')) }
   ];
 
   /* ---- derivations ---- */
@@ -1214,6 +1218,7 @@
     try { state = JSON.parse(sessionStorage.getItem(KEY)) || {...DEFAULT}; }
     catch(e){ state = {...DEFAULT}; }
     if (!state.live || !state.bench || !state.removed) state = {...DEFAULT};
+    if (state.pending){ state.removed.push(state.pending.id); state.pending = null; save(); }
   }
   const save = () => sessionStorage.setItem(KEY, JSON.stringify(state));
 
@@ -1236,9 +1241,10 @@
     });
     return [match, miss].filter(Boolean).slice(0,2);
   }
-  /* Keep a gradient class on every portrait: if Unsplash is unreachable the
-     gradient shows through, so the gallery degrades to its previous look
-     rather than rendering empty boxes. */
+  /* Keep a gradient class on every portrait: if Unsplash is unreachable a
+     solid brand colour shows through (see the .av.gN{background-color} rules
+     — don't delete them), so the gallery degrades gracefully rather than
+     rendering empty boxes. */
   const GRAD = c => 'g' + (1 + (CANDIDATES.indexOf(c) % 4));
 
   function cardHTML(c){
@@ -1311,12 +1317,16 @@
           : `not blocking any of your current candidates`
       } <span class="src">[no data]</span></span></li>`;
     }).join('');
+    const helped = USER_GAPS.reduce((s,g) => s + blocking(g), 0);
     wrap.innerHTML = `<div class="card" style="margin-top:4px">
       <div class="eyebrow">✦ ${n} band${n===1?'':'s'} ${n===1?'is':'are'} blank on your side</div>
       <ul class="why" style="margin-top:10px">${lines}</ul>
       <p class="muted" style="font-size:12.5px;line-height:1.5;margin:10px 0 0">
-        Answering both means every future candidate is scored on all 5 bands
-        instead of 3.</p>
+        ${helped ? `Answering ${n===1?'it':'both'} would complete the picture for the
+        ${helped === 1 ? 'one candidate whose' : `${helped} candidates whose`} side is
+        already filled in` : `Answering ${n===1?'it':'both'} will not change your current
+        candidates — none of them has answered theirs either`} — and for future candidates
+        who have answered theirs.</p>
       <div class="muted" style="font-size:11.5px;margin-top:6px">
         ~${totalQs} questions · about ${mins} minutes</div>
       <a class="btn primary block" href="${first.screen}" style="margin-top:12px">Answer ${first.name} ›</a>
@@ -1326,7 +1336,7 @@
     </div>`;
   }
 
-  let undoTimer = null, pendingUndo = null;
+  let undoTimer = null, pendingUndo = null, drawerOpen = true;
 
   /* Only ONE removal may be pending at a time. `pendingUndo` and `undoTimer` are
      single slots, so a second removal inside the 6s window would overwrite the
@@ -1364,6 +1374,7 @@
     const benchTop = state.bench[0];
     backfill();
     if (state.live.includes(benchTop)) pendingUndo.backfilled = benchTop;
+    state.pending = pendingUndo;
     save(); render();
     toast(`${byId(id).name} removed.`, () => {
       // free undo: put him back, send the backfill to the front of the bench
@@ -1373,21 +1384,22 @@
           state.bench.unshift(pendingUndo.backfilled);
       }
       state.live.splice(pendingUndo.index, 0, pendingUndo.id);
-      pendingUndo = null; save(); render();
+      pendingUndo = null; state.pending = null; save(); render();
     });
   }
   function commitRemoval(){
     if (!pendingUndo) return;
     state.removed.push(pendingUndo.id);
-    pendingUndo = null; save(); render();
+    pendingUndo = null; state.pending = null; save(); render();
   }
   function renderDrawer(){
     const wrap = document.getElementById('b2drawerwrap');
     if (!wrap) return;
     if (!state.removed.length){ wrap.innerHTML = ''; return; }
+    const open = drawerOpen;
     wrap.innerHTML = `
-      <div class="eyebrow" style="margin-top:6px">Removed (${state.removed.length})</div>
-      <div class="drawer open">${state.removed.map(id => {
+      <div class="eyebrow drawer-toggle" style="margin-top:6px;cursor:pointer">${open ? '▾' : '▸'} Removed (${state.removed.length})</div>
+      <div class="drawer ${open ? 'open' : ''}">${state.removed.map(id => {
         const c = byId(id);
         return `<div class="row" data-id="${id}">
           <div class="av s40 ${GRAD(c)}" style="background-image:url('${facePhoto(c)}')"></div>
@@ -1398,6 +1410,11 @@
       }).join('')}</div>`;
     wrap.querySelectorAll('.restore').forEach(b =>
       b.addEventListener('click', () => confirmRestore(b.dataset.id)));
+    const toggle = wrap.querySelector('.drawer-toggle');
+    if (toggle) toggle.addEventListener('click', () => {
+      drawerOpen = !drawerOpen;
+      renderDrawer();
+    });
   }
   function confirmRestore(id){
     const c = byId(id), sheet = document.getElementById('mmSheet');
@@ -1411,18 +1428,19 @@
     document.getElementById('mmSheetNo').onclick = () => sheet.classList.remove('on');
     sheet.classList.add('on');
   }
+  const byFit = (a,b) => fit(byId(b)) - fit(byId(a));   // fit-descending
   function restore(id){
     flushPending();
     state.removed = state.removed.filter(x => x !== id);
     // hold the list at three: weakest live candidate returns to the bench front
     if (state.live.length >= 3){
-      const weakest = state.live.slice().sort((a,b) => fit(byId(a)) - fit(byId(b)))[0];
+      const weakest = [...state.live].sort(byFit).pop();
       state.live = state.live.filter(x => x !== weakest);
       state.bench.push(weakest);
-      state.bench.sort((a,b) => fit(byId(b)) - fit(byId(a)));
+      state.bench.sort(byFit);
     }
     state.live.push(id);
-    state.live.sort((a,b) => fit(byId(b)) - fit(byId(a)));
+    state.live.sort(byFit);
     save(); render();
   }
 
@@ -1435,6 +1453,10 @@
 
     const scored = BANDS.filter(b => c.bands[b.key] && c.bands[b.key].score != null).length;
     const k = conf(c), f = fit(c);
+    const theirGap = BANDS.reduce((s,b) => {
+      const bd = c.bands[b.key];
+      return s + (bd && bd.score == null && bd.blankOwner === 'them' ? b.w : 0);
+    }, 0);
     const advisory = k < 40 ? `<div class="note danger advisory">! Surfaced partly at
       random. Only ${scored} of 5 bands could be scored, so he is not meaningfully
       ranked against your other candidates.</div>` : '';
@@ -1452,7 +1474,7 @@
           <span class="muted">${scoreLabel(f)} · ${confLabel(c)} confidence</span></div>
         <div class="prog" style="margin-top:8px"><i style="width:${f}%"></i></div>
         <div class="muted completeness" style="font-size:12px;margin-top:8px">Scored on
-          ${scored} of 5 bands · he's completed ${Math.round(k)}% of his profile</div>
+          ${scored} of 5 bands · he's completed ${100 - theirGap}% of his profile</div>
       </div>
       ${advisory}
       <div class="note pass">✓ Dealbreakers cleared — genotype AA, marital status
@@ -1497,7 +1519,7 @@
           <div class="note">Full bio, extra photos and his answers stay hidden until he accepts. You're choosing who to invite — not judging a wall of text.</div>
         </div>
         <div class="foot">
-          <a class="btn move block" href="#S-C1">Invite David to the show</a>
+          <a class="btn move block" href="#S-C1">Invite him to the show</a>
           <a class="link center" href="#S-B2">Back to candidates</a>
         </div>
       </section>
