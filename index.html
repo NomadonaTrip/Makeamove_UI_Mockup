@@ -866,6 +866,88 @@
                  reviewQuestion, genOptions, answerCard, o };
 })();
 </script>
+    <script id="mmasync">
+/* ===== MMASYNC · shared async-game state (spec Cluster 2) =====
+   The async game is symmetric: both parties answer everything before play
+   (§2.1), then each reacts to the other's answers. Your verdicts drive THEIR
+   score; their verdicts drive YOURS. Both need 70%.
+
+   Declared after MMQ because it reads the question set and the fixtures, and
+   before #screenwrap because S-F3's inline script consumes it at parse time. */
+(function(){
+  const WINDOW_MS = 72*60*60*1000;          // §2.5 — the whole game fits in 72h
+  const DL = 'mm_async_deadline', RES = 'mm_async_result';
+
+  function deadline(){
+    let d = +sessionStorage.getItem(DL);
+    if(!d){ d = Date.now() + WINDOW_MS; sessionStorage.setItem(DL, d); }
+    return d;
+  }
+  function resetWindow(){ sessionStorage.removeItem(DL); deadline(); }
+  function expire(){ sessionStorage.setItem(DL, Date.now()); }
+
+  function remaining(){
+    const ms = Math.max(0, deadline() - Date.now());
+    return { ms, expired: ms === 0,
+             h: Math.floor(ms/3600000),
+             m: Math.floor(ms/60000) % 60,
+             s: Math.floor(ms/1000) % 60 };
+  }
+  const p2 = n => String(n).padStart(2,'0');
+  function fmt(){ const r = remaining(); return p2(r.h)+':'+p2(r.m)+':'+p2(r.s); }
+
+  /* ONE interval paints every countdown on the page, so navigating between
+     screens can never stack timers. Elements opt in with data-mm-countdown. */
+  function paintAll(){
+    const t = fmt();
+    document.querySelectorAll('[data-mm-countdown]').forEach(el => { el.textContent = t; });
+  }
+  setInterval(paintAll, 1000);
+  document.addEventListener('DOMContentLoaded', paintAll);
+  window.addEventListener('hashchange', paintAll);
+
+  /* Both sides answered every question before play began (§2.1). Demo
+     fixtures are sparse, so every lookup falls back to a valid option. */
+  /* `answered` distinguishes a real answer from a fallback. A profile fills in
+     progressively (§2.7), so a user can legitimately reach a game with nothing
+     recorded for some questions — and the result screen must say so rather
+     than implying an answer they never gave. */
+  function myAnswer(qid){
+    const a = MMQ.answers().find(x => x.qid === qid);
+    return a ? { qid, opt:a.opt, why:a.why || '', answered:true }
+             : { qid, opt:0, why:'', answered:false };
+  }
+  function theirAnswer(qid){
+    return Object.assign({ qid }, MMQ.DEMO.them[qid] || { opt:0, why:'' });
+  }
+  function theirVerdict(qid){
+    return MMQ.DEMO.verdict[qid] === 'stay' ? 'stay' : 'move';
+  }
+
+  /* myVerdicts maps question id -> 'move'|'stay' (what YOU decided about
+     THEM). Their score is what you gave them; yours is what they gave you. */
+  function scores(myVerdicts){
+    const set = MMQ.buildSet();
+    const totw = set.reduce((s,q) => s + MMQ.DIMS[q.dim], 0);
+    let them = 0, you = 0;
+    set.forEach(q => {
+      const w = MMQ.DIMS[q.dim];
+      if((myVerdicts||{})[q.id] === 'move') them += w;
+      if(theirVerdict(q.id) === 'move')     you  += w;
+    });
+    return { you: Math.round(you/totw*100), them: Math.round(them/totw*100) };
+  }
+
+  function saveResult(o){ sessionStorage.setItem(RES, JSON.stringify(o)); }
+  function result(){ try { return JSON.parse(sessionStorage.getItem(RES)); }
+                     catch(e){ return null; } }
+  function clearResult(){ sessionStorage.removeItem(RES); }
+
+  window.MMASYNC = { WINDOW_MS, deadline, resetWindow, expire, remaining, fmt,
+                     myAnswer, theirAnswer, theirVerdict, scores,
+                     saveResult, result, clearResult, paintAll };
+})();
+</script>
     <div class="screenwrap" id="screenwrap">
       <!-- ============ GROUP A · ONBOARDING ============ -->
       <section class="screen dark" id="S-A1" data-group="A · Onboarding" data-title="Landing / referral">
