@@ -2038,17 +2038,19 @@
         <div class="reveal" id="reveal"><span class="ring"></span><span class="ring"></span><div class="burst"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="verdict" id="rverdict">MOVE</div><p id="rmsg"></p><a class="btn ghost sm" id="rnext" style="width:auto;padding:10px 22px">Continue ›</a></div>
         <script>
         (function(){
-          const W={Family:3.0,Values:1.5,Lifestyle:0.9,Finances:1.0,Ambition:0.6,Intimacy:1.4};
-          const TURNS=[
-            {mode:'you', dim:'Family',  depth:'Screening',  q:'Do you want more children of your own?', a:'"Yes — I always pictured a bigger, noisier house."', verdict:'move'},
-            {mode:'them',dim:'Family',  depth:'Screening',  q:'Do you want children of your own someday?', a:'"Yes — two, ideally. I\'m a deputy head; kids are my whole world."'},
-            {mode:'you', dim:'Values',  depth:'Screening',  q:'What matters most to you in a partner?', a:'"Honesty. And kindness when absolutely no one is watching."', verdict:'move'},
-            {mode:'them',dim:'Lifestyle',depth:'Screening', q:'Describe your ideal Saturday.', a:'"Park with the kids, then a proper grown-up dinner out."'},
-            {mode:'you', dim:'Family',  depth:'Exploratory', q:'How would you blend two families together?', a:'"Slowly. The kids set the pace, not the adults."', verdict:'move'},
-            {mode:'them',dim:'Finances',depth:'Screening',  q:'What does financial partnership look like to you?', a:'"Shared goals, honest numbers, a little separate fun money."'},
-            {mode:'you', dim:'Family',  depth:'Deep dive', l3:true, q:'A partner\'s teenager rejects you outright. What happens?', a:'"I stay patient. I was a stepkid — rejection is fear. I\'d earn it over years."', verdict:'move'},
-            {mode:'them',dim:'Ambition',depth:'Screening',  q:'Where do you want to be in five years?', a:'"Head teacher — and a calmer, fuller home life."'},
-          ];
+          const W = MMQ.DIMS;
+          /* Turns are built from the live question set, so the deck and the
+             count model (spec 1.2) drive the arena. Even index = you answer,
+             odd = David answers and you react. */
+          const SET = MMQ.buildSet();
+          const TURNS = SET.map((q, n) => ({
+            q, mode: n % 2 === 0 ? 'you' : 'them',
+            l3: q.depth === 'Deep dive',
+            ans: n % 2 === 0
+              ? (MMQ.answers().find(a => a.qid === q.id) || { qid:q.id, opt:0, why:'' })
+              : Object.assign({ qid:q.id }, MMQ.DEMO.them[q.id] || { opt:0, why:'' }),
+            verdict: MMQ.DEMO.verdict[q.id] || 'move'
+          }));
           let i=0, yA=0,yE=0,tA=0,tE=0, sd=0;
           const $=id=>document.getElementById(id);
           function pc(a,e){return a>0?Math.round(e/a*100):null;}
@@ -2072,21 +2074,27 @@
             $('hYou').classList.toggle('lit', t.mode==='you');
             $('hThem').classList.toggle('lit', t.mode==='them');
             $('esc').classList.toggle('on', !!t.l3 && sd>=1);
-            const chip='<span class="chip '+(t.l3?'l3':'')+' qchip">'+t.dim+' · '+t.depth+'</span>';
+            const chip = '<span class="chip '+(t.l3?'l3':'')+' qchip">'
+                       + t.q.dim + ' · ' + t.q.depth + '</span>';
+            const total = TURNS.length;
             if(t.mode==='you'){
-              $('turnflag').innerHTML='Question <b>'+(i+1)+'</b> / 20 · <b style="color:var(--move)">your turn to answer</b>';
-              $('stage').innerHTML=chip+'<div class="qtext">'+t.q+'</div><div class="ans"><div class="lbl">Your answer</div>'+t.a+'</div>';
+              $('turnflag').innerHTML='Question <b>'+(i+1)+'</b> / '+total
+                +' · <b style="color:var(--move)">your turn to answer</b>';
+              $('stage').innerHTML = chip + '<div class="qtext">'+t.q.text+'</div>'
+                + MMQ.answerCard(t.q, t.ans, 'Your answer');
               $('act').innerHTML='<button class="btn move" onclick="DSHOW.lock()">Lock my answer</button>';
             }else{
-              $('turnflag').innerHTML='Question <b>'+(i+1)+'</b> / 20 · <b style="color:var(--spotlight-soft)">David is answering — you react</b>';
-              $('stage').innerHTML=chip+'<div class="qtext">'+t.q+'</div><div class="ans"><div class="lbl">David\'s answer</div>'+t.a+'</div>';
+              $('turnflag').innerHTML='Question <b>'+(i+1)+'</b> / '+total
+                +' · <b style="color:var(--spotlight-soft)">David is answering — you react</b>';
+              $('stage').innerHTML = chip + '<div class="qtext">'+t.q.text+'</div>'
+                + MMQ.answerCard(t.q, t.ans, "David's answer");
               $('act').innerHTML='<button class="btn ghost" onclick="DSHOW.react(\'stay\')">Stay<span class="sub">not feeling it</span></button><button class="btn move" onclick="DSHOW.react(\'move\')"><svg class="icon"><use href="#i-heart"/></svg> Move<span class="sub">I want you</span></button>';
             }
             paint();
           }
           function addTok(kind){ const d=document.createElement('div'); d.className='tok '+(kind==='move'?'m':'s'); d.innerHTML=kind==='move'?'<svg class="icon"><use href="#i-heart"/></svg>':'<svg class="icon"><use href="#i-x"/></svg>'; $('tokens').appendChild(d); }
           function lock(){ // you answered -> LOCKED, hold the beat, then reveal David's verdict (PRIMETIME §7)
-            const t=TURNS[i]; const v=t.verdict||'move'; yA+=W[t.dim]; if(v==='move') yE+=W[t.dim];
+            const t=TURNS[i]; const v=t.verdict||'move'; yA+=W[t.q.dim]; if(v==='move') yE+=W[t.q.dim];
             const r=$('reveal'); r.className='reveal on lock';
             $('rverdict').textContent='LOCKED';
             $('rmsg').textContent='Your answer is in. David is deciding…';
@@ -2100,7 +2108,7 @@
             $('rnext').onclick=()=>{ r.className='reveal'; i++; render(); };
           }
           function react(kind){ // you reacted to David -> his score moves
-            const t=TURNS[i]; tA+=W[t.dim]; if(kind==='move') tE+=W[t.dim]; else sd++;
+            const t=TURNS[i]; tA+=W[t.q.dim]; if(kind==='move') tE+=W[t.q.dim]; else sd++;
             paint();
             const a=$('act'); a.innerHTML='<div style="flex:1;text-align:center;color:var(--ink-dim);font-size:13px;padding:12px">Reaction '+(kind==='move'?'<b style=\'color:var(--move)\'>Move</b>':'<b>Stay</b>')+' sent to David →</div>';
             setTimeout(()=>{ i++; render(); }, 750);
