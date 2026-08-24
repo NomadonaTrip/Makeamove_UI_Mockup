@@ -248,6 +248,28 @@
   .opt.sel .dot{border-color:#2A1A05; background:transparent; box-shadow:none; position:relative}
   .opt.sel .dot::after{content:"✓"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:900}
   .opt.sel.move .dot{border-color:#fff}
+  /* ===== question engine · answer card (spec 1.1) =====
+     Rendered on dark stage surfaces (S-D2, S-F3) and paper ones (S-E6 deep
+     dive), so every colour resolves through a variable that both themes set. */
+  .anscard2{position:relative; border-radius:12px; padding:12px 14px;
+    background:rgba(255,255,255,.05); border:1px solid rgba(255,182,39,.35);
+    text-align:left; max-width:34ch}
+  .paper .anscard2{background:var(--paper-2); border-color:var(--line)}
+  .anscard2 .lb{font-size:9.5px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--ink-faint); font-weight:700; margin-bottom:6px}
+  .paper .anscard2 .lb{color:var(--t-faint)}
+  /* the selected option is the primary element — it is the scoring signal */
+  .anscard2 .ac-opt{font-weight:800; font-size:15px; line-height:1.3}
+  /* the optional voice line, secondary and italic, absent when not written */
+  .anscard2 .ac-why{margin-top:7px; font-size:12.5px; line-height:1.45;
+    font-style:italic; color:var(--ink-dim)}
+  .paper .anscard2 .ac-why{color:var(--t-dim)}
+  .anscard2 .ac-why::before{content:'\201C'} .anscard2 .ac-why::after{content:'\201D'}
+  /* spec 1.7 — a custom question is visibly the other party's */
+  .qauthor{display:inline-flex; align-items:center; gap:5px; font-family:var(--display);
+    font-weight:700; font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--move); background:rgba(255,45,111,.14); border:1px solid rgba(255,45,111,.4);
+    border-radius:999px; padding:3px 9px; margin-bottom:7px}
   /* styled select dropdown */
   .select{position:relative}
   .select select{appearance:none; -webkit-appearance:none; font-family:var(--body); font-size:15px; color:var(--t);
@@ -504,6 +526,14 @@
       padding:20px 0 0; border-top:0; background:transparent !important }
     .lay-feed > .foot .btn.block{ max-width:420px; margin-inline:auto }
 
+    /* S-QD1 is a FEED screen: let the deck cards tile as grid items of .body
+       rather than stacking inside a wrapper the grid treats as one child. */
+    #deckList{display:contents}
+    /* display:contents doesn't change the DOM tree, so the empty-state
+       .note (a child of #deckList, not .body) misses the ">" selector
+       above and renders as a single narrow column instead of full-width. */
+    #deckList > .note{ grid-column:1 / -1 }
+
     /* ============ IMMERSIVE (full-bleed, capped measure) ============ */
     .lay-immersive .heads, .lay-immersive .turnflag, .lay-immersive .stage,
     .lay-immersive .base, .lay-immersive .act{ max-width:620px; margin-inline:auto; width:100% }
@@ -513,6 +543,52 @@
   @media (min-width:1280px){
     :root{ --pagw:700px; --feedw:1140px }
   }
+
+  /* ===== dev settings · A/B toggles for testable features =====
+     Holds the question-count model (spec 1.2) and, from Phase 6, the karma
+     display direction (spec 6.4). Built as rows so more can be added. */
+  .devpanel{position:fixed; right:14px; bottom:14px; z-index:120; width:260px;
+    background:var(--paper); color:var(--t); border:1px solid var(--line);
+    border-radius:14px; box-shadow:0 18px 50px rgba(0,0,0,.35); padding:14px;
+    display:none}
+  .devpanel.on{display:block}
+  .devpanel h3{font-family:var(--display); font-size:13px; margin:0 0 4px;
+    letter-spacing:.06em; text-transform:uppercase}
+  .devpanel .hint2{font-size:11px; color:var(--t-faint); margin-bottom:10px}
+  .devrow{border-top:1px solid var(--line); padding-top:10px; margin-top:10px}
+  .devrow:first-of-type{border-top:none; padding-top:0; margin-top:0}
+  .devrow .lbl2{font-size:12px; font-weight:700; margin-bottom:6px}
+  .devrow .seg{display:flex; gap:6px}
+  .devrow .seg button{flex:1; font-size:11px; padding:7px 4px; border-radius:8px;
+    border:1px solid var(--line); background:var(--paper-2); color:var(--t-dim);
+    cursor:pointer; font-family:var(--body)}
+  .devrow .seg button.on{background:var(--move); border-color:var(--move); color:#fff; font-weight:700}
+  .devrow .note2{font-size:10.5px; color:var(--t-faint); margin-top:6px; line-height:1.4}
+  /* .tbtn is styled for the dark toolbar; re-theme it for this paper panel or
+     the Close button renders near-invisible. */
+  .devpanel .tbtn{color:var(--t-dim); border-color:var(--line)}
+  .devpanel .tbtn:hover{color:var(--t); border-color:var(--move)}
+
+  /* ===== confirmed-about-you (spec 1.4) =====
+     A truth is written to the profile once corroborating variations of the same
+     probe agree. The bar shows that confidence, not a preference weight. */
+  .confrow{border-top:1px solid rgba(255,255,255,.08); padding:11px 0}
+  .paper .confrow{border-top-color:var(--line)}
+  .confrow:first-child{border-top:none}
+  .confrow[data-rejected="true"]{opacity:.45}
+  .confrow .cf-head{display:flex; justify-content:space-between; align-items:baseline; gap:10px}
+  .confrow .cf-name{font-weight:700; font-size:13.5px}
+  .confrow .cf-label{font-size:10px; letter-spacing:.12em; text-transform:uppercase;
+    font-family:var(--display); font-weight:700; color:var(--ink-faint)}
+  .paper .confrow .cf-label{color:var(--t-faint)}
+  .confrow[data-confirmed="true"] .cf-label{color:var(--pass)}
+  .confrow .cf-val{font-size:12.5px; margin:3px 0 7px; color:var(--ink-dim)}
+  .paper .confrow .cf-val{color:var(--t-dim)}
+  .confrow .cf-cites{margin-top:8px; display:flex; flex-direction:column; gap:3px}
+  .confrow .cf-cite{font-size:11px; color:var(--ink-faint); line-height:1.4}
+  .paper .confrow .cf-cite{color:var(--t-faint)}
+  .confrow .cf-wrong{margin-top:8px; font-size:11.5px; background:none; border:none;
+    padding:0; cursor:pointer; color:var(--move); font-family:var(--body); text-decoration:underline}
 </style>
 </head>
 <body>
@@ -526,10 +602,270 @@
     <button class="tbtn" onclick="nextS()">Next ›</button>
     <button class="tbtn" onclick="openIndex()">☰ Screens</button>
     <button class="tbtn" onclick="go(FIRST)">⟲ Restart</button>
+    <button class="tbtn" onclick="MMDEV.open()" title="Dev settings"><svg class="icon"><use href="#i-gear"/></svg></button>
   </div>
 
   <div class="device">
     <div class="statusbar" id="statusbar"><span>9:41</span><span class="r">●●● &nbsp;5G &nbsp;100%▮</span></div>
+    <script id="mmq">
+/* ===== MMQ · THE QUESTION ENGINE =====
+   Shared by S-D2 (the arena), S-F3 (the async board), S-C1/S-F2 (deck attach),
+   S-QD1-3 (deck authoring) and S-E6 (confidence). Declared BEFORE #screenwrap
+   because those screens' inline scripts run at parse time and consume it.
+
+   Spec: docs/superpowers/specs/2026-08-24-prompt2-decisions.md, Cluster 1.
+   Fixtures, not a real engine. Confidence is DERIVED from how many variations
+   of the same probe were answered consistently, so editing a demo answer
+   moves the meter on S-E6. */
+(function(){
+  const DIMS = { Family:3.0, Values:1.5, Lifestyle:0.9, Finances:1.0, Ambition:0.6, Intimacy:1.4 };
+
+  const CONF_GATE = 70;   // at or above: confirmed, written to the profile
+  const MAX_DECK  = 5;    // custom questions per user (spec 1.6)
+  const ATTEMPTS  = 3;    // replacement attempts TOTAL per submission (spec 1.3)
+
+  /* o(text, value) — value is the normalised answer, so two differently
+     worded questions on the same probe can be compared for consistency. */
+  const o = (t,v) => ({ t, v });
+
+  /* Every question carries a `probe`: the underlying attribute it measures.
+     Several questions share a probe — those are the "variations" of spec 1.8
+     that let confidence be triangulated rather than taken on one answer. */
+  const BANK = [
+    { id:'q-fam-01', dim:'Family', depth:'Screening', probe:'wants-children',
+      text:'Do you want children of your own someday?',
+      opts:[o('Yes — more than one','yes'), o('Yes — one','yes'),
+            o('Open, not set on it','open'), o('No','no')] },
+
+    { id:'q-fam-02', dim:'Family', depth:'Screening', probe:'children-timing',
+      text:'When would you want your first child?',
+      opts:[o('Within 2 years of marriage','soon'), o('3–5 years in','later'),
+            o('Open — no fixed timeline','open'), o("I don't want children",'no')] },
+
+    { id:'q-fam-03', dim:'Family', depth:'Exploratory', probe:'wants-children',
+      text:'If a partner already had children, would you still want your own?',
+      opts:[o('Yes, definitely','yes'), o('Yes, if they were open to it','yes'),
+            o("I'd be content either way",'open'), o('No — theirs would be enough','no')] },
+
+    { id:'q-fam-04', dim:'Family', depth:'Exploratory', probe:'blending',
+      text:'How would you blend two families together?',
+      opts:[o('Slowly — the kids set the pace','slow'), o('Together from day one','fast'),
+            o('Separate homes at first','separate'), o("I'd follow my partner's lead",'defer')] },
+
+    { id:'q-fam-05', dim:'Family', depth:'Deep dive', probe:'step-resilience',
+      text:"A partner's teenager rejects you outright. What happens?",
+      opts:[o("I stay patient and earn it over years",'persist'),
+            o('I give them space and let my partner lead','defer'),
+            o("I'd want family counselling",'support'), o("I'd struggle to stay",'exit')] },
+
+    { id:'q-fam-06', dim:'Family', depth:'Deep dive', probe:'wants-children',
+      text:"If you learned you couldn't have biological children, what then?",
+      opts:[o("We'd adopt — I want to raise children",'yes'), o("We'd try every route",'yes'),
+            o("I'd make peace with it",'open'), o("I'd be relieved",'no')] },
+
+    { id:'q-val-01', dim:'Values', depth:'Screening', probe:'core-value',
+      text:'What matters most to you in a partner?',
+      opts:[o('Honesty','honesty'), o('Kindness','kindness'),
+            o('Ambition','ambition'), o('Faith','faith')] },
+
+    { id:'q-val-02', dim:'Values', depth:'Screening', probe:'non-negotiable',
+      text:'What would you never compromise on?',
+      opts:[o('Time with my family','family'), o('My faith','faith'),
+            o('My career','career'), o('My independence','independence')] },
+
+    { id:'q-val-03', dim:'Values', depth:'Exploratory', probe:'core-value',
+      text:'Which would you forgive more easily?',
+      opts:[o('A painful truth','honesty'), o('A kind lie','kindness'),
+            o('Neither, honestly','neither'), o('It would depend entirely','depends')] },
+
+    { id:'q-lif-01', dim:'Lifestyle', depth:'Screening', probe:'weekend',
+      text:'Describe your ideal Saturday.',
+      opts:[o('Out with family','family'), o('Quiet at home','home'),
+            o('Somewhere new','adventure'), o('Working on something','work')] },
+
+    { id:'q-lif-02', dim:'Lifestyle', depth:'Screening', probe:'weekend',
+      text:'Describe your perfect weekend.',
+      opts:[o('A long lunch with people I love','family'), o('Nothing planned at all','home'),
+            o('A trip somewhere unfamiliar','adventure'), o('Deep in a project','work')] },
+
+    { id:'q-fin-01', dim:'Finances', depth:'Screening', probe:'money-model',
+      text:'What does financial partnership look like to you?',
+      opts:[o('Fully joint — one pot','joint'), o('Joint plan, separate accounts','hybrid'),
+            o('Mostly separate','separate'), o('Whoever earns, manages','earner')] },
+
+    { id:'q-fin-02', dim:'Finances', depth:'Exploratory', probe:'money-model',
+      text:'How do you handle money in a relationship?',
+      opts:[o('Open books, one budget','joint'), o('Shared goals, own accounts','hybrid'),
+            o('We each cover our own','separate'), o("I'd rather not manage it",'earner')] },
+
+    { id:'q-amb-01', dim:'Ambition', depth:'Screening', probe:'five-year',
+      text:'Where do you want to be in five years?',
+      opts:[o('Further along in my career','career'), o('Settled with a family','family'),
+            o('Somewhere new entirely','change'), o('Much as I am now','steady')] },
+
+    { id:'q-int-01', dim:'Intimacy', depth:'Screening', probe:'closeness',
+      text:'What does closeness look like for you?',
+      opts:[o('Small daily rituals','rituals'), o('Long honest conversations','talk'),
+            o('Physical affection','touch'), o('Being in the same room','presence')] }
+  ];
+
+  /* Questions sharing a probe are each other's mirror in async play, so a
+     Move/Stay from one party reads against the other's answer on the same
+     attribute (spec 1.5). Phase 2 renders this; Phase 1 only supplies it. */
+  BANK.forEach(q => { q.src = 'bank'; q.author = null; q.mirror = q.probe; });
+
+  const qById = id => BANK.concat(deck()).find(q => q.id === id) || null;
+
+  /* ---- persisted state ---- */
+  const read = (k, d) => { try { return JSON.parse(sessionStorage.getItem(k)) ?? d; }
+                           catch(e){ return d; } };
+  const deck      = () => read('mm_deck', []);
+  const saveDeck  = a  => sessionStorage.setItem('mm_deck', JSON.stringify(a.slice(0,MAX_DECK)));
+  const model     = () => sessionStorage.getItem('mm_qmodel') || 'A';
+  const setModel  = m  => sessionStorage.setItem('mm_qmodel', m === 'B' ? 'B' : 'A');
+  const answers   = () => read('mm_answers', DEMO.answers);
+
+  /* ---- the two count models (spec 1.2) ----
+     A: exactly 10, deck questions DISPLACE bank ones.
+     B: 10 bank PLUS the deck, capped at 15.                                */
+  function buildSet(opts){
+    opts = opts || {};
+    const m = opts.model || model();
+    /* Only questions that cleared review reach a game (spec 1.3). A flagged
+       question the user never rewrote must not be asked. Bank-backfilled
+       slots carry no review and are cleared by definition. */
+    const d = (opts.deck || deck())
+      .filter(q => q.src === 'bank' || !q.review || q.review.ok)
+      .slice(0, MAX_DECK);
+    const seen = new Set(d.map(q => q.id));
+    if (m === 'B'){
+      /* A backfilled slot holds a real bank question that may already be in
+         the first ten — add only the deck entries the bank does not cover. */
+      const bank = BANK.slice(0, 10);
+      const bankIds = new Set(bank.map(q => q.id));
+      return bank.concat(d.filter(q => !bankIds.has(q.id)));
+    }
+    return d.concat(BANK.filter(q => !seen.has(q.id)).slice(0, 10 - d.length));
+  }
+
+  /* ---- confidence (spec 1.4 / item 8) ----
+     Consistency across variations, damped by how few variations exist.
+     3 consistent answers on a probe -> 100. 2 -> 67. 1 -> 33.               */
+  function confidence(probe, ans){
+    ans = ans || answers();
+    const hits = ans.filter(a => { const q = qById(a.qid); return q && q.probe === probe; });
+    if (!hits.length) return null;
+    const vals = hits.map(a => { const q = qById(a.qid); return q.opts[a.opt].v; });
+    const tally = {};
+    vals.forEach(v => { tally[v] = (tally[v]||0) + 1; });
+    const agree = Math.max.apply(null, Object.values(tally));
+    return Math.round((agree / hits.length) * Math.min(1, hits.length / 3) * 100);
+  }
+  const confLabel = n => n == null ? 'No data'
+                       : n >= CONF_GATE ? 'Confirmed' : 'Still forming';
+
+  const probes = () => [...new Set(BANK.map(q => q.probe))];
+
+  /* Pairs of questions in a set that probe the same attribute (spec 1.5). */
+  function mirrorPairs(set){
+    const by = {};
+    (set || buildSet()).forEach(q => { (by[q.probe] = by[q.probe] || []).push(q.id); });
+    return Object.entries(by).filter(([,ids]) => ids.length > 1)
+                             .map(([probe, ids]) => ({ probe, ids }));
+  }
+
+  /* ---- the fake LLM (spec 1.3) — deterministic, so it is testable ---- */
+  const BLOCKED = ['salary','virgin','body count','how much do you earn','net worth'];
+  function reviewQuestion(text){
+    const t = String(text || '').trim();
+    const low = t.toLowerCase();
+    if (t.length < 12)                  return { ok:false, reason:'Too vague to answer meaningfully.' };
+    if (t.indexOf('?') === -1)          return { ok:false, reason:'Write it as a question.' };
+    const hit = BLOCKED.find(b => low.includes(b));
+    if (hit)                            return { ok:false, reason:'Not appropriate before you have met.' };
+    return { ok:true, reason:'Cleared' };
+  }
+
+  /* Options the system generates for a user's custom question (spec 1.2/2). */
+  function genOptions(text){
+    const low = String(text || '').toLowerCase().trim();
+    if (/^(how many|when|how soon|how often)/.test(low))
+      return [o('Very soon','soon'), o('Within a few years','later'),
+              o('No fixed timeline','open'), o('Never / not at all','no')];
+    if (/^(would|do|did|can|could|have|are|is|will)\b/.test(low))
+      return [o('Yes, without hesitation','yes'), o('Yes, with conditions','yes-if'),
+              o('I am open to it','open'), o('No','no')];
+    return [o('Very important to me','high'), o('Somewhat important','mid'),
+            o('Neutral','neutral'), o('Not important to me','low')];
+  }
+
+  /* ---- demo fixtures ----
+     Answers are what S-E6 reads when nothing has been played yet.
+     wants-children: 3 consistent -> 100 (confirmed)
+     core-value:     2 consistent -> 67
+     weekend:        2 conflicting -> 33
+     money-model:    1 answer     -> 33                                     */
+  const DEMO = {
+    answers: [
+      { qid:'q-fam-01', opt:0, why:'I always pictured a bigger, noisier house.' },
+      { qid:'q-fam-03', opt:1, why:'' },
+      { qid:'q-fam-06', opt:0, why:'' },
+      { qid:'q-val-01', opt:0, why:'Honesty. And kindness when no one is watching.' },
+      { qid:'q-val-03', opt:0, why:'' },
+      { qid:'q-lif-01', opt:0, why:'Park with the kids, then a proper dinner out.' },
+      { qid:'q-lif-02', opt:1, why:'' },
+      { qid:'q-fin-01', opt:1, why:'Shared goals, honest numbers, some fun money.' }
+    ],
+    /* David's recorded answers, keyed by question id, for the arena. */
+    them: {
+      'q-fam-01': { opt:0, why:"Two, ideally. I'm a deputy head; kids are my world." },
+      'q-fam-02': { opt:0, why:'' },
+      'q-fam-03': { opt:0, why:'' },
+      'q-fam-04': { opt:0, why:'The kids set the pace, not the adults.' },
+      'q-fam-05': { opt:0, why:'I was a stepkid. Rejection is fear.' },
+      'q-fam-06': { opt:1, why:'' },
+      'q-val-01': { opt:0, why:'' },
+      'q-val-02': { opt:0, why:'Sunday dinner with my mum. Non-negotiable.' },
+      'q-val-03': { opt:0, why:'' },
+      'q-lif-01': { opt:0, why:'Park with the kids, then a grown-up dinner.' },
+      'q-lif-02': { opt:0, why:'' },
+      'q-fin-01': { opt:1, why:'Shared goals, honest numbers, a little fun money.' },
+      'q-fin-02': { opt:1, why:'I budget like an architect — everything load-bearing.' },
+      'q-amb-01': { opt:0, why:'Head teacher — and a calmer, fuller home life.' },
+      'q-int-01': { opt:0, why:'Tea made without asking. A hand on the shoulder.' }
+    },
+    /* David's verdict on each of YOUR answers, keyed by question id. */
+    verdict: {
+      'q-fam-01':'move', 'q-fam-02':'move', 'q-fam-03':'move', 'q-fam-04':'move',
+      'q-fam-05':'move', 'q-fam-06':'move', 'q-val-01':'move', 'q-val-02':'move',
+      'q-val-03':'stay', 'q-lif-01':'move', 'q-lif-02':'stay', 'q-fin-01':'move',
+      'q-fin-02':'move', 'q-amb-01':'move', 'q-int-01':'move'
+    }
+  };
+
+  /* The one place an answer becomes markup. S-D2 and S-F3 both call this so
+     the option-primary / voice-secondary treatment cannot drift apart. */
+  function answerCard(q, ans, label){
+    const opt   = q.opts[ans.opt];
+    const badge = q.src === 'custom' && q.author
+      ? '<span class="qauthor"><svg class="icon" style="width:11px;height:11px">'
+        + '<use href="#i-heart"/></svg>' + q.author + ' asked this</span>'
+      : '';
+    const why   = ans.why
+      ? '<div class="ac-why">' + ans.why + '</div>'
+      : '';
+    return '<div class="anscard2">' + badge
+         + '<div class="lb">' + label + '</div>'
+         + '<div class="ac-opt">' + opt.t + '</div>'
+         + why + '</div>';
+  }
+
+  window.MMQ = { DIMS, BANK, DEMO, CONF_GATE, MAX_DECK, ATTEMPTS,
+                 qById, deck, saveDeck, model, setModel, answers,
+                 buildSet, confidence, confLabel, probes, mirrorPairs,
+                 reviewQuestion, genOptions, answerCard, o };
+})();
+</script>
     <div class="screenwrap" id="screenwrap">
       <!-- ============ GROUP A · ONBOARDING ============ -->
       <section class="screen dark" id="S-A1" data-group="A · Onboarding" data-title="Landing / referral">
@@ -976,6 +1312,145 @@
           <div class="note">Feeds your <b>Family</b> dimension — the heaviest weight in the show for most players.</div>
         </div>
         <div class="foot"><a class="btn primary block" href="#S-A9">Save · back to profile</a></div>
+      </section>
+
+      <section class="screen paper" id="S-QD1" data-group="A · Onboarding" data-title="Question deck · your 5 questions">
+        <div class="pbar"><a class="back" href="#S-P5">‹</a><h1>Your questions</h1></div>
+        <div class="body">
+          <div class="note gold">Write up to <b>5 questions</b> of your own. We turn each into a set of options so nobody can dodge with a vague answer — and we check them for you before anyone sees them.</div>
+          <div id="deckList"></div>
+          <div class="field"><label>Add a question</label>
+            <input class="input" id="deckNew" placeholder="e.g. Would you move abroad for a partner?">
+          </div>
+          <button class="btn ghost block" onclick="MMDECK.addFromInput()">Add to deck</button>
+          <div class="note info">Your deck is attached automatically when you invite someone or start an async game. You can swap questions per match.</div>
+        </div>
+        <div class="foot"><a class="btn move block" href="#S-QD3" onclick="MMDECK.submit()">Submit for review</a></div>
+      </section>
+
+      <section class="screen paper" id="S-QD2" data-group="A · Onboarding" data-title="Question deck · generated options">
+        <div class="pbar"><a class="back" href="#S-QD1">‹</a><h1>Your options</h1></div>
+        <div class="body">
+          <div class="note">These are the options we generated. Everyone answering picks exactly one — that is what gets scored. They may add a line of their own beneath it, but it is optional.</div>
+          <div id="deckOpts"></div>
+        </div>
+        <div class="foot"><a class="btn move block" href="#S-QD1">Back to deck</a></div>
+      </section>
+
+      <section class="screen paper" id="S-QD3" data-group="A · Onboarding" data-title="Question deck · review results">
+        <div class="pbar"><a class="back" href="#S-QD1">‹</a><h1>Review results</h1></div>
+        <div class="body">
+          <div id="deckReview"></div>
+        </div>
+        <div class="foot"><a class="btn move block" href="#S-B2">Done</a></div>
+
+        <script>
+        /* ===== MMDECK · custom question authoring (spec 1.3, 1.6) =====
+           3 replacement attempts TOTAL per submission, then the rejected slot
+           is backfilled from the bank so a game always has a full set. */
+        (function(){
+          const used = () => +(sessionStorage.getItem('mm_deck_used') || 0);
+          const burn = () => sessionStorage.setItem('mm_deck_used', used() + 1);
+          const attemptsLeft = () => Math.max(0, MMQ.ATTEMPTS - used());
+
+          function mk(text){
+            return { id:'c-' + Date.now() + '-' + Math.random().toString(36).slice(2,7),
+                     dim:'Values', depth:'Screening', probe:'custom',
+                     text:String(text).trim(), opts:MMQ.genOptions(text),
+                     src:'custom', author:'You', mirror:'custom',
+                     review:MMQ.reviewQuestion(text) };
+          }
+          function add(text){
+            const d = MMQ.deck();
+            if(d.length >= MMQ.MAX_DECK) return false;
+            d.push(mk(text)); MMQ.saveDeck(d); render(); return true;
+          }
+          function addFromInput(){
+            const el = document.getElementById('deckNew');
+            if(el.value.trim()){ add(el.value); el.value = ''; }
+          }
+          function remove(i){ const d = MMQ.deck(); d.splice(i,1); MMQ.saveDeck(d); render(); }
+
+          /* A rejected question can be rewritten 3 times. On the 4th, we stop
+             asking and drop a bank question into the slot instead. */
+          function replace(i, text){
+            const d = MMQ.deck(); if(!d[i]) return;
+            if(attemptsLeft() === 0){
+              const taken = d.map(q => q.id);
+              const fill = MMQ.BANK.find(q => taken.indexOf(q.id) === -1);
+              d[i] = Object.assign({}, fill);
+              MMQ.saveDeck(d); render(); return;
+            }
+            const next = mk(text);
+            if(!next.review.ok) burn();
+            d[i] = next; MMQ.saveDeck(d); render();
+          }
+          /* Attempts are budgeted per submission (spec 1.3), so a new
+             submission starts with a full three. */
+          function submit(){ sessionStorage.removeItem('mm_deck_used'); render(); }
+
+          /* The index is the only thing that crosses the markup boundary, so
+             quotes, backslashes and angle brackets in a question can never
+             break the handler. Cancelling returns null and costs nothing —
+             an attempt is only spent on a real rewrite that fails review. */
+          function rewrite(i){
+            const d = MMQ.deck(); if(!d[i]) return;
+            const next = prompt('Rewrite your question', d[i].text);
+            if(next === null) return;              // cancelled — no attempt burned
+            const t = next.trim();
+            if(!t) return;                         // empty — no attempt burned
+            replace(i, t);
+          }
+
+          function render(){
+            const d = MMQ.deck();
+            const list = document.getElementById('deckList');
+            if(list){
+              list.innerHTML = d.length ? d.map((q,i) =>
+                '<div class="card" style="margin-bottom:8px">'
+                + '<div style="display:flex;justify-content:space-between;gap:8px">'
+                + '<div style="font-weight:700;font-size:13.5px">'+q.text+'</div>'
+                + '<span class="tag '+(q.src==='bank'?'':(q.review && q.review.ok?'pass':'danger'))+'">'
+                + (q.src==='bank' ? 'From bank' : (q.review && q.review.ok ? 'Cleared' : 'Flagged'))
+                + '</span></div>'
+                + (q.review && !q.review.ok ? '<div class="muted" style="font-size:11.5px;margin-top:6px">'+q.review.reason+'</div>' : '')
+                + '<div class="btnrow" style="margin-top:10px">'
+                + '<button class="btn ghost sm" onclick="MMDECK.remove('+i+')">Remove</button>'
+                + '<a class="btn ghost sm" href="#S-QD2" onclick="MMDECK.showOpts('+i+')">See options</a>'
+                + '</div></div>').join('')
+                : '<div class="note">No questions yet. Add up to '+MMQ.MAX_DECK+'.</div>';
+            }
+            const rev = document.getElementById('deckReview');
+            if(rev){
+              const flagged = d.filter(q => q.src !== 'bank' && q.review && !q.review.ok).length;
+              rev.innerHTML =
+                '<div class="note '+(flagged?'':'pass')+'">'
+                + (flagged ? flagged+' of your questions need a rewrite.' : 'All your questions cleared review.')
+                + '</div>'
+                + '<div class="row"><div class="grow"><div class="t1">Replacement attempts left</div>'
+                + '<div class="t2">3 per submission, then we fill the slot from the bank</div></div>'
+                + '<span class="tag '+(attemptsLeft()?'':'danger')+'">'+attemptsLeft()+'</span></div>'
+                + d.map((q,i) => '<div class="row"><div class="grow"><div class="t1">'+q.text+'</div>'
+                    + '<div class="t2">'+(q.src==='bank' ? 'Filled from the question bank'
+                        : (q.review.ok ? 'Cleared' : q.review.reason))+'</div></div>'
+                    + (q.src!=='bank' && !q.review.ok
+                        ? '<button class="btn ghost sm" onclick="MMDECK.rewrite('+i+')">Rewrite</button>'
+                        : '')
+                    + '</div>').join('');
+            }
+          }
+          function showOpts(i){
+            const q = MMQ.deck()[i]; if(!q) return;
+            document.getElementById('deckOpts').innerHTML =
+              '<div class="card"><div class="eyebrow">'+q.text+'</div>'
+              + '<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">'
+              + q.opts.map(op => '<div class="opt"><span class="dot"></span>'+op.t+'</div>').join('')
+              + '</div></div>';
+          }
+          window.MMDECK = { add, addFromInput, remove, replace, rewrite, submit, render, showOpts, attemptsLeft };
+          render();
+        })();
+        </script>
       </section>
 
       <!-- ============ GROUP B · MATCHING & GALLERY ============ -->
@@ -1537,8 +2012,9 @@
         <div class="pbar"><a class="back" href="#S-B3">‹</a><h1>Invite David</h1></div>
         <div class="body">
           <div class="note gold"><svg class="icon"><use href="#i-gift"/></svg> <b>Free during launch.</b> 1 free session credit applied — no charge now, and nothing held until a time is agreed.</div>
+          <div class="card" id="attachC1"></div>
           <div style="display:flex;align-items:center;gap:10px">
-            <div class="av g1 s52">D</div><div><div style="font-weight:700">A synchronous game show</div><div class="muted" style="font-size:12px">One-on-one · ~20 questions · ≥70% each to pass</div></div>
+            <div class="av g1 s52">D</div><div><div style="font-weight:700">A synchronous game show</div><div class="muted" style="font-size:12px">One-on-one · 10–15 questions · ≥70% each to pass</div></div>
           </div>
           <label class="muted" style="font-size:12px;font-weight:700">Propose up to 5 times that work for you</label>
           <div style="display:flex;flex-direction:column;gap:8px">
@@ -1663,7 +2139,7 @@
             <ul class="muted" style="font-size:12.5px;margin:8px 0 0;padding-left:18px;line-height:1.7">
               <li>You take <b>turns</b>: one answers, the other reacts <b style="color:var(--move)">Move</b> or <b style="color:var(--stay-soft)">Stay</b>.</li>
               <li>After you answer, you'll <b>see their verdict</b> — that's the suspense.</li>
-              <li>~20 questions. Each of you must reach <b style="color:var(--pass)">70%</b> to pass.</li>
+              <li>10–15 questions. Each of you must reach <b style="color:var(--pass)">70%</b> to pass.</li>
             </ul>
           </div>
           <a class="btn move block" href="#S-D2">Enter the arena</a>
@@ -1761,7 +2237,7 @@
           <div class="head them" id="hThem"><div class="who"><div class="av g1 s40">D</div><div><div class="nm">David</div><div class="ro">vs you</div></div></div><div class="pctline"><span style="font-size:10px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.1em">His score</span><span class="pct" id="pctThem">—</span></div><div class="climb"><i id="climbThem" style="width:0%"></i><span class="gate"></span></div></div>
           <div class="head you lit" id="hYou"><div class="who"><div class="av g2 s40">T</div><div><div class="nm">You</div><div class="ro">Tolu</div></div></div><div class="pctline"><span style="font-size:10px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.1em">Your score</span><span class="pct" id="pctYou">—</span></div><div class="climb"><i id="climbYou" style="width:0%"></i><span class="gate"></span></div></div>
         </div>
-        <div class="turnflag" id="turnflag">Question <b id="qn">1</b> / 20</div>
+        <div class="turnflag" id="turnflag">Question <b id="qn">1</b> / —</div>
         <div class="esc" id="esc"><svg class="icon"><use href="#i-bolt"/></svg> Stay-cluster in Family — going deeper (L3)</div>
         <div class="stage" id="stage"></div>
         <div class="base"><div class="blbl">David's reactions to you ↓</div><div class="tokens" id="tokens"></div></div>
@@ -1769,17 +2245,23 @@
         <div class="reveal" id="reveal"><span class="ring"></span><span class="ring"></span><div class="burst"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="verdict" id="rverdict">MOVE</div><p id="rmsg"></p><a class="btn ghost sm" id="rnext" style="width:auto;padding:10px 22px">Continue ›</a></div>
         <script>
         (function(){
-          const W={Family:3.0,Values:1.5,Lifestyle:0.9,Finances:1.0,Ambition:0.6,Intimacy:1.4};
-          const TURNS=[
-            {mode:'you', dim:'Family',  depth:'Screening',  q:'Do you want more children of your own?', a:'"Yes — I always pictured a bigger, noisier house."', verdict:'move'},
-            {mode:'them',dim:'Family',  depth:'Screening',  q:'Do you want children of your own someday?', a:'"Yes — two, ideally. I\'m a deputy head; kids are my whole world."'},
-            {mode:'you', dim:'Values',  depth:'Screening',  q:'What matters most to you in a partner?', a:'"Honesty. And kindness when absolutely no one is watching."', verdict:'move'},
-            {mode:'them',dim:'Lifestyle',depth:'Screening', q:'Describe your ideal Saturday.', a:'"Park with the kids, then a proper grown-up dinner out."'},
-            {mode:'you', dim:'Family',  depth:'Exploratory', q:'How would you blend two families together?', a:'"Slowly. The kids set the pace, not the adults."', verdict:'move'},
-            {mode:'them',dim:'Finances',depth:'Screening',  q:'What does financial partnership look like to you?', a:'"Shared goals, honest numbers, a little separate fun money."'},
-            {mode:'you', dim:'Family',  depth:'Deep dive', l3:true, q:'A partner\'s teenager rejects you outright. What happens?', a:'"I stay patient. I was a stepkid — rejection is fear. I\'d earn it over years."', verdict:'move'},
-            {mode:'them',dim:'Ambition',depth:'Screening',  q:'Where do you want to be in five years?', a:'"Head teacher — and a calmer, fuller home life."'},
-          ];
+          const W = MMQ.DIMS;
+          /* Turns are built from the live question set, so the deck and the
+             count model (spec 1.2) drive the arena. Even index = you answer,
+             odd = David answers and you react. */
+          let SET, TURNS;
+          function dbuild(){
+            SET = MMQ.buildSet();
+            TURNS = SET.map((q, n) => ({
+              q, mode: n % 2 === 0 ? 'you' : 'them',
+              l3: q.depth === 'Deep dive',
+              ans: n % 2 === 0
+                ? (MMQ.answers().find(a => a.qid === q.id) || { qid:q.id, opt:0, why:'' })
+                : Object.assign({ qid:q.id }, MMQ.DEMO.them[q.id] || { opt:0, why:'' }),
+              verdict: MMQ.DEMO.verdict[q.id] || 'move'
+            }));
+          }
+          dbuild();
           let i=0, yA=0,yE=0,tA=0,tE=0, sd=0;
           const $=id=>document.getElementById(id);
           function pc(a,e){return a>0?Math.round(e/a*100):null;}
@@ -1803,21 +2285,27 @@
             $('hYou').classList.toggle('lit', t.mode==='you');
             $('hThem').classList.toggle('lit', t.mode==='them');
             $('esc').classList.toggle('on', !!t.l3 && sd>=1);
-            const chip='<span class="chip '+(t.l3?'l3':'')+' qchip">'+t.dim+' · '+t.depth+'</span>';
+            const chip = '<span class="chip '+(t.l3?'l3':'')+' qchip">'
+                       + t.q.dim + ' · ' + t.q.depth + '</span>';
+            const total = TURNS.length;
             if(t.mode==='you'){
-              $('turnflag').innerHTML='Question <b>'+(i+1)+'</b> / 20 · <b style="color:var(--move)">your turn to answer</b>';
-              $('stage').innerHTML=chip+'<div class="qtext">'+t.q+'</div><div class="ans"><div class="lbl">Your answer</div>'+t.a+'</div>';
+              $('turnflag').innerHTML='Question <b>'+(i+1)+'</b> / '+total
+                +' · <b style="color:var(--move)">your turn to answer</b>';
+              $('stage').innerHTML = chip + '<div class="qtext">'+t.q.text+'</div>'
+                + MMQ.answerCard(t.q, t.ans, 'Your answer');
               $('act').innerHTML='<button class="btn move" onclick="DSHOW.lock()">Lock my answer</button>';
             }else{
-              $('turnflag').innerHTML='Question <b>'+(i+1)+'</b> / 20 · <b style="color:var(--spotlight-soft)">David is answering — you react</b>';
-              $('stage').innerHTML=chip+'<div class="qtext">'+t.q+'</div><div class="ans"><div class="lbl">David\'s answer</div>'+t.a+'</div>';
+              $('turnflag').innerHTML='Question <b>'+(i+1)+'</b> / '+total
+                +' · <b style="color:var(--spotlight-soft)">David is answering — you react</b>';
+              $('stage').innerHTML = chip + '<div class="qtext">'+t.q.text+'</div>'
+                + MMQ.answerCard(t.q, t.ans, "David's answer");
               $('act').innerHTML='<button class="btn ghost" onclick="DSHOW.react(\'stay\')">Stay<span class="sub">not feeling it</span></button><button class="btn move" onclick="DSHOW.react(\'move\')"><svg class="icon"><use href="#i-heart"/></svg> Move<span class="sub">I want you</span></button>';
             }
             paint();
           }
           function addTok(kind){ const d=document.createElement('div'); d.className='tok '+(kind==='move'?'m':'s'); d.innerHTML=kind==='move'?'<svg class="icon"><use href="#i-heart"/></svg>':'<svg class="icon"><use href="#i-x"/></svg>'; $('tokens').appendChild(d); }
           function lock(){ // you answered -> LOCKED, hold the beat, then reveal David's verdict (PRIMETIME §7)
-            const t=TURNS[i]; const v=t.verdict||'move'; yA+=W[t.dim]; if(v==='move') yE+=W[t.dim];
+            const t=TURNS[i]; const v=t.verdict||'move'; yA+=W[t.q.dim]; if(v==='move') yE+=W[t.q.dim];
             const r=$('reveal'); r.className='reveal on lock';
             $('rverdict').textContent='LOCKED';
             $('rmsg').textContent='Your answer is in. David is deciding…';
@@ -1831,7 +2319,7 @@
             $('rnext').onclick=()=>{ r.className='reveal'; i++; render(); };
           }
           function react(kind){ // you reacted to David -> his score moves
-            const t=TURNS[i]; tA+=W[t.dim]; if(kind==='move') tE+=W[t.dim]; else sd++;
+            const t=TURNS[i]; tA+=W[t.q.dim]; if(kind==='move') tE+=W[t.q.dim]; else sd++;
             paint();
             const a=$('act'); a.innerHTML='<div style="flex:1;text-align:center;color:var(--ink-dim);font-size:13px;padding:12px">Reaction '+(kind==='move'?'<b style=\'color:var(--move)\'>Move</b>':'<b>Stay</b>')+' sent to David →</div>';
             setTimeout(()=>{ i++; render(); }, 750);
@@ -1841,7 +2329,7 @@
             sessionStorage.setItem('mm_py',py); sessionStorage.setItem('mm_pt',pt);
             location.hash = pass ? 'S-D5' : 'S-D6';
           }
-          window.DSHOW={lock,react,reset(){i=0;yA=yE=tA=tE=sd=0;$('tokens').innerHTML='';$('reveal').className='reveal';render();}};
+          window.DSHOW={lock,react,reset(){dbuild();i=0;yA=yE=tA=tE=sd=0;$('tokens').innerHTML='';$('reveal').className='reveal';render();}};
           render();
         })();
         </script>
@@ -2008,6 +2496,11 @@
         <div class="body">
           <div class="note gold">After a few shows, here's the picture your answers paint. Tell us where we got it wrong — it reshapes who you meet.</div>
           <div class="card">
+            <div class="eyebrow" style="color:var(--bulb)">Confirmed about you</div>
+            <div class="muted" style="font-size:11.5px;margin-top:4px">We ask the same thing several ways. When your answers agree, we write it down.</div>
+            <div id="confBlock" style="margin-top:10px"></div>
+          </div>
+          <div class="card">
             <div class="eyebrow" style="color:var(--bulb)">What you weigh most</div>
             <div style="margin-top:10px;display:flex;flex-direction:column;gap:10px">
               <div><div style="display:flex;justify-content:space-between;font-size:13px"><span>Family</span><b>Very high</b></div><div class="prog"><i style="width:92%;background:var(--move)"></i></div></div>
@@ -2021,6 +2514,57 @@
           </div>
         </div>
         <div class="foot"><a class="btn move block" href="#S-E7">Looks right — save</a></div>
+
+        <script>
+        /* ===== MMCONF · confirmed attributes (spec 1.4 / item 8) =====
+           Confidence is derived from MMQ, never hardcoded — change a demo
+           answer and these meters move. */
+        (function(){
+          const NAMES = {
+            'wants-children':'Wanting children', 'children-timing':'Timing for a first child',
+            'blending':'Blending two families',  'step-resilience':'Facing a stepchild’s rejection',
+            'core-value':'What you value most',  'non-negotiable':'Your non-negotiable',
+            'weekend':'How you spend a weekend', 'money-model':'How you handle money',
+            'five-year':'Where you are heading', 'closeness':'What closeness means'
+          };
+          const rejected = () => { try { return JSON.parse(sessionStorage.getItem('mm_conf_rejected')) || []; }
+                                   catch(e){ return []; } };
+
+          function paint(){
+            const host = document.getElementById('confBlock'); if(!host) return;
+            const ans = MMQ.answers(), out = rejected();
+            const rows = MMQ.probes().map(p => ({ p, pct: MMQ.confidence(p, ans) }))
+                                     .filter(r => r.pct !== null)
+                                     .sort((a,b) => b.pct - a.pct);
+            host.innerHTML = rows.map(r => {
+              const hits = ans.filter(a => { const q = MMQ.qById(a.qid); return q && q.probe === r.p; });
+              const val = MMQ.qById(hits[0].qid).opts[hits[0].opt].t;
+              const conf = r.pct >= MMQ.CONF_GATE;
+              const isOut = out.indexOf(r.p) !== -1;
+              return '<div class="confrow" data-probe="'+r.p+'" data-pct="'+r.pct+'"'
+                + ' data-confirmed="'+conf+'" data-rejected="'+isOut+'">'
+                + '<div class="cf-head"><span class="cf-name">'+(NAMES[r.p]||r.p)+'</span>'
+                + '<span class="cf-label">'+MMQ.confLabel(r.pct)+'</span></div>'
+                + '<div class="cf-val">'+val+'</div>'
+                + '<div class="prog"><i style="width:'+r.pct+'%;background:'
+                + (conf?'var(--pass)':'var(--bulb)')+'"></i></div>'
+                + '<div class="cf-cites">' + hits.map(a =>
+                    '<div class="cf-cite">· '+MMQ.qById(a.qid).text+'</div>').join('') + '</div>'
+                + (isOut ? '<div class="cf-cite" style="color:var(--move)">You told us this is wrong — we have stopped using it.</div>'
+                         : '<button class="cf-wrong" onclick="MMCONF.reject(\''+r.p+'\')">That’s wrong about me</button>')
+                + '</div>';
+            }).join('');
+          }
+          function reject(p){
+            const out = rejected();
+            if(out.indexOf(p) === -1) out.push(p);
+            sessionStorage.setItem('mm_conf_rejected', JSON.stringify(out));
+            paint();
+          }
+          window.MMCONF = { paint, reject };
+          paint();
+        })();
+        </script>
       </section>
 
       <section class="screen dark" id="S-E7" data-group="E · Post-show" data-title="Referral">
@@ -2056,6 +2600,7 @@
         <div class="body">
           <div class="card" style="display:flex;gap:12px;align-items:center"><div class="av g3 s52">S</div><div><div style="font-weight:800">Samuel, 44</div><div class="muted" style="font-size:12px">Architect · wants kids · London</div></div></div>
           <div class="note info">You're the <b>pursuer</b>. You'll react to Samuel's recorded answers — judged against <b>Samuel's</b> dimension weights.</div>
+          <div class="card" id="attachF2"></div>
           <div class="card">
             <div style="display:flex;justify-content:space-between"><span>Initiation fee</span><b>£19.00</b></div>
             <div class="muted" style="font-size:12px;margin-top:4px">Free during launch — covered by your free credit.</div>
@@ -2086,8 +2631,16 @@
           #S-F3 .board::before{content:""; position:absolute; inset:6px; border:3px dotted var(--bulb); border-radius:12px;
             filter:drop-shadow(0 0 5px rgba(255,182,39,.85)); animation:marq 2.2s steps(2) infinite; pointer-events:none}
           #S-F3 .board.done::before{animation-duration:.45s}
+          /* The board holds one slot per question — 10 under Model A, up to 15
+             under Model B — so it must scroll rather than push the stage into
+             the button row. Phase 3 replaces this with a windowed ladder. */
+          #S-F3 .board{max-height:38vh; overflow:hidden}
+          #S-F3 .slots{max-height:calc(38vh - 30px); overflow-y:auto; scrollbar-width:none}
+          #S-F3 .slots::-webkit-scrollbar{display:none}
+          /* the floor must keep enough room for the answer card + buttons */
+          #S-F3 .stagef{min-height:190px; overflow:visible}
           #S-F3 .slots{display:flex; flex-direction:column; gap:7px}
-          #S-F3 .slot{height:42px; perspective:700px}
+          #S-F3 .slot{height:42px; flex-shrink:0; perspective:700px}
           #S-F3 .slot .in{position:relative; width:100%; height:100%; transform-style:preserve-3d; transition:transform var(--flip) var(--ease-show)}
           #S-F3 .slot.flip .in{transform:rotateX(180deg)}
           #S-F3 .face{position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden;
@@ -2128,27 +2681,30 @@
           <div class="who"><div class="av g3 s40">S</div><div><div class="nm">Samuel, 44</div><div class="sub2">his board · his rules</div></div></div>
           <div><div class="pctf" id="fpct">0%</div><div class="gate">gate · 70%</div></div>
         </div>
-        <div class="board" id="fboard">
-          <div class="slots">
-            <div class="slot"><div class="in"><div class="face front"><b>1</b></div><div class="face back"></div></div></div>
-            <div class="slot"><div class="in"><div class="face front"><b>2</b></div><div class="face back"></div></div></div>
-            <div class="slot"><div class="in"><div class="face front"><b>3</b></div><div class="face back"></div></div></div>
-            <div class="slot"><div class="in"><div class="face front"><b>4</b></div><div class="face back"></div></div></div>
-            <div class="slot"><div class="in"><div class="face front"><b>5</b></div><div class="face back"></div></div></div>
-          </div>
-        </div>
+        <div class="board" id="fboard"><div class="slots" id="fslots"></div></div>
         <div class="stagef" id="fstage"></div>
         <div class="actf" id="fact"></div>
         <script>
         (function(){
-          const QF=[
-            {dim:'Family',   w:3.0, q:'When would you want your first child?', a:'"Within the first two years of marriage — I\'m ready, I\'ve been ready a while."', note:'Highest weight on Samuel\'s board. This one counts for a lot.'},
-            {dim:'Values',   w:1.5, q:'What would you never compromise on?', a:'"Sunday dinner with my mum. Non-negotiable, even during deadlines."', note:'High weight for Samuel.'},
-            {dim:'Lifestyle',w:0.9, q:'Describe your perfect weekend.', a:'"Sketching buildings in the morning, cooking something ambitious at night."', note:'Lighter weight — but it all adds up.'},
-            {dim:'Finances', w:1.0, q:'How do you handle money in a relationship?', a:'"Joint plan, open books. I budget like an architect — everything is load-bearing."', note:'Mid weight on his board.'},
-            {dim:'Intimacy', w:1.4, q:'What does closeness look like for you?', a:'"Small rituals. Tea made without asking. A hand on the shoulder in a crowd."', note:'Second-highest weight. Last slot on the board.'}
-          ];
-          const TOTW=QF.reduce((s,t)=>s+t.w,0);
+          /* The board is built from the live set, so its length follows the
+             count model (spec 1.2) rather than a hardcoded five. Rebuilt (not
+             just re-rendered) on every reset so a model/deck change without a
+             page reload is picked up. */
+          let QF, TOTW;
+          function fbuild(){
+            QF = MMQ.buildSet().map(q => ({
+              q, w: MMQ.DIMS[q.dim],
+              ans: Object.assign({ qid:q.id }, MMQ.DEMO.them[q.id] || { opt:0, why:'' })
+            }));
+            TOTW = QF.reduce((s,t) => s + t.w, 0);
+          }
+          fbuild();
+          function fslots(){
+            document.getElementById('fslots').innerHTML = QF.map((t,n) =>
+              '<div class="slot"><div class="in">'
+              + '<div class="face front"><b>'+(n+1)+'</b></div>'
+              + '<div class="face back"></div></div></div>').join('');
+          }
           let fi=0, fgot=0;
           const $=id=>document.getElementById(id);
           function ftween(el,val){ const from=(el._v==null)?0:el._v; el._v=val;
@@ -2161,20 +2717,23 @@
           function frender(){
             if(fi>=QF.length) return ffinish();
             const t=QF[fi];
-            $('fstage').innerHTML='<span class="chip" style="animation:rise .4s var(--ease-show) both">'+t.dim+' · slot '+(fi+1)+' of 5</span>'
-              +'<div class="qbar">'+t.q+'</div>'
-              +'<div class="anscard"><div class="lb">Samuel said (recorded)</div>'+t.a+'</div>'
-              +'<div class="wnote">'+t.note+'</div>';
+            $('fstage').innerHTML='<span class="chip" style="animation:rise .4s var(--ease-show) both">'
+              + t.q.dim + ' · slot ' + (fi+1) + ' of ' + QF.length + '</span>'
+              + '<div class="qbar">' + t.q.text + '</div>'
+              + MMQ.answerCard(t.q, t.ans, 'Samuel said (recorded)')
+              + '<div class="wnote">Weight ' + t.w.toFixed(1) + " on Samuel's board.</div>";
             $('fact').innerHTML='<button class="btn ghost" onclick="FSHOW.react(\'stay\')">Stay<span class="sub">not feeling it</span></button>'
               +'<button class="btn move" onclick="FSHOW.react(\'move\')"><svg class="icon"><use href="#i-heart"/></svg> Move<span class="sub">I want this</span></button>';
+            const cur = document.querySelectorAll('#S-F3 .slot')[fi];
+            if(cur && cur.scrollIntoView) cur.scrollIntoView({block:'nearest'});
           }
           function freact(kind){
             const t=QF[fi];
             const slot=document.querySelectorAll('#S-F3 .slot')[fi];
             const back=slot.querySelector('.face.back');
             back.innerHTML = kind==='move'
-              ? '<span><span class="hh">♥</span>'+t.dim+'</span><span class="pts">'+Math.round(t.w*10)+'</span>'
-              : '<span style="letter-spacing:.12em">'+t.dim+' · stay</span><span class="pts">—</span>';
+              ? '<span><span class="hh">♥</span>'+t.q.dim+'</span><span class="pts">'+Math.round(t.w*10)+'</span>'
+              : '<span style="letter-spacing:.12em">'+t.q.dim+' · stay</span><span class="pts">—</span>';
             slot.classList.add('flip', kind);
             if(kind==='move') fgot+=t.w;
             ftween($('fpct'), Math.round(fgot/TOTW*100));
@@ -2190,9 +2749,8 @@
             setTimeout(()=>{ location.hash='S-F4'; }, 1700);
           }
           window.FSHOW={react:freact, reset(){ fi=0; fgot=0; $('fpct')._v=null; $('fpct').textContent='0%';
-            $('fboard').classList.remove('done');
-            document.querySelectorAll('#S-F3 .slot').forEach(s=>{ s.className='slot'; s.querySelector('.face.back').innerHTML=''; });
-            frender(); }};
+            $('fboard').classList.remove('done'); fbuild(); fslots(); frender(); }};
+          fslots();
           frender();
         })();
         </script>
@@ -2416,7 +2974,7 @@
   let _classified = false;
   function classify(){
     if(_classified) return;
-    const FEED = new Set(['S-B2','S-E3','S-E4','S-A8','S-H1','S-G3','S-H5']);
+    const FEED = new Set(['S-B2','S-E3','S-E4','S-A8','S-H1','S-G3','S-H5','S-QD1']);
     const IMMERSIVE = new Set(['S-D2','S-E1']);
     SCREENS.forEach(s=>{
       let lay;
@@ -2621,6 +3179,60 @@
     if(e.key==='ArrowRight' && !document.getElementById('index').classList.contains('on')) nextS();
     if(e.key==='ArrowLeft' && !document.getElementById('index').classList.contains('on')) prevS();
   });
+
+  /* Dev settings — spec 1.2 and 6.4 both call for an A/B switch, and they
+     share one surface rather than each inventing their own. */
+  window.MMDEV = {
+    open(){ document.getElementById('devpanel').classList.add('on'); MMDEV.paint(); },
+    close(){ document.getElementById('devpanel').classList.remove('on'); },
+    paint(){
+      /* The panel markup sits after this script in document order, so at
+         parse time these are null. Guard, or the TypeError aborts the rest
+         of the router script and takes MMATTACH down with it. */
+      const a = document.getElementById('devqa'), b = document.getElementById('devqb');
+      if(!a || !b) return;
+      const m = MMQ.model();
+      a.classList.toggle('on', m === 'A');
+      b.classList.toggle('on', m === 'B');
+    },
+    setModel(m){
+      MMQ.setModel(m); MMDEV.paint();
+      /* rebuild any board that is already on screen so the change is visible */
+      if(window.DSHOW) DSHOW.reset();
+      if(window.FSHOW) FSHOW.reset();
+    }
+  };
+  MMDEV.paint();
+
+  /* Deck attach (spec 1.6). Sync: both participants may attach questions.
+     Async: only the initiator may, so S-F2 says so explicitly. */
+  window.MMATTACH = {
+    paint(){
+      const d = MMQ.deck();
+      const lines = d.length
+        ? d.map(q => '<div class="t2">· ' + q.text + '</div>').join('')
+        : '<div class="t2">No custom questions yet.</div>';
+      const head = n => '<div style="display:flex;justify-content:space-between;align-items:center">'
+        + '<div style="font-weight:700;font-size:13px">Your questions</div>'
+        + '<span class="tag">' + n + ' of ' + MMQ.MAX_DECK + '</span></div>';
+      const edit = '<div class="btnrow" style="margin-top:10px">'
+        + '<a class="btn ghost sm" href="#S-QD1">Edit deck</a></div>';
+
+      const c1 = document.getElementById('attachC1');
+      if(c1) c1.innerHTML = head(d.length)
+        + '<div style="margin-top:8px">' + lines + '</div>'
+        + '<div class="muted" style="font-size:11px;margin-top:8px">Both of you can attach questions to a live show.</div>'
+        + edit;
+
+      const f2 = document.getElementById('attachF2');
+      if(f2) f2.innerHTML = head(d.length)
+        + '<div style="margin-top:8px">' + lines + '</div>'
+        + '<div class="muted" style="font-size:11px;margin-top:8px">In an async game only the pursuer sets custom questions — that is you.</div>'
+        + edit;
+    }
+  };
+  MMATTACH.paint();
+  window.addEventListener('hashchange', () => MMATTACH.paint());
 </script>
 <script>
 /* PRIMETIME motion v2 — ceremony confetti: gold rain when a match is made (S-D5) */
@@ -2656,5 +3268,20 @@
   onEnter();
 })();
 </script>
+<div class="devpanel" id="devpanel">
+  <h3>Dev settings</h3>
+  <div class="hint2">A/B switches for features still under test. Prototype only.</div>
+  <div class="devrow">
+    <div class="lbl2">Question count model</div>
+    <div class="seg">
+      <button id="devqa" onclick="MMDEV.setModel('A')">A · 10 total</button>
+      <button id="devqb" onclick="MMDEV.setModel('B')">B · 10 + 5</button>
+    </div>
+    <div class="note2">A replaces up to 5 bank questions with yours. B adds yours on top, max 15.</div>
+  </div>
+  <div style="text-align:right;margin-top:12px">
+    <button class="tbtn" onclick="MMDEV.close()">Close</button>
+  </div>
+</div>
 </body>
 </html>
