@@ -2695,6 +2695,55 @@
         <div class="foot"><a class="btn move block" href="#S-F2A">Send · Samuel consents next</a></div>
       </section>
 
+      <section class="screen paper" id="S-F2A" data-group="F · Async game" data-title="Async consent + charge (pursued)">
+        <div class="pbar"><span class="brand" style="font-size:16px">Make<span class="a">a</span>Move</span><span class="tag warn">Samuel's view</span></div>
+        <div class="body">
+          <div class="note info"><svg class="icon"><use href="#i-hourglass"/></svg> Tolu wants to play an async game with you. Once you accept, you both have <b><span data-mm-countdown>72:00:00</span></b> to finish.</div>
+
+          <div class="card" style="display:flex;gap:14px;align-items:center">
+            <div class="av g2 s72">T</div>
+            <div><div style="font-weight:800;font-size:18px">Tolu, 37</div><div class="muted" style="font-size:13px">Project manager · 2 kids · London</div><div style="margin-top:6px"><span class="tag pass">Family fit</span> <span class="tag">AA</span></div></div>
+          </div>
+
+          <div class="card">
+            <div class="eyebrow" style="color:var(--move)">What Tolu will ask you</div>
+            <div class="muted" style="font-size:11.5px;margin-top:4px">You see her questions before you decide — not after.</div>
+            <div id="pursuerQs" style="margin-top:10px;display:flex;flex-direction:column;gap:6px"></div>
+          </div>
+
+          <div class="card">
+            <div style="display:flex;justify-content:space-between"><span>Your fee, charged on accept</span><b>£19.00</b></div>
+            <div class="muted" style="font-size:12px;margin-top:4px">Free during launch — covered by your free credit.</div>
+          </div>
+          <div class="note">Accepting charges you now. <b>Neither fee is refunded if the game ends under the gate</b> — you're paying for the game, not the result. Leave it unfinished past 72 hours and you forfeit; finish it and you're covered either way.</div>
+        </div>
+        <div class="foot">
+          <a class="btn move block" href="#S-F3">Accept &amp; pay · start playing</a>
+          <a class="link center" href="#S-F6">No thanks — decline</a>
+        </div>
+        <script>
+        (function(){
+          /* The pursuer's custom questions are shown BEFORE payment (§2.4).
+             Falls back to a representative set when the deck is empty, so the
+             screen never renders as a blank promise. */
+          function paint(){
+            const host = document.getElementById('pursuerQs');
+            if(!host) return;
+            const deck = MMQ.deck().filter(q => q.src !== 'bank');
+            const shown = deck.length ? deck.map(q => q.text)
+              : ['Would you move abroad for the right person?',
+                 'How do you handle a disagreement that lasts more than a day?'];
+            host.innerHTML = shown.map(t =>
+              '<div class="t2" data-pursuer-q>· ' + t + '</div>').join('')
+              + '<div class="muted" style="font-size:11px;margin-top:6px">'
+              + 'Plus the standard set — ' + MMQ.buildSet().length + ' questions in total.</div>';
+          }
+          window.addEventListener('hashchange', paint);
+          paint();
+        })();
+        </script>
+      </section>
+
       <section class="screen dark" id="S-F3" data-group="F · Async game" data-title="Async play · the board (interactive)">
         <style>
           #S-F3{padding:0; overflow:hidden}
