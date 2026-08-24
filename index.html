@@ -568,6 +568,27 @@
      the Close button renders near-invisible. */
   .devpanel .tbtn{color:var(--t-dim); border-color:var(--line)}
   .devpanel .tbtn:hover{color:var(--t); border-color:var(--move)}
+
+  /* ===== confirmed-about-you (spec 1.4) =====
+     A truth is written to the profile once corroborating variations of the same
+     probe agree. The bar shows that confidence, not a preference weight. */
+  .confrow{border-top:1px solid rgba(255,255,255,.08); padding:11px 0}
+  .paper .confrow{border-top-color:var(--line)}
+  .confrow:first-child{border-top:none}
+  .confrow[data-rejected="true"]{opacity:.45}
+  .confrow .cf-head{display:flex; justify-content:space-between; align-items:baseline; gap:10px}
+  .confrow .cf-name{font-weight:700; font-size:13.5px}
+  .confrow .cf-label{font-size:10px; letter-spacing:.12em; text-transform:uppercase;
+    font-family:var(--display); font-weight:700; color:var(--ink-faint)}
+  .paper .confrow .cf-label{color:var(--t-faint)}
+  .confrow[data-confirmed="true"] .cf-label{color:var(--pass)}
+  .confrow .cf-val{font-size:12.5px; margin:3px 0 7px; color:var(--ink-dim)}
+  .paper .confrow .cf-val{color:var(--t-dim)}
+  .confrow .cf-cites{margin-top:8px; display:flex; flex-direction:column; gap:3px}
+  .confrow .cf-cite{font-size:11px; color:var(--ink-faint); line-height:1.4}
+  .paper .confrow .cf-cite{color:var(--t-faint)}
+  .confrow .cf-wrong{margin-top:8px; font-size:11.5px; background:none; border:none;
+    padding:0; cursor:pointer; color:var(--move); font-family:var(--body); text-decoration:underline}
 </style>
 </head>
 <body>
@@ -2461,6 +2482,11 @@
         <div class="body">
           <div class="note gold">After a few shows, here's the picture your answers paint. Tell us where we got it wrong — it reshapes who you meet.</div>
           <div class="card">
+            <div class="eyebrow" style="color:var(--bulb)">Confirmed about you</div>
+            <div class="muted" style="font-size:11.5px;margin-top:4px">We ask the same thing several ways. When your answers agree, we write it down.</div>
+            <div id="confBlock" style="margin-top:10px"></div>
+          </div>
+          <div class="card">
             <div class="eyebrow" style="color:var(--bulb)">What you weigh most</div>
             <div style="margin-top:10px;display:flex;flex-direction:column;gap:10px">
               <div><div style="display:flex;justify-content:space-between;font-size:13px"><span>Family</span><b>Very high</b></div><div class="prog"><i style="width:92%;background:var(--move)"></i></div></div>
@@ -2474,6 +2500,57 @@
           </div>
         </div>
         <div class="foot"><a class="btn move block" href="#S-E7">Looks right — save</a></div>
+
+        <script>
+        /* ===== MMCONF · confirmed attributes (spec 1.4 / item 8) =====
+           Confidence is derived from MMQ, never hardcoded — change a demo
+           answer and these meters move. */
+        (function(){
+          const NAMES = {
+            'wants-children':'Wanting children', 'children-timing':'Timing for a first child',
+            'blending':'Blending two families',  'step-resilience':'Facing a stepchild’s rejection',
+            'core-value':'What you value most',  'non-negotiable':'Your non-negotiable',
+            'weekend':'How you spend a weekend', 'money-model':'How you handle money',
+            'five-year':'Where you are heading', 'closeness':'What closeness means'
+          };
+          const rejected = () => { try { return JSON.parse(sessionStorage.getItem('mm_conf_rejected')) || []; }
+                                   catch(e){ return []; } };
+
+          function paint(){
+            const host = document.getElementById('confBlock'); if(!host) return;
+            const ans = MMQ.answers(), out = rejected();
+            const rows = MMQ.probes().map(p => ({ p, pct: MMQ.confidence(p, ans) }))
+                                     .filter(r => r.pct !== null)
+                                     .sort((a,b) => b.pct - a.pct);
+            host.innerHTML = rows.map(r => {
+              const hits = ans.filter(a => { const q = MMQ.qById(a.qid); return q && q.probe === r.p; });
+              const val = MMQ.qById(hits[0].qid).opts[hits[0].opt].t;
+              const conf = r.pct >= MMQ.CONF_GATE;
+              const isOut = out.indexOf(r.p) !== -1;
+              return '<div class="confrow" data-probe="'+r.p+'" data-pct="'+r.pct+'"'
+                + ' data-confirmed="'+conf+'" data-rejected="'+isOut+'">'
+                + '<div class="cf-head"><span class="cf-name">'+(NAMES[r.p]||r.p)+'</span>'
+                + '<span class="cf-label">'+MMQ.confLabel(r.pct)+'</span></div>'
+                + '<div class="cf-val">'+val+'</div>'
+                + '<div class="prog"><i style="width:'+r.pct+'%;background:'
+                + (conf?'var(--pass)':'var(--bulb)')+'"></i></div>'
+                + '<div class="cf-cites">' + hits.map(a =>
+                    '<div class="cf-cite">· '+MMQ.qById(a.qid).text+'</div>').join('') + '</div>'
+                + (isOut ? '<div class="cf-cite" style="color:var(--move)">You told us this is wrong — we have stopped using it.</div>'
+                         : '<button class="cf-wrong" onclick="MMCONF.reject(\''+r.p+'\')">That’s wrong about me</button>')
+                + '</div>';
+            }).join('');
+          }
+          function reject(p){
+            const out = rejected();
+            if(out.indexOf(p) === -1) out.push(p);
+            sessionStorage.setItem('mm_conf_rejected', JSON.stringify(out));
+            paint();
+          }
+          window.MMCONF = { paint, reject };
+          paint();
+        })();
+        </script>
       </section>
 
       <section class="screen dark" id="S-E7" data-group="E · Post-show" data-title="Referral">
