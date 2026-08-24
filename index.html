@@ -535,6 +535,31 @@
   @media (min-width:1280px){
     :root{ --pagw:700px; --feedw:1140px }
   }
+
+  /* ===== dev settings · A/B toggles for testable features =====
+     Holds the question-count model (spec 1.2) and, from Phase 6, the karma
+     display direction (spec 6.4). Built as rows so more can be added. */
+  .devpanel{position:fixed; right:14px; bottom:14px; z-index:120; width:260px;
+    background:var(--paper); color:var(--t); border:1px solid var(--line);
+    border-radius:14px; box-shadow:0 18px 50px rgba(0,0,0,.35); padding:14px;
+    display:none}
+  .devpanel.on{display:block}
+  .devpanel h3{font-family:var(--display); font-size:13px; margin:0 0 4px;
+    letter-spacing:.06em; text-transform:uppercase}
+  .devpanel .hint2{font-size:11px; color:var(--t-faint); margin-bottom:10px}
+  .devrow{border-top:1px solid var(--line); padding-top:10px; margin-top:10px}
+  .devrow:first-of-type{border-top:none; padding-top:0; margin-top:0}
+  .devrow .lbl2{font-size:12px; font-weight:700; margin-bottom:6px}
+  .devrow .seg{display:flex; gap:6px}
+  .devrow .seg button{flex:1; font-size:11px; padding:7px 4px; border-radius:8px;
+    border:1px solid var(--line); background:var(--paper-2); color:var(--t-dim);
+    cursor:pointer; font-family:var(--body)}
+  .devrow .seg button.on{background:var(--move); border-color:var(--move); color:#fff; font-weight:700}
+  .devrow .note2{font-size:10.5px; color:var(--t-faint); margin-top:6px; line-height:1.4}
+  /* .tbtn is styled for the dark toolbar; re-theme it for this paper panel or
+     the Close button renders near-invisible. */
+  .devpanel .tbtn{color:var(--t-dim); border-color:var(--line)}
+  .devpanel .tbtn:hover{color:var(--t); border-color:var(--move)}
 </style>
 </head>
 <body>
@@ -548,6 +573,7 @@
     <button class="tbtn" onclick="nextS()">Next ›</button>
     <button class="tbtn" onclick="openIndex()">☰ Screens</button>
     <button class="tbtn" onclick="go(FIRST)">⟲ Restart</button>
+    <button class="tbtn" onclick="MMDEV.open()" title="Dev settings"><svg class="icon"><use href="#i-gear"/></svg></button>
   </div>
 
   <div class="device">
@@ -2042,15 +2068,19 @@
           /* Turns are built from the live question set, so the deck and the
              count model (spec 1.2) drive the arena. Even index = you answer,
              odd = David answers and you react. */
-          const SET = MMQ.buildSet();
-          const TURNS = SET.map((q, n) => ({
-            q, mode: n % 2 === 0 ? 'you' : 'them',
-            l3: q.depth === 'Deep dive',
-            ans: n % 2 === 0
-              ? (MMQ.answers().find(a => a.qid === q.id) || { qid:q.id, opt:0, why:'' })
-              : Object.assign({ qid:q.id }, MMQ.DEMO.them[q.id] || { opt:0, why:'' }),
-            verdict: MMQ.DEMO.verdict[q.id] || 'move'
-          }));
+          let SET, TURNS;
+          function dbuild(){
+            SET = MMQ.buildSet();
+            TURNS = SET.map((q, n) => ({
+              q, mode: n % 2 === 0 ? 'you' : 'them',
+              l3: q.depth === 'Deep dive',
+              ans: n % 2 === 0
+                ? (MMQ.answers().find(a => a.qid === q.id) || { qid:q.id, opt:0, why:'' })
+                : Object.assign({ qid:q.id }, MMQ.DEMO.them[q.id] || { opt:0, why:'' }),
+              verdict: MMQ.DEMO.verdict[q.id] || 'move'
+            }));
+          }
+          dbuild();
           let i=0, yA=0,yE=0,tA=0,tE=0, sd=0;
           const $=id=>document.getElementById(id);
           function pc(a,e){return a>0?Math.round(e/a*100):null;}
@@ -2118,7 +2148,7 @@
             sessionStorage.setItem('mm_py',py); sessionStorage.setItem('mm_pt',pt);
             location.hash = pass ? 'S-D5' : 'S-D6';
           }
-          window.DSHOW={lock,react,reset(){i=0;yA=yE=tA=tE=sd=0;$('tokens').innerHTML='';$('reveal').className='reveal';render();}};
+          window.DSHOW={lock,react,reset(){dbuild();i=0;yA=yE=tA=tE=sd=0;$('tokens').innerHTML='';$('reveal').className='reveal';render();}};
           render();
         })();
         </script>
@@ -2901,6 +2931,30 @@
     if(e.key==='ArrowRight' && !document.getElementById('index').classList.contains('on')) nextS();
     if(e.key==='ArrowLeft' && !document.getElementById('index').classList.contains('on')) prevS();
   });
+
+  /* Dev settings — spec 1.2 and 6.4 both call for an A/B switch, and they
+     share one surface rather than each inventing their own. */
+  window.MMDEV = {
+    open(){ document.getElementById('devpanel').classList.add('on'); MMDEV.paint(); },
+    close(){ document.getElementById('devpanel').classList.remove('on'); },
+    paint(){
+      /* The panel markup sits after this script in document order, so at
+         parse time these are null. Guard, or the TypeError aborts the rest
+         of the router script and takes MMATTACH down with it. */
+      const a = document.getElementById('devqa'), b = document.getElementById('devqb');
+      if(!a || !b) return;
+      const m = MMQ.model();
+      a.classList.toggle('on', m === 'A');
+      b.classList.toggle('on', m === 'B');
+    },
+    setModel(m){
+      MMQ.setModel(m); MMDEV.paint();
+      /* rebuild any board that is already on screen so the change is visible */
+      if(window.DSHOW) DSHOW.reset();
+      if(window.FSHOW) FSHOW.reset();
+    }
+  };
+  MMDEV.paint();
 </script>
 <script>
 /* PRIMETIME motion v2 — ceremony confetti: gold rain when a match is made (S-D5) */
@@ -2936,5 +2990,20 @@
   onEnter();
 })();
 </script>
+<div class="devpanel" id="devpanel">
+  <h3>Dev settings</h3>
+  <div class="hint2">A/B switches for features still under test. Prototype only.</div>
+  <div class="devrow">
+    <div class="lbl2">Question count model</div>
+    <div class="seg">
+      <button id="devqa" onclick="MMDEV.setModel('A')">A · 10 total</button>
+      <button id="devqb" onclick="MMDEV.setModel('B')">B · 10 + 5</button>
+    </div>
+    <div class="note2">A replaces up to 5 bank questions with yours. B adds yours on top, max 15.</div>
+  </div>
+  <div style="text-align:right;margin-top:12px">
+    <button class="tbtn" onclick="MMDEV.close()">Close</button>
+  </div>
+</div>
 </body>
 </html>
