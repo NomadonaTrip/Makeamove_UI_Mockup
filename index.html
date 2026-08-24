@@ -178,6 +178,8 @@
   .dark .btn.ghost{border-color:rgba(255,255,255,.22); color:var(--ink)}
   .btn.sm{font-size:12px; padding:10px 14px}
   .btn.block{width:100%}
+  /* a CTA that is deliberately inert until a required choice is made */
+  .btn.disabled{opacity:.45; pointer-events:none}
   .btn .sub{display:block; font-family:var(--body); font-weight:600; font-size:11px; text-transform:none; opacity:.9; margin-top:3px; letter-spacing:0}
   .btnrow{display:flex; gap:10px} .btnrow .btn{flex:1}
   /* PRIMETIME motion — hero CTAs breathe light; every button gets a shine sweep on hover */
@@ -2903,6 +2905,48 @@
           </div>
           <a class="btn pass block" href="#S-E1">Start the video call</a>
         </div>
+      </section>
+
+      <section class="screen paper" id="S-F6" data-group="F · Async game" data-title="⚠ Async declined · reason">
+        <div class="pbar"><a class="back" href="#S-F2A">‹</a><h1>Before you go</h1></div>
+        <div class="body">
+          <div class="note">Nothing has been charged. Telling us why takes a second and genuinely changes who we put in front of you next — this goes to your profile, not to Tolu.</div>
+          <label class="muted" style="font-size:12px;font-weight:700">Why are you passing on this one?</label>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div class="opt" data-reason="not-attracted" onclick="MMDECLINE.pick(this)"><span class="dot"></span>Not attracted to them</div>
+            <div class="opt" data-reason="life-stage" onclick="MMDECLINE.pick(this)"><span class="dot"></span>Wrong life stage for me</div>
+            <div class="opt" data-reason="distance" onclick="MMDECLINE.pick(this)"><span class="dot"></span>Too far away</div>
+            <div class="opt" data-reason="values" onclick="MMDECLINE.pick(this)"><span class="dot"></span>Values or faith don't line up</div>
+            <div class="opt" data-reason="not-ready" onclick="MMDECLINE.pick(this)"><span class="dot"></span>Not ready to play right now</div>
+            <div class="opt" data-reason="other" onclick="MMDECLINE.pick(this)"><span class="dot"></span>Something else</div>
+          </div>
+          <div class="field"><label>Anything to add? (optional)</label><textarea class="textarea" id="declineNote" placeholder="Only we see this."></textarea></div>
+        </div>
+        <div class="foot"><a class="btn move block disabled" id="declineSubmit" href="#S-B2" onclick="return MMDECLINE.submit()">Submit &amp; go back to matches</a></div>
+        <script>
+        (function(){
+          /* §2.6 — MECE options with an optional free line. Structured options
+             are what the pre-matching system can consume; the free line catches
+             what the options miss. Goes to the rejector's profile, never to the
+             other party. */
+          let chosen = null;
+          function pick(el){
+            if(!el) return;
+            document.querySelectorAll('#S-F6 .opt[data-reason]')
+              .forEach(o => o.classList.remove('sel'));
+            el.classList.add('sel');
+            chosen = el.getAttribute('data-reason');
+            document.getElementById('declineSubmit').classList.remove('disabled');
+          }
+          function submit(){
+            if(!chosen) return false;          // a reason is required
+            const note = (document.getElementById('declineNote')||{}).value || '';
+            sessionStorage.setItem('mm_decline', JSON.stringify({ reason:chosen, note }));
+            return true;
+          }
+          window.MMDECLINE = { pick, submit };
+        })();
+        </script>
       </section>
 
       <!-- ============ GROUP G · PAYMENT & MORATORIUM ============ -->
