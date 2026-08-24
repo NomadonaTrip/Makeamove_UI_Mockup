@@ -591,6 +591,27 @@
   .paper .confrow .cf-cite{color:var(--t-faint)}
   .confrow .cf-wrong{margin-top:8px; font-size:11.5px; background:none; border:none;
     padding:0; cursor:pointer; color:var(--move); font-family:var(--body); text-decoration:underline}
+
+  /* ===== async result · the mirrored-pairs reveal (spec 1.5) =====
+     Each attribute both parties were asked about, what each said, and how the
+     other reacted. Divergences are the interesting part, so they are marked. */
+  .mirrorrow{border-top:1px solid rgba(255,255,255,.08); padding:10px 0; text-align:left}
+  .paper .mirrorrow{border-top-color:var(--line)}
+  .mirrorrow:first-child{border-top:none}
+  .mirrorrow .mr-q{font-weight:700; font-size:12.5px; line-height:1.35}
+  .mirrorrow .mr-side{display:flex; justify-content:space-between; align-items:baseline;
+    gap:10px; margin-top:5px; font-size:11.5px; color:var(--ink-dim)}
+  .paper .mirrorrow .mr-side{color:var(--t-dim)}
+  .mirrorrow .mr-who{font-weight:700; color:var(--ink-faint)}
+  .paper .mirrorrow .mr-who{color:var(--t-faint)}
+  .mirrorrow .mr-v{font-family:var(--display); font-weight:700; font-size:10px;
+    letter-spacing:.1em; text-transform:uppercase; white-space:nowrap}
+  .mirrorrow .mr-v.move{color:var(--move)} .mirrorrow .mr-v.stay{color:var(--ink-faint)}
+  /* a profile fills in progressively — an unanswered side is stated plainly,
+     never filled with a default that implies an answer nobody gave */
+  .mirrorrow .mr-side.mr-none{opacity:.55; font-style:italic}
+  .mirrorrow .mr-flag{display:inline-block; margin-top:6px; font-size:10px; letter-spacing:.1em;
+    text-transform:uppercase; font-family:var(--display); font-weight:700; color:var(--bulb)}
 </style>
 </head>
 <body>
@@ -2948,17 +2969,84 @@
 
       <section class="screen dark" id="S-F4" data-group="F · Async game" data-title="Async result + buy-in soft-hold">
         <div class="raywrap"><div class="rays"></div></div>
-        <div class="body" style="justify-content:center;text-align:center;gap:16px;padding:30px 24px">
-          <div style="font-size:36px"><svg class="icon" style="width:36px;height:36px;color:var(--bulb)"><use href="#i-party"/></svg></div>
-          <h2 class="scrn" style="font-size:34px;color:var(--pass)">You passed · 78%</h2>
-          <p class="muted" style="max-width:30ch;margin:0 auto;line-height:1.5">You cleared Samuel's 70% gate. He consented when you invited — so his <b>50% buy-in</b>, soft-held at consent, is now captured. It's a mutual match.</p>
+        <div class="body" style="justify-content:flex-start;text-align:center;gap:14px;padding:26px 22px">
+          <div id="f4icon" style="font-size:36px"></div>
+          <h2 class="scrn" id="f4head" style="font-size:32px"></h2>
+          <p class="muted" id="f4sub" style="max-width:32ch;margin:0 auto;line-height:1.5"></p>
+          <div class="card" style="text-align:left" id="f4money"></div>
           <div class="card" style="text-align:left">
-            <div style="display:flex;justify-content:space-between;font-size:13px"><span>Your initiation</span><span class="tag pass">Captured</span></div>
-            <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:8px"><span>Samuel's buy-in (50%)</span><span class="tag pass">Captured</span></div>
-            <div class="muted" style="font-size:11px;margin-top:8px">A fail would have released his hold, untouched.</div>
+            <div class="eyebrow" style="color:var(--bulb)">Where you two actually landed</div>
+            <div class="muted" style="font-size:11.5px;margin-top:4px">You were both asked about the same things. Here's each side, and how the other reacted.</div>
+            <div id="f4mirror" style="margin-top:8px"></div>
           </div>
-          <a class="btn pass block" href="#S-E1">Start the video call</a>
+          <div id="f4cta"></div>
         </div>
+        <script>
+        (function(){
+          /* Spec §1.5 renders here rather than in Phase 1, because this screen
+             was rebuilt wholesale for the async restructure. */
+          function rows(res){
+            const set = MMQ.buildSet(), byProbe = {};
+            set.forEach(q => { (byProbe[q.probe] = byProbe[q.probe] || []).push(q); });
+            return Object.keys(byProbe).map(p => {
+              const qs = byProbe[p], q = qs[0];
+              const mine = MMASYNC.myAnswer(q.id), theirs = MMASYNC.theirAnswer(q.id);
+              const myV = (res.verdicts||{})[q.id] || 'stay';
+              const theirV = MMASYNC.theirVerdict(q.id);
+              /* An unanswered row cannot diverge from anything — suppress both
+                 flags rather than comparing against a fallback (§2.7). */
+              return { q, qs, mine, theirs, myV, theirV,
+                       answersDiffer: mine.answered &&
+                         q.opts[mine.opt].v !== q.opts[theirs.opt].v,
+                       verdictsDiffer: mine.answered && myV !== theirV };
+            });
+          }
+          function paint(){
+            const res = MMASYNC.result();
+            if(!res) return;
+            const pass = res.you >= 70 && res.them >= 70;
+            document.getElementById('f4icon').innerHTML = pass
+              ? '<svg class="icon" style="width:36px;height:36px;color:var(--bulb)"><use href="#i-party"/></svg>'
+              : '<svg class="icon" style="width:36px;height:36px;color:var(--ink-faint)"><use href="#i-hourglass"/></svg>';
+            const head = document.getElementById('f4head');
+            head.textContent = pass ? 'You both passed' : 'Not this time';
+            head.style.color = pass ? 'var(--pass)' : 'var(--ink)';
+            document.getElementById('f4sub').innerHTML = pass
+              ? 'Samuel <b>'+res.them+'%</b> · you <b>'+res.you+'%</b> — both clear of the 70% gate. It\'s a mutual match.'
+              : 'Samuel <b>'+res.them+'%</b> · you <b>'+res.you+'%</b> — the gate is 70% for both of you, and it takes both.';
+
+            document.getElementById('f4money').innerHTML =
+                '<div style="display:flex;justify-content:space-between;font-size:13px"><span>Your fee</span><span class="tag pass">Charged</span></div>'
+              + '<div style="display:flex;justify-content:space-between;font-size:13px;margin-top:8px"><span>Samuel\'s fee</span><span class="tag pass">Charged</span></div>'
+              + '<div class="muted" style="font-size:11px;margin-top:8px">Both were taken before play. The fee buys the game, not the result — '
+              + (pass ? 'and this one paid off.' : 'so a result under the gate is <b>not refunded</b>.') + '</div>';
+
+            document.getElementById('f4mirror').innerHTML = rows(res).map(r =>
+                '<div class="mirrorrow">'
+              + '<div class="mr-q">' + r.q.text + '</div>'
+              + '<div class="mr-side"><span><span class="mr-who">Samuel:</span> ' + r.q.opts[r.theirs.opt].t + '</span>'
+              + '<span class="mr-v ' + r.myV + '">you ' + r.myV + '</span></div>'
+              + (r.mine.answered
+                  ? '<div class="mr-side"><span><span class="mr-who">You:</span> ' + r.q.opts[r.mine.opt].t + '</span>'
+                    + '<span class="mr-v ' + r.theirV + '">he ' + r.theirV + 's</span></div>'
+                  : '<div class="mr-side mr-none"><span><span class="mr-who">You:</span> not answered yet</span>'
+                    + '<span class="mr-v">—</span></div>')
+              + (r.answersDiffer ? '<span class="mr-flag">↯ you answered differently</span>' : '')
+              + (!r.answersDiffer && r.verdictsDiffer ? '<span class="mr-flag">↯ same answer, different verdict</span>' : '')
+              + (r.qs.length > 1 ? ' <span class="mr-flag" style="color:var(--ink-faint)">asked ' + r.qs.length + ' ways</span>' : '')
+              + '</div>').join('');
+
+            document.getElementById('f4cta').innerHTML = pass
+              ? '<a class="btn pass block" href="#S-E1">Schedule the video call</a>'
+              : '<a class="btn primary block" href="#S-B2">Back to your matches</a>';
+          }
+          window.MMRESULT = { paint };
+          window.addEventListener('hashchange', () => {
+            if(location.hash === '#S-F4') paint();
+          });
+          paint();
+        })();
+        </script>
       </section>
 
       <section class="screen paper" id="S-F6" data-group="F · Async game" data-title="⚠ Async declined · reason">
@@ -3491,7 +3579,12 @@
   }
   const CELEBRATE=['#S-D5','#S-F4'];
   function onEnter(){
-    if(CELEBRATE.includes(location.hash)) confettiBurst(location.hash.slice(1));
+    /* S-F4 now renders both outcomes — only celebrate an actual pass */
+    if(CELEBRATE.includes(location.hash)){
+      const r = location.hash === '#S-F4' && window.MMASYNC ? MMASYNC.result() : null;
+      if(location.hash !== '#S-F4' || (r && r.you >= 70 && r.them >= 70))
+        confettiBurst(location.hash.slice(1));
+    }
     /* the games rewind when you walk back on stage */
     if(location.hash==='#S-D2' && window.DSHOW) DSHOW.reset();
     if(location.hash==='#S-F3' && window.FSHOW) FSHOW.reset();
