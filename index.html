@@ -1273,6 +1273,130 @@
         <div class="foot"><a class="btn primary block" href="#S-A9">Save · back to profile</a></div>
       </section>
 
+      <section class="screen paper" id="S-QD1" data-group="A · Onboarding" data-title="Question deck · your 5 questions">
+        <div class="pbar"><a class="back" href="#S-P5">‹</a><h1>Your questions</h1></div>
+        <div class="body">
+          <div class="note gold">Write up to <b>5 questions</b> of your own. We turn each into a set of options so nobody can dodge with a vague answer — and we check them for you before anyone sees them.</div>
+          <div id="deckList"></div>
+          <div class="field"><label>Add a question</label>
+            <input class="input" id="deckNew" placeholder="e.g. Would you move abroad for a partner?">
+          </div>
+          <button class="btn ghost block" onclick="MMDECK.addFromInput()">Add to deck</button>
+          <div class="note info">Your deck is attached automatically when you invite someone or start an async game. You can swap questions per match.</div>
+        </div>
+        <div class="foot"><a class="btn move block" href="#S-QD3" onclick="MMDECK.submit()">Submit for review</a></div>
+      </section>
+
+      <section class="screen paper" id="S-QD2" data-group="A · Onboarding" data-title="Question deck · generated options">
+        <div class="pbar"><a class="back" href="#S-QD1">‹</a><h1>Your options</h1></div>
+        <div class="body">
+          <div class="note">These are the options we generated. Everyone answering picks exactly one — that is what gets scored. They may add a line of their own beneath it, but it is optional.</div>
+          <div id="deckOpts"></div>
+        </div>
+        <div class="foot"><a class="btn move block" href="#S-QD1">Back to deck</a></div>
+      </section>
+
+      <section class="screen paper" id="S-QD3" data-group="A · Onboarding" data-title="Question deck · review results">
+        <div class="pbar"><a class="back" href="#S-QD1">‹</a><h1>Review results</h1></div>
+        <div class="body">
+          <div id="deckReview"></div>
+        </div>
+        <div class="foot"><a class="btn move block" href="#S-B2">Done</a></div>
+
+        <script>
+        /* ===== MMDECK · custom question authoring (spec 1.3, 1.6) =====
+           3 replacement attempts TOTAL per submission, then the rejected slot
+           is backfilled from the bank so a game always has a full set. */
+        (function(){
+          const used = () => +(sessionStorage.getItem('mm_deck_used') || 0);
+          const burn = () => sessionStorage.setItem('mm_deck_used', used() + 1);
+          const attemptsLeft = () => Math.max(0, MMQ.ATTEMPTS - used());
+
+          function mk(text){
+            return { id:'c-' + Date.now() + '-' + Math.random().toString(36).slice(2,7),
+                     dim:'Values', depth:'Screening', probe:'custom',
+                     text:String(text).trim(), opts:MMQ.genOptions(text),
+                     src:'custom', author:'You', mirror:'custom',
+                     review:MMQ.reviewQuestion(text) };
+          }
+          function add(text){
+            const d = MMQ.deck();
+            if(d.length >= MMQ.MAX_DECK) return false;
+            d.push(mk(text)); MMQ.saveDeck(d); render(); return true;
+          }
+          function addFromInput(){
+            const el = document.getElementById('deckNew');
+            if(el.value.trim()){ add(el.value); el.value = ''; }
+          }
+          function remove(i){ const d = MMQ.deck(); d.splice(i,1); MMQ.saveDeck(d); render(); }
+
+          /* A rejected question can be rewritten 3 times. On the 4th, we stop
+             asking and drop a bank question into the slot instead. */
+          function replace(i, text){
+            const d = MMQ.deck(); if(!d[i]) return;
+            if(attemptsLeft() === 0){
+              const taken = d.map(q => q.id);
+              const fill = MMQ.BANK.find(q => taken.indexOf(q.id) === -1);
+              d[i] = Object.assign({}, fill);
+              MMQ.saveDeck(d); render(); return;
+            }
+            const next = mk(text);
+            if(!next.review.ok) burn();
+            d[i] = next; MMQ.saveDeck(d); render();
+          }
+          function submit(){ render(); }
+
+          function render(){
+            const d = MMQ.deck();
+            const list = document.getElementById('deckList');
+            if(list){
+              list.innerHTML = d.length ? d.map((q,i) =>
+                '<div class="card" style="margin-bottom:8px">'
+                + '<div style="display:flex;justify-content:space-between;gap:8px">'
+                + '<div style="font-weight:700;font-size:13.5px">'+q.text+'</div>'
+                + '<span class="tag '+(q.src==='bank'?'':(q.review && q.review.ok?'pass':'danger'))+'">'
+                + (q.src==='bank' ? 'From bank' : (q.review && q.review.ok ? 'Cleared' : 'Flagged'))
+                + '</span></div>'
+                + (q.review && !q.review.ok ? '<div class="muted" style="font-size:11.5px;margin-top:6px">'+q.review.reason+'</div>' : '')
+                + '<div class="btnrow" style="margin-top:10px">'
+                + '<button class="btn ghost sm" onclick="MMDECK.remove('+i+')">Remove</button>'
+                + '<a class="btn ghost sm" href="#S-QD2" onclick="MMDECK.showOpts('+i+')">See options</a>'
+                + '</div></div>').join('')
+                : '<div class="note">No questions yet. Add up to '+MMQ.MAX_DECK+'.</div>';
+            }
+            const rev = document.getElementById('deckReview');
+            if(rev){
+              const flagged = d.filter(q => q.src !== 'bank' && q.review && !q.review.ok).length;
+              rev.innerHTML =
+                '<div class="note '+(flagged?'':'pass')+'">'
+                + (flagged ? flagged+' of your questions need a rewrite.' : 'All your questions cleared review.')
+                + '</div>'
+                + '<div class="row"><div class="grow"><div class="t1">Replacement attempts left</div>'
+                + '<div class="t2">3 per submission, then we fill the slot from the bank</div></div>'
+                + '<span class="tag '+(attemptsLeft()?'':'danger')+'">'+attemptsLeft()+'</span></div>'
+                + d.map((q,i) => '<div class="row"><div class="grow"><div class="t1">'+q.text+'</div>'
+                    + '<div class="t2">'+(q.src==='bank' ? 'Filled from the question bank'
+                        : (q.review.ok ? 'Cleared' : q.review.reason))+'</div></div>'
+                    + (q.src!=='bank' && !q.review.ok
+                        ? '<button class="btn ghost sm" onclick="MMDECK.replace('+i+',prompt(\'Rewrite your question\',\''+q.text.replace(/'/g,"")+'\')||\'\')">Rewrite</button>'
+                        : '')
+                    + '</div>').join('');
+            }
+          }
+          function showOpts(i){
+            const q = MMQ.deck()[i]; if(!q) return;
+            document.getElementById('deckOpts').innerHTML =
+              '<div class="card"><div class="eyebrow">'+q.text+'</div>'
+              + '<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">'
+              + q.opts.map(op => '<div class="opt"><span class="dot"></span>'+op.t+'</div>').join('')
+              + '</div></div>';
+          }
+          window.MMDECK = { add, addFromInput, remove, replace, submit, render, showOpts, attemptsLeft };
+          render();
+        })();
+        </script>
+      </section>
+
       <!-- ============ GROUP B · MATCHING & GALLERY ============ -->
       <section class="screen dark" id="S-B1" data-group="B · Matching" data-title="Finding matches">
         <div class="body" style="justify-content:center; gap:20px; text-align:center; padding:50px 26px">
@@ -2726,7 +2850,7 @@
   let _classified = false;
   function classify(){
     if(_classified) return;
-    const FEED = new Set(['S-B2','S-E3','S-E4','S-A8','S-H1','S-G3','S-H5']);
+    const FEED = new Set(['S-B2','S-E3','S-E4','S-A8','S-H1','S-G3','S-H5','S-QD1']);
     const IMMERSIVE = new Set(['S-D2','S-E1']);
     SCREENS.forEach(s=>{
       let lay;
