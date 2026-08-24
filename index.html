@@ -2405,27 +2405,30 @@
           <div class="who"><div class="av g3 s40">S</div><div><div class="nm">Samuel, 44</div><div class="sub2">his board · his rules</div></div></div>
           <div><div class="pctf" id="fpct">0%</div><div class="gate">gate · 70%</div></div>
         </div>
-        <div class="board" id="fboard">
-          <div class="slots">
-            <div class="slot"><div class="in"><div class="face front"><b>1</b></div><div class="face back"></div></div></div>
-            <div class="slot"><div class="in"><div class="face front"><b>2</b></div><div class="face back"></div></div></div>
-            <div class="slot"><div class="in"><div class="face front"><b>3</b></div><div class="face back"></div></div></div>
-            <div class="slot"><div class="in"><div class="face front"><b>4</b></div><div class="face back"></div></div></div>
-            <div class="slot"><div class="in"><div class="face front"><b>5</b></div><div class="face back"></div></div></div>
-          </div>
-        </div>
+        <div class="board" id="fboard"><div class="slots" id="fslots"></div></div>
         <div class="stagef" id="fstage"></div>
         <div class="actf" id="fact"></div>
         <script>
         (function(){
-          const QF=[
-            {dim:'Family',   w:3.0, q:'When would you want your first child?', a:'"Within the first two years of marriage — I\'m ready, I\'ve been ready a while."', note:'Highest weight on Samuel\'s board. This one counts for a lot.'},
-            {dim:'Values',   w:1.5, q:'What would you never compromise on?', a:'"Sunday dinner with my mum. Non-negotiable, even during deadlines."', note:'High weight for Samuel.'},
-            {dim:'Lifestyle',w:0.9, q:'Describe your perfect weekend.', a:'"Sketching buildings in the morning, cooking something ambitious at night."', note:'Lighter weight — but it all adds up.'},
-            {dim:'Finances', w:1.0, q:'How do you handle money in a relationship?', a:'"Joint plan, open books. I budget like an architect — everything is load-bearing."', note:'Mid weight on his board.'},
-            {dim:'Intimacy', w:1.4, q:'What does closeness look like for you?', a:'"Small rituals. Tea made without asking. A hand on the shoulder in a crowd."', note:'Second-highest weight. Last slot on the board.'}
-          ];
-          const TOTW=QF.reduce((s,t)=>s+t.w,0);
+          /* The board is built from the live set, so its length follows the
+             count model (spec 1.2) rather than a hardcoded five. Rebuilt (not
+             just re-rendered) on every reset so a model/deck change without a
+             page reload is picked up. */
+          let QF, TOTW;
+          function fbuild(){
+            QF = MMQ.buildSet().map(q => ({
+              q, w: MMQ.DIMS[q.dim],
+              ans: Object.assign({ qid:q.id }, MMQ.DEMO.them[q.id] || { opt:0, why:'' })
+            }));
+            TOTW = QF.reduce((s,t) => s + t.w, 0);
+          }
+          fbuild();
+          function fslots(){
+            document.getElementById('fslots').innerHTML = QF.map((t,n) =>
+              '<div class="slot"><div class="in">'
+              + '<div class="face front"><b>'+(n+1)+'</b></div>'
+              + '<div class="face back"></div></div></div>').join('');
+          }
           let fi=0, fgot=0;
           const $=id=>document.getElementById(id);
           function ftween(el,val){ const from=(el._v==null)?0:el._v; el._v=val;
@@ -2438,10 +2441,11 @@
           function frender(){
             if(fi>=QF.length) return ffinish();
             const t=QF[fi];
-            $('fstage').innerHTML='<span class="chip" style="animation:rise .4s var(--ease-show) both">'+t.dim+' · slot '+(fi+1)+' of 5</span>'
-              +'<div class="qbar">'+t.q+'</div>'
-              +'<div class="anscard"><div class="lb">Samuel said (recorded)</div>'+t.a+'</div>'
-              +'<div class="wnote">'+t.note+'</div>';
+            $('fstage').innerHTML='<span class="chip" style="animation:rise .4s var(--ease-show) both">'
+              + t.q.dim + ' · slot ' + (fi+1) + ' of ' + QF.length + '</span>'
+              + '<div class="qbar">' + t.q.text + '</div>'
+              + MMQ.answerCard(t.q, t.ans, 'Samuel said (recorded)')
+              + '<div class="wnote">Weight ' + t.w.toFixed(1) + " on Samuel's board.</div>";
             $('fact').innerHTML='<button class="btn ghost" onclick="FSHOW.react(\'stay\')">Stay<span class="sub">not feeling it</span></button>'
               +'<button class="btn move" onclick="FSHOW.react(\'move\')"><svg class="icon"><use href="#i-heart"/></svg> Move<span class="sub">I want this</span></button>';
           }
@@ -2450,8 +2454,8 @@
             const slot=document.querySelectorAll('#S-F3 .slot')[fi];
             const back=slot.querySelector('.face.back');
             back.innerHTML = kind==='move'
-              ? '<span><span class="hh">♥</span>'+t.dim+'</span><span class="pts">'+Math.round(t.w*10)+'</span>'
-              : '<span style="letter-spacing:.12em">'+t.dim+' · stay</span><span class="pts">—</span>';
+              ? '<span><span class="hh">♥</span>'+t.q.dim+'</span><span class="pts">'+Math.round(t.w*10)+'</span>'
+              : '<span style="letter-spacing:.12em">'+t.q.dim+' · stay</span><span class="pts">—</span>';
             slot.classList.add('flip', kind);
             if(kind==='move') fgot+=t.w;
             ftween($('fpct'), Math.round(fgot/TOTW*100));
@@ -2467,9 +2471,8 @@
             setTimeout(()=>{ location.hash='S-F4'; }, 1700);
           }
           window.FSHOW={react:freact, reset(){ fi=0; fgot=0; $('fpct')._v=null; $('fpct').textContent='0%';
-            $('fboard').classList.remove('done');
-            document.querySelectorAll('#S-F3 .slot').forEach(s=>{ s.className='slot'; s.querySelector('.face.back').innerHTML=''; });
-            frender(); }};
+            $('fboard').classList.remove('done'); fbuild(); fslots(); frender(); }};
+          fslots();
           frender();
         })();
         </script>
