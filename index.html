@@ -2000,7 +2000,7 @@
           <div class="note gold"><svg class="icon"><use href="#i-gift"/></svg> <b>Free during launch.</b> 1 free session credit applied — no charge now, and nothing held until a time is agreed.</div>
           <div class="card" id="attachC1"></div>
           <div style="display:flex;align-items:center;gap:10px">
-            <div class="av g1 s52">D</div><div><div style="font-weight:700">A synchronous game show</div><div class="muted" style="font-size:12px">One-on-one · ~20 questions · ≥70% each to pass</div></div>
+            <div class="av g1 s52">D</div><div><div style="font-weight:700">A synchronous game show</div><div class="muted" style="font-size:12px">One-on-one · 10–15 questions · ≥70% each to pass</div></div>
           </div>
           <label class="muted" style="font-size:12px;font-weight:700">Propose up to 5 times that work for you</label>
           <div style="display:flex;flex-direction:column;gap:8px">
@@ -2617,8 +2617,16 @@
           #S-F3 .board::before{content:""; position:absolute; inset:6px; border:3px dotted var(--bulb); border-radius:12px;
             filter:drop-shadow(0 0 5px rgba(255,182,39,.85)); animation:marq 2.2s steps(2) infinite; pointer-events:none}
           #S-F3 .board.done::before{animation-duration:.45s}
+          /* The board holds one slot per question — 10 under Model A, up to 15
+             under Model B — so it must scroll rather than push the stage into
+             the button row. Phase 3 replaces this with a windowed ladder. */
+          #S-F3 .board{max-height:38vh; overflow:hidden}
+          #S-F3 .slots{max-height:calc(38vh - 30px); overflow-y:auto; scrollbar-width:none}
+          #S-F3 .slots::-webkit-scrollbar{display:none}
+          /* the floor must keep enough room for the answer card + buttons */
+          #S-F3 .stagef{min-height:190px; overflow:visible}
           #S-F3 .slots{display:flex; flex-direction:column; gap:7px}
-          #S-F3 .slot{height:42px; perspective:700px}
+          #S-F3 .slot{height:42px; flex-shrink:0; perspective:700px}
           #S-F3 .slot .in{position:relative; width:100%; height:100%; transform-style:preserve-3d; transition:transform var(--flip) var(--ease-show)}
           #S-F3 .slot.flip .in{transform:rotateX(180deg)}
           #S-F3 .face{position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden;
@@ -2702,6 +2710,8 @@
               + '<div class="wnote">Weight ' + t.w.toFixed(1) + " on Samuel's board.</div>";
             $('fact').innerHTML='<button class="btn ghost" onclick="FSHOW.react(\'stay\')">Stay<span class="sub">not feeling it</span></button>'
               +'<button class="btn move" onclick="FSHOW.react(\'move\')"><svg class="icon"><use href="#i-heart"/></svg> Move<span class="sub">I want this</span></button>';
+            const cur = document.querySelectorAll('#S-F3 .slot')[fi];
+            if(cur && cur.scrollIntoView) cur.scrollIntoView({block:'nearest'});
           }
           function freact(kind){
             const t=QF[fi];
