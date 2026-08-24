@@ -1354,6 +1354,19 @@
           }
           function submit(){ render(); }
 
+          /* The index is the only thing that crosses the markup boundary, so
+             quotes, backslashes and angle brackets in a question can never
+             break the handler. Cancelling returns null and costs nothing —
+             an attempt is only spent on a real rewrite that fails review. */
+          function rewrite(i){
+            const d = MMQ.deck(); if(!d[i]) return;
+            const next = prompt('Rewrite your question', d[i].text);
+            if(next === null) return;              // cancelled — no attempt burned
+            const t = next.trim();
+            if(!t) return;                         // empty — no attempt burned
+            replace(i, t);
+          }
+
           function render(){
             const d = MMQ.deck();
             const list = document.getElementById('deckList');
@@ -1386,7 +1399,7 @@
                     + '<div class="t2">'+(q.src==='bank' ? 'Filled from the question bank'
                         : (q.review.ok ? 'Cleared' : q.review.reason))+'</div></div>'
                     + (q.src!=='bank' && !q.review.ok
-                        ? '<button class="btn ghost sm" onclick="MMDECK.replace('+i+',prompt(\'Rewrite your question\',\''+q.text.replace(/'/g,"")+'\')||\'\')">Rewrite</button>'
+                        ? '<button class="btn ghost sm" onclick="MMDECK.rewrite('+i+')">Rewrite</button>'
                         : '')
                     + '</div>').join('');
             }
@@ -1399,7 +1412,7 @@
               + q.opts.map(op => '<div class="opt"><span class="dot"></span>'+op.t+'</div>').join('')
               + '</div></div>';
           }
-          window.MMDECK = { add, addFromInput, remove, replace, submit, render, showOpts, attemptsLeft };
+          window.MMDECK = { add, addFromInput, remove, replace, rewrite, submit, render, showOpts, attemptsLeft };
           render();
         })();
         </script>
