@@ -904,11 +904,75 @@ IIFEs; this goes at top level, at the very end:
   MMDEV.paint();
 ```
 
-- [ ] **Step 6: Run the assertion to verify it passes**
+- [ ] **Step 6: Make the arena's question set rebuildable**
 
-Re-evaluate Step 1. Expected: `ok: true`, `bAfter:'B'`, `aAfter:'A'`, `bLen:10`, `rows: 1`.
+`MMDEV.setModel()` calls `DSHOW.reset()` expecting the board to pick up the new
+model — but `S-D2` currently computes its set **once at parse time**:
 
-- [ ] **Step 7: Commit**
+```js
+          const SET = MMQ.buildSet();
+          const TURNS = SET.map((q, n) => ({ …
+```
+
+`reset()` re-renders from that frozen array, so switching the model changes
+nothing visible in the arena. (Task 4 already solved the identical problem in
+`S-F3` with a rebuildable `fbuild()`; this mirrors it.)
+
+Change the two `const` declarations to a rebuild function. Replace:
+
+```js
+          const SET = MMQ.buildSet();
+          const TURNS = SET.map((q, n) => ({
+```
+
+with:
+
+```js
+          let SET, TURNS;
+          function dbuild(){
+            SET = MMQ.buildSet();
+            TURNS = SET.map((q, n) => ({
+```
+
+Close the new function immediately after the existing `}));` that ends the
+`.map(...)` call, so it becomes `})); }` — then call `dbuild();` once on the
+line after it, preserving parse-time behaviour.
+
+Then make `reset()` rebuild first:
+
+```js
+          window.DSHOW={lock,react,reset(){dbuild();i=0;yA=yE=tA=tE=sd=0;$('tokens').innerHTML='';$('reveal').className='reveal';render();}};
+```
+
+- [ ] **Step 7: Extend the assertion to prove the arena actually rebuilds**
+
+The Step 1 assertion only proves `MMQ.model()` changed. Add this second
+assertion, which fails if `TURNS` is still frozen:
+
+```js
+() => {
+  sessionStorage.removeItem('mm_deck');
+  location.hash = 'S-D2';
+  MMDEV.setModel('A');
+  const a = document.getElementById('turnflag').textContent;
+  MMQ.saveDeck(MMQ.BANK.slice(0,3).map((q,n)=>({...q,id:'c'+n,src:'custom',author:'You'})));
+  MMDEV.setModel('B');
+  const b = document.getElementById('turnflag').textContent;
+  MMDEV.setModel('A'); sessionStorage.removeItem('mm_deck'); DSHOW.reset();
+  return { ok: /\/\s*10\b/.test(a) && /\/\s*13\b/.test(b),
+           modelA: a.replace(/\s+/g,' ').trim(), modelB: b.replace(/\s+/g,' ').trim() };
+}
+```
+
+Expected: `ok: true`, `modelA` showing `/ 10`, `modelB` showing `/ 13`
+(10 bank + a 3-question deck).
+
+- [ ] **Step 8: Run both assertions to verify they pass**
+
+Re-evaluate Step 1 (`ok: true`, `bAfter:'B'`, `aAfter:'A'`, `bLen:10`, `rows: 1`)
+and then Step 7's.
+
+- [ ] **Step 9: Commit**
 
 ```bash
 git add index.html
@@ -1418,10 +1482,16 @@ Run `browser_console_messages`. Expected: no `error`-level entries. Unsplash 404
 
 - [ ] **Step 3: Confirm both count models survive a full arena run**
 
+**This loop must be `async`.** `lock()` reveals David's verdict behind a 600ms
+`setTimeout` and `react()` advances the turn behind a 750ms one, so a synchronous
+`while` spins without ever letting a turn advance and always hits the guard. Wait
+between actions:
+
 ```js
-() => {
+async () => {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
   const out = {};
-  ['A','B'].forEach(m => {
+  for (const m of ['A','B']) {
     sessionStorage.removeItem('mm_deck');
     MMQ.setModel(m);
     if (m === 'B') MMQ.saveDeck(MMQ.BANK.slice(0,3).map((q,n)=>({...q,id:'c'+n,src:'custom',author:'You'})));
@@ -1429,18 +1499,65 @@ Run `browser_console_messages`. Expected: no `error`-level entries. Unsplash 404
     let guard = 0;
     while (location.hash.replace('#','') === 'S-D2' && guard++ < 40) {
       const lock = document.getElementById('act').querySelector('button[onclick*="lock"]');
-      if (lock) { DSHOW.lock(); document.getElementById('rnext').click(); } else { DSHOW.react('move'); }
+      if (lock) {
+        DSHOW.lock();
+        await sleep(700);                       // verdict reveal
+        document.getElementById('rnext').click();
+      } else {
+        DSHOW.react('move');
+        await sleep(850);                       // turn advance
+      }
+      await sleep(30);
     }
     out[m] = { landed: location.hash, py: sessionStorage.getItem('mm_py'), guard };
-  });
+  }
   MMQ.setModel('A'); sessionStorage.removeItem('mm_deck');
   return out;
 }
 ```
 
-Expected: both `A` and `B` land on `#S-D5` (all-Move runs pass the gate) with a numeric `py`, and neither hits the guard.
+Expected: both `A` and `B` land on `#S-D5` (all-Move runs pass the gate) with a numeric `py`, and neither hits the guard of 40.
 
-- [ ] **Step 4: Commit any fixes**
+- [ ] **Step 4: Exercise the paper-surface answer card**
+
+No Phase 1 screen renders an answer card on a `paper` surface — `S-D2` and
+`S-F3` are both `dark` — so the `.paper .anscard2` override ships unexercised.
+Confirm it resolves rather than leaving it to Phase 5:
+
+```js
+() => {
+  const q = MMQ.qById('q-fam-01');
+  const host = document.createElement('div');
+  host.className = 'paper';
+  host.innerHTML = MMQ.answerCard(q, { qid:'q-fam-01', opt:0, why:'A noisier house.' }, 'Test');
+  document.body.appendChild(host);
+  const cs = getComputedStyle(host.querySelector('.anscard2'));
+  const why = getComputedStyle(host.querySelector('.ac-why'));
+  const out = { bg: cs.backgroundColor, border: cs.borderTopColor, whyColor: why.color };
+  host.remove();
+  // must resolve to real colours, not transparent or the dark-surface values
+  out.ok = out.bg !== 'rgba(0, 0, 0, 0)' &&
+           !out.bg.startsWith('rgba(255, 255, 255, 0.05') &&
+           out.whyColor !== 'rgba(0, 0, 0, 0)';
+  return out;
+}
+```
+
+Expected: `ok: true`, with `bg` resolving to the paper-2 colour rather than the
+dark surface's translucent white.
+
+- [ ] **Step 5: Clean up the stale counter literal**
+
+`S-D2`'s static pre-JS markup still reads `Question <b id="qn">1</b> / 20`.
+`render()` overwrites it synchronously before paint, so it is never visibly
+wrong, but it is a stale literal that misleads anyone reading the raw HTML and
+would surface if `MMQ` ever failed to load. Change the `20` to `—`:
+
+```html
+        <div class="turnflag" id="turnflag">Question <b id="qn">1</b> / —</div>
+```
+
+- [ ] **Step 6: Commit any fixes**
 
 ```bash
 git add index.html
