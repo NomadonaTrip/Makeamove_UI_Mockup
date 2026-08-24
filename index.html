@@ -248,6 +248,28 @@
   .opt.sel .dot{border-color:#2A1A05; background:transparent; box-shadow:none; position:relative}
   .opt.sel .dot::after{content:"✓"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:900}
   .opt.sel.move .dot{border-color:#fff}
+  /* ===== question engine · answer card (spec 1.1) =====
+     Rendered on dark stage surfaces (S-D2, S-F3) and paper ones (S-E6 deep
+     dive), so every colour resolves through a variable that both themes set. */
+  .anscard2{position:relative; border-radius:12px; padding:12px 14px;
+    background:rgba(255,255,255,.05); border:1px solid rgba(255,182,39,.35);
+    text-align:left; max-width:34ch}
+  .paper .anscard2{background:var(--paper-2); border-color:var(--line)}
+  .anscard2 .lb{font-size:9.5px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--ink-faint); font-weight:700; margin-bottom:6px}
+  .paper .anscard2 .lb{color:var(--t-faint)}
+  /* the selected option is the primary element — it is the scoring signal */
+  .anscard2 .ac-opt{font-weight:800; font-size:15px; line-height:1.3}
+  /* the optional voice line, secondary and italic, absent when not written */
+  .anscard2 .ac-why{margin-top:7px; font-size:12.5px; line-height:1.45;
+    font-style:italic; color:var(--ink-dim)}
+  .paper .anscard2 .ac-why{color:var(--t-dim)}
+  .anscard2 .ac-why::before{content:'\201C'} .anscard2 .ac-why::after{content:'\201D'}
+  /* spec 1.7 — a custom question is visibly the other party's */
+  .qauthor{display:inline-flex; align-items:center; gap:5px; font-family:var(--display);
+    font-weight:700; font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--move); background:rgba(255,45,111,.14); border:1px solid rgba(255,45,111,.4);
+    border-radius:999px; padding:3px 9px; margin-bottom:7px}
   /* styled select dropdown */
   .select{position:relative}
   .select select{appearance:none; -webkit-appearance:none; font-family:var(--body); font-size:15px; color:var(--t);
@@ -754,10 +776,27 @@
     }
   };
 
+  /* The one place an answer becomes markup. S-D2 and S-F3 both call this so
+     the option-primary / voice-secondary treatment cannot drift apart. */
+  function answerCard(q, ans, label){
+    const opt   = q.opts[ans.opt];
+    const badge = q.src === 'custom' && q.author
+      ? '<span class="qauthor"><svg class="icon" style="width:11px;height:11px">'
+        + '<use href="#i-heart"/></svg>' + q.author + ' asked this</span>'
+      : '';
+    const why   = ans.why
+      ? '<div class="ac-why">' + ans.why + '</div>'
+      : '';
+    return '<div class="anscard2">' + badge
+         + '<div class="lb">' + label + '</div>'
+         + '<div class="ac-opt">' + opt.t + '</div>'
+         + why + '</div>';
+  }
+
   window.MMQ = { DIMS, BANK, DEMO, CONF_GATE, MAX_DECK, ATTEMPTS,
                  qById, deck, saveDeck, model, setModel, answers,
                  buildSet, confidence, confLabel, probes, mirrorPairs,
-                 reviewQuestion, genOptions, o };
+                 reviewQuestion, genOptions, answerCard, o };
 })();
 </script>
     <div class="screenwrap" id="screenwrap">
