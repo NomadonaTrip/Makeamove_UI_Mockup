@@ -526,6 +526,14 @@
       padding:20px 0 0; border-top:0; background:transparent !important }
     .lay-feed > .foot .btn.block{ max-width:420px; margin-inline:auto }
 
+    /* S-QD1 is a FEED screen: let the deck cards tile as grid items of .body
+       rather than stacking inside a wrapper the grid treats as one child. */
+    #deckList{display:contents}
+    /* display:contents doesn't change the DOM tree, so the empty-state
+       .note (a child of #deckList, not .body) misses the ">" selector
+       above and renders as a single narrow column instead of full-width. */
+    #deckList > .note{ grid-column:1 / -1 }
+
     /* ============ IMMERSIVE (full-bleed, capped measure) ============ */
     .lay-immersive .heads, .lay-immersive .turnflag, .lay-immersive .stage,
     .lay-immersive .base, .lay-immersive .act{ max-width:620px; margin-inline:auto; width:100% }
