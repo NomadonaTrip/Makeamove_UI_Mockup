@@ -2753,13 +2753,28 @@
           #S-F3 .rec{display:inline-flex; align-items:center; gap:6px; font-family:var(--display); font-weight:700; font-size:10px;
             letter-spacing:.18em; text-transform:uppercase; color:var(--ink-dim)}
           #S-F3 .rec .rd{width:8px; height:8px; border-radius:50%; background:var(--danger); box-shadow:0 0 10px var(--danger); animation:lp 1.2s infinite}
-          /* the stakes banner — Samuel's gate, your climbing score */
-          #S-F3 .scorebar{flex:0 0 auto; margin:4px 14px 0; display:flex; align-items:center; gap:10px; padding:9px 14px;
+          /* Two scores now — theirs from your Moves, yours from theirs (§2.1) */
+          #S-F3 .scorebar{flex:0 0 auto; margin:4px 14px 0; display:flex; align-items:stretch; gap:8px}
+          #S-F3 .half{flex:1; display:flex; align-items:center; gap:8px; padding:8px 12px;
             background:linear-gradient(180deg,var(--stage-700),var(--stage-800)); clip-path:var(--ticket)}
-          #S-F3 .scorebar .who{display:flex; align-items:center; gap:8px; flex:1}
-          #S-F3 .scorebar .who .nm{font-weight:800; font-size:12.5px} #S-F3 .scorebar .who .sub2{font-size:10px; color:var(--ink-faint)}
-          #S-F3 .scorebar .gate{font-size:10px; color:var(--ink-faint); letter-spacing:.1em; text-transform:uppercase; text-align:right}
-          #S-F3 .scorebar .pctf{font-family:var(--display); font-weight:900; font-size:26px; color:var(--bulb); text-shadow:0 0 16px rgba(255,182,39,.45)}
+          #S-F3 .half .nm{font-weight:800; font-size:12px; line-height:1.2}
+          #S-F3 .half .sub2{font-size:9.5px; color:var(--ink-faint)}
+          #S-F3 .half .pctf{font-family:var(--display); font-weight:900; font-size:22px; color:var(--bulb);
+            text-shadow:0 0 16px rgba(255,182,39,.45); margin-left:auto}
+          #S-F3 .half.pass .pctf{color:var(--pass); text-shadow:0 0 16px rgba(46,204,113,.4)}
+          #S-F3 .gateline{flex:0 0 auto; text-align:center; font-size:9.5px; letter-spacing:.14em;
+            text-transform:uppercase; color:var(--ink-faint); margin:5px 0 0}
+          /* their verdicts on YOUR answers, arriving as you play (§2.2) */
+          #S-F3 .mini{flex:0 0 auto; display:flex; gap:4px; justify-content:center;
+            padding:6px 14px 0; flex-wrap:wrap}
+          #S-F3 .minitok{width:16px; height:16px; border-radius:5px; background:rgba(255,255,255,.07);
+            border:1px solid rgba(255,255,255,.1); display:flex; align-items:center; justify-content:center;
+            font-size:9px; color:var(--ink-faint); transition:.35s var(--ease-show)}
+          #S-F3 .minitok.on.move{background:var(--move); border-color:var(--move); color:#fff}
+          #S-F3 .minitok.on.stay{background:rgba(255,255,255,.14); color:var(--ink-dim)}
+          /* the board shrinks a little to make room for the second score row */
+          #S-F3 .board{max-height:32vh}
+          #S-F3 .slots{max-height:calc(32vh - 30px)}
           /* THE BOARD — bulb-framed, five flip slots (the Feud object) */
           #S-F3 .board{flex:0 0 auto; position:relative; margin:10px 14px 4px; padding:15px 13px;
             background:linear-gradient(180deg,var(--stage-800),var(--stage-850)); border-radius:18px;
@@ -2770,8 +2785,8 @@
           /* The board holds one slot per question — 10 under Model A, up to 15
              under Model B — so it must scroll rather than push the stage into
              the button row. Phase 3 replaces this with a windowed ladder. */
-          #S-F3 .board{max-height:38vh; overflow:hidden}
-          #S-F3 .slots{max-height:calc(38vh - 30px); overflow-y:auto; scrollbar-width:none}
+          #S-F3 .board{max-height:32vh; overflow:hidden}
+          #S-F3 .slots{max-height:calc(32vh - 30px); overflow-y:auto; scrollbar-width:none}
           #S-F3 .slots::-webkit-scrollbar{display:none}
           /* the floor must keep enough room for the answer card + buttons */
           #S-F3 .stagef{min-height:190px; overflow:visible}
@@ -2810,38 +2825,47 @@
           #S-F3 .actf .wait{flex:1; text-align:center; color:var(--ink-dim); font-size:13px; padding:14px}
         </style>
         <div class="fhead">
-          <span class="tag" style="background:rgba(255,255,255,.08);color:var(--ink-dim)">Async · Samuel's weights</span>
-          <span class="rec"><span class="rd"></span>Recorded</span>
+          <span class="tag" style="background:rgba(255,255,255,.08);color:var(--ink-dim)">Async · both must clear 70%</span>
+          <span class="rec"><span class="rd"></span><span data-mm-countdown>72:00:00</span> left</span>
         </div>
         <div class="scorebar">
-          <div class="who"><div class="av g3 s40">S</div><div><div class="nm">Samuel, 44</div><div class="sub2">his board · his rules</div></div></div>
-          <div><div class="pctf" id="fpct">0%</div><div class="gate">gate · 70%</div></div>
+          <div class="half" id="halfThem">
+            <div class="av g3 s28">S</div>
+            <div><div class="nm">Samuel</div><div class="sub2">your Moves</div></div>
+            <div class="pctf" id="fpctThem">0%</div>
+          </div>
+          <div class="half" id="halfYou">
+            <div class="av g2 s28">T</div>
+            <div><div class="nm">You</div><div class="sub2">his Moves</div></div>
+            <div class="pctf" id="fpctYou">0%</div>
+          </div>
         </div>
+        <div class="gateline">both need 70% to pass</div>
+        <div class="mini" id="fmini"></div>
         <div class="board" id="fboard"><div class="slots" id="fslots"></div></div>
         <div class="stagef" id="fstage"></div>
         <div class="actf" id="fact"></div>
         <script>
         (function(){
-          /* The board is built from the live set, so its length follows the
-             count model (spec 1.2) rather than a hardcoded five. Rebuilt (not
-             just re-rendered) on every reset so a model/deck change without a
-             page reload is picked up. */
+          /* Symmetric async (§2.1): you react to Samuel's recorded answers,
+             building HIS score; his recorded verdicts on YOUR answers build
+             yours, revealed one per turn as you play (§2.2). Both need 70%. */
           let QF, TOTW;
           function fbuild(){
             QF = MMQ.buildSet().map(q => ({
-              q, w: MMQ.DIMS[q.dim],
-              ans: Object.assign({ qid:q.id }, MMQ.DEMO.them[q.id] || { opt:0, why:'' })
+              q, w: MMQ.DIMS[q.dim], ans: MMASYNC.theirAnswer(q.id)
             }));
             TOTW = QF.reduce((s,t) => s + t.w, 0);
           }
-          fbuild();
           function fslots(){
             document.getElementById('fslots').innerHTML = QF.map((t,n) =>
               '<div class="slot"><div class="in">'
               + '<div class="face front"><b>'+(n+1)+'</b></div>'
               + '<div class="face back"></div></div></div>').join('');
+            document.getElementById('fmini').innerHTML = QF.map((t,n) =>
+              '<div class="minitok" data-i="'+n+'">'+(n+1)+'</div>').join('');
           }
-          let fi=0, fgot=0;
+          let fi=0, gotThem=0, gotYou=0, verdicts={};
           const $=id=>document.getElementById(id);
           function ftween(el,val){ const from=(el._v==null)?0:el._v; el._v=val;
             if(from===val){ el.textContent=val+'%'; return; }
@@ -2850,14 +2874,20 @@
               el.textContent=Math.round(from+(val-from)*(1-Math.pow(1-p,3)))+'%';
               if(p<1) requestAnimationFrame(step); })(t0);
           }
+          function paint(){
+            const them = Math.round(gotThem/TOTW*100), you = Math.round(gotYou/TOTW*100);
+            ftween($('fpctThem'), them); ftween($('fpctYou'), you);
+            $('halfThem').classList.toggle('pass', them >= 70);
+            $('halfYou').classList.toggle('pass', you >= 70);
+          }
           function frender(){
             if(fi>=QF.length) return ffinish();
             const t=QF[fi];
             $('fstage').innerHTML='<span class="chip" style="animation:rise .4s var(--ease-show) both">'
               + t.q.dim + ' · slot ' + (fi+1) + ' of ' + QF.length + '</span>'
               + '<div class="qbar">' + t.q.text + '</div>'
-              + MMQ.answerCard(t.q, t.ans, 'Samuel said (recorded)')
-              + '<div class="wnote">Weight ' + t.w.toFixed(1) + " on Samuel's board.</div>";
+              + MMQ.answerCard(t.q, t.ans, 'Samuel answered (before play)')
+              + '<div class="wnote">Weight ' + t.w.toFixed(1) + ' — your call moves <b>his</b> score.</div>';
             $('fact').innerHTML='<button class="btn ghost" onclick="FSHOW.react(\'stay\')">Stay<span class="sub">not feeling it</span></button>'
               +'<button class="btn move" onclick="FSHOW.react(\'move\')"><svg class="icon"><use href="#i-heart"/></svg> Move<span class="sub">I want this</span></button>';
             const cur = document.querySelectorAll('#S-F3 .slot')[fi];
@@ -2865,29 +2895,53 @@
           }
           function freact(kind){
             const t=QF[fi];
+            verdicts[t.q.id] = kind;
             const slot=document.querySelectorAll('#S-F3 .slot')[fi];
             const back=slot.querySelector('.face.back');
             back.innerHTML = kind==='move'
               ? '<span><span class="hh">♥</span>'+t.q.dim+'</span><span class="pts">'+Math.round(t.w*10)+'</span>'
               : '<span style="letter-spacing:.12em">'+t.q.dim+' · stay</span><span class="pts">—</span>';
             slot.classList.add('flip', kind);
-            if(kind==='move') fgot+=t.w;
-            ftween($('fpct'), Math.round(fgot/TOTW*100));
-            $('fact').innerHTML='<div class="wait">Slot '+(fi+1)+' locked — '+(kind==='move'?'<b style="color:var(--move)">Move</b>':'<b>Stay</b>')+' on Samuel\'s board</div>';
+            if(kind==='move') gotThem += t.w;
+
+            /* his verdict on YOUR answer to this question lands at the same
+               beat — that is the reciprocity §2.2 wants visible during play */
+            const hv = MMASYNC.theirVerdict(t.q.id);
+            const tok = document.querySelector('#S-F3 .minitok[data-i="'+fi+'"]');
+            if(tok){ tok.classList.add('on', hv); tok.textContent = hv==='move' ? '♥' : '·'; }
+            if(hv==='move') gotYou += t.w;
+
+            paint();
+            $('fact').innerHTML='<div class="wait">Slot '+(fi+1)+' — you said '
+              +(kind==='move'?'<b style="color:var(--move)">Move</b>':'<b>Stay</b>')
+              +'; Samuel said '+(hv==='move'?'<b style="color:var(--move)">Move</b>':'<b>Stay</b>')+' on yours</div>';
             setTimeout(()=>{ fi++; frender(); }, 950);
           }
           function ffinish(){
-            const pct=Math.round(fgot/TOTW*100);
+            /* One canonical derivation for the recorded result — the running
+               gotThem/gotYou totals drive the live display only, so the number
+               shown and the number stored cannot drift apart. */
+            const s = MMASYNC.scores(verdicts);
+            const them = s.them, you = s.you;
+            const pass = them>=70 && you>=70;
+            MMASYNC.saveResult({ you, them, verdicts });
             $('fboard').classList.add('done');
             $('fstage').innerHTML='<div class="qbar" style="text-align:center">Board complete.</div>'
-              +'<div class="wnote">'+(pct>=70?'You cleared Samuel\'s gate — taking you to the result…':'Under the gate this run — here\'s how it works…')+'</div>';
-            $('fact').innerHTML='<div class="wait">Scoring '+pct+'% against a 70% gate…</div>';
+              +'<div class="wnote">'+(pass
+                 ? 'You both cleared 70% — taking you to the result…'
+                 : 'One of you came in under the gate — here\'s where it landed…')+'</div>';
+            $('fact').innerHTML='<div class="wait">Samuel '+them+'% · you '+you+'% · gate 70%</div>';
             setTimeout(()=>{ location.hash='S-F4'; }, 1700);
           }
-          window.FSHOW={react:freact, reset(){ fi=0; fgot=0; $('fpct')._v=null; $('fpct').textContent='0%';
-            $('fboard').classList.remove('done'); fbuild(); fslots(); frender(); }};
-          fslots();
-          frender();
+          window.FSHOW={react:freact, reset(){
+            fi=0; gotThem=0; gotYou=0; verdicts={};
+            $('fpctThem')._v=null; $('fpctThem').textContent='0%';
+            $('fpctYou')._v=null;  $('fpctYou').textContent='0%';
+            $('halfThem').classList.remove('pass'); $('halfYou').classList.remove('pass');
+            $('fboard').classList.remove('done');
+            MMASYNC.clearResult();
+            fbuild(); fslots(); frender(); }};
+          fbuild(); fslots(); frender();
         })();
         </script>
       </section>
