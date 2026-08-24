@@ -2848,6 +2848,7 @@
         <div class="fhead">
           <span class="tag" style="background:rgba(255,255,255,.08);color:var(--ink-dim)">Async · both must clear 70%</span>
           <span class="rec"><span class="rd"></span><span data-mm-countdown>72:00:00</span> left</span>
+          <a class="tag" href="#S-F5" style="background:rgba(255,255,255,.08);color:var(--ink-dim);text-decoration:none">demo · expire ›</a>
         </div>
         <div class="scorebar">
           <div class="half" id="halfThem">
@@ -3049,6 +3050,20 @@
         </script>
       </section>
 
+      <section class="screen dark" id="S-F5" data-group="F · Async game" data-title="⚠ Async expired (72h forfeit)">
+        <div class="body" style="justify-content:center;text-align:center;gap:18px;padding:40px 26px">
+          <div class="av g5 s72" style="margin:0 auto"><svg class="icon" style="width:30px;height:30px"><use href="#i-hourglass"/></svg></div>
+          <h2 class="scrn" style="font-size:28px">The 72 hours ran out.</h2>
+          <p class="muted" style="max-width:32ch;margin:0 auto;line-height:1.55">Samuel never finished his board. An async game has to close inside 72 hours so nobody is left waiting indefinitely.</p>
+          <div class="card" style="text-align:left">
+            <div style="display:flex;justify-content:space-between;font-size:13px"><span>Samuel's fee</span><span class="tag danger">Forfeited</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:8px"><span>Your fee</span><span class="tag pass">Credit returned</span></div>
+            <div class="muted" style="font-size:11px;margin-top:8px">You finished your side, so you're made whole — a session credit is back in your account. The side that left it unfinished forfeits.</div>
+          </div>
+          <div class="btnrow"><a class="btn ghost block" href="#S-G1">See your credits</a><a class="btn move block" href="#S-B2">Find someone else</a></div>
+        </div>
+      </section>
+
       <section class="screen paper" id="S-F6" data-group="F · Async game" data-title="⚠ Async declined · reason">
         <div class="pbar"><a class="back" href="#S-F2A">‹</a><h1>Before you go</h1></div>
         <div class="body">
@@ -3125,11 +3140,17 @@
       <section class="screen paper" id="S-G3" data-group="G · Payment" data-title="Hold lifecycle states">
         <div class="pbar"><a class="back" href="#S-G1">‹</a><h1>How holds work</h1></div>
         <div class="body">
-          <div class="note">A session credit moves through four states. Nothing is captured until you actually play.</div>
+          <div class="note">A sync session and an async game charge at different moments. Here's every state either can be in.</div>
+          <div class="eyebrow" style="margin-top:4px">Sync session</div>
           <div class="row"><span class="tag" style="background:var(--paper-2)">1</span><div class="grow"><div class="t1">Soft-held</div><div class="t2">Placed when the session is scheduled</div></div><span class="tag warn">Pending</span></div>
           <div class="row"><span class="tag" style="background:var(--paper-2)">2</span><div class="grow"><div class="t1">Captured</div><div class="t2">Both showed up and played</div></div><span class="tag pass">Charged</span></div>
           <div class="row" style="border-color:var(--danger)"><span class="tag" style="background:var(--paper-2)">3</span><div class="grow"><div class="t1">Forfeited</div><div class="t2">You no-showed (100%, &lt;6h to reschedule)</div></div><span class="tag danger">Lost</span></div>
           <div class="row" style="border-color:var(--pass)"><span class="tag" style="background:var(--paper-2)">4</span><div class="grow"><div class="t1">Released</div><div class="t2">Partner no-showed — reuse your hold</div></div><span class="tag pass">Returned</span></div>
+          <div class="eyebrow" style="margin-top:14px">Async game</div>
+          <div class="row"><span class="tag" style="background:var(--paper-2)">1</span><div class="grow"><div class="t1">Charged at consent</div><div class="t2">Pursuer on send, pursued the moment they accept — before play</div></div><span class="tag pass">Charged</span></div>
+          <div class="row"><span class="tag" style="background:var(--paper-2)">2</span><div class="grow"><div class="t1">Kept on a fail</div><div class="t2">Under the gate is still a game played — the fee buys the game, not the result</div></div><span class="tag">No refund</span></div>
+          <div class="row" style="border-color:var(--danger)"><span class="tag" style="background:var(--paper-2)">3</span><div class="grow"><div class="t1">Forfeited at 72h</div><div class="t2">You left your board unfinished inside the window</div></div><span class="tag danger">Lost</span></div>
+          <div class="row" style="border-color:var(--pass)"><span class="tag" style="background:var(--paper-2)">4</span><div class="grow"><div class="t1">Credit returned</div><div class="t2">You finished, they didn't — you're made whole</div></div><span class="tag pass">Returned</span></div>
         </div>
         <div class="foot"><a class="btn ghost block" href="#S-G1">Back to credits</a></div>
       </section>
