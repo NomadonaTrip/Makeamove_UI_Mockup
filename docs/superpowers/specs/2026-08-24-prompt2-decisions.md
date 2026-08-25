@@ -334,6 +334,22 @@ shows has already done most of the work without being asked to. It also means
 `mm_answers` — which Phase 1 left as a read-only key with no writer — must
 actually be written by `S-D2` when a turn is locked.
 
+**Prototype limitation, recorded honestly (added 2026-08-25).** The above is
+production intent. The prototype **does not currently demonstrate it**: a game
+draws a fixed ten questions from the front of the bank, so replaying the sync
+show re-asks the same set and `recordAnswer`'s dedupe means the answered count
+saturates. Measured at the end of Phase 2: a thin profile sits at 1 confirmed /
+8 answered, and reaches 1 / 9 after one show and stays there.
+
+Making play the real unlock path needs a question-selection strategy — ask what
+we do not yet know — and that pulls against the mirrored-pairs reveal (1.5),
+which needs a mix of answered and unanswered rows to be worth showing at all.
+That trade-off is a design decision, not a defect, and it is deferred.
+
+**Until it is resolved, the thresholds are reached in the prototype via the
+dev-settings profile-depth toggle.** Do not cite "playing the flagship mode is
+how you unlock async" as implemented — it is intended, not built.
+
 **The profile is progressively reconciled.** Confirmation is not a one-time
 capture. As users play more and discover more about themselves, answers
 accumulate, confidence moves, and the correction control on `S-E6` (1.4) lets
