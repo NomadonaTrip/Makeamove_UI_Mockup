@@ -247,6 +247,9 @@ Navigate to `#S-D2` and evaluate. This mounts onto a scratch element, so it does
   h.set(0, 'move'); h.set(1, 'stay'); h.set(2, 'move');
   const s = h.state();
   const foot = host.querySelector('.lfoot').textContent;
+  /* Capture NOW: the unreachable-path block below resets the same host, and a
+     live re-query afterwards would read the reset state instead of this one. */
+  const rung1Move = rungEls()[4].classList.contains('move');
 
   // Unreachable path: the gate line desaturates and NOTHING is announced.
   const h2State = (() => { h.reset(arena);
@@ -265,7 +268,7 @@ Navigate to `#S-D2` and evaluate. This mounts onto a scratch element, so it does
         gateAt > -1 && afterGate && +afterGate.dataset.n === 3 &&
         s.won === 60 && s.toGo === 24 &&
         /60/.test(foot) && /24/.test(foot) && /30/.test(foot) &&
-        rungEls()[4].classList.contains('move') &&
+        rung1Move &&
         h2State.dim === true && h2State.reachable === false &&
         !/cannot|can't|impossible|out of reach/i.test(h2State.text) &&
         compactTagged && compactHost.querySelectorAll('.lrung').length === 5,
