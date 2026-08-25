@@ -3200,14 +3200,6 @@
           #S-F3 .half.pass .pctf{color:var(--pass); text-shadow:0 0 16px rgba(46,204,113,.4)}
           #S-F3 .gateline{flex:0 0 auto; text-align:center; font-size:9.5px; letter-spacing:.14em;
             text-transform:uppercase; color:var(--ink-faint); margin:5px 0 0}
-          /* their verdicts on YOUR answers, arriving as you play (§2.2) */
-          #S-F3 .mini{flex:0 0 auto; display:flex; gap:4px; justify-content:center;
-            padding:6px 14px 0; flex-wrap:wrap}
-          #S-F3 .minitok{width:16px; height:16px; border-radius:5px; background:rgba(255,255,255,.07);
-            border:1px solid rgba(255,255,255,.1); display:flex; align-items:center; justify-content:center;
-            font-size:9px; color:var(--ink-faint); transition:.35s var(--ease-show)}
-          #S-F3 .minitok.on.move{background:var(--move); border-color:var(--move); color:#fff}
-          #S-F3 .minitok.on.stay{background:rgba(255,255,255,.14); color:var(--ink-dim)}
           /* THE BOARD — bulb-framed, five flip slots (the Feud object) */
           #S-F3 .board{flex:0 0 auto; position:relative; margin:10px 14px 4px; padding:15px 13px;
             background:linear-gradient(180deg,var(--stage-800),var(--stage-850)); border-radius:18px;
@@ -3218,7 +3210,10 @@
           /* The board holds one slot per question — 10 under Model A, up to 15
              under Model B — so it must scroll rather than push the stage into
              the button row, and it is capped to leave room for the second
-             score row. Phase 3 replaces this with a windowed ladder. */
+             score row. Phase 3 deliberately left this board alone: it tracks
+             SAMUEL's score, while the ladder tracks yours, so converting it
+             would have changed what the object means. The ladder took over
+             the .mini strip above instead. */
           #S-F3 .board{max-height:32vh; overflow:hidden}
           #S-F3 .slots{max-height:calc(32vh - 30px); overflow-y:auto; scrollbar-width:none}
           #S-F3 .slots::-webkit-scrollbar{display:none}
@@ -3278,7 +3273,7 @@
           </div>
         </div>
         <div class="gateline">both need 70% to pass</div>
-        <div class="mini" id="fmini"></div>
+        <div id="fmini" style="flex:0 0 auto; padding:6px 14px 0"></div>
         <div class="board" id="fboard"><div class="slots" id="fslots"></div></div>
         <div class="stagef" id="fstage"></div>
         <div class="actf" id="fact"></div>
@@ -3287,7 +3282,7 @@
           /* Symmetric async (§2.1): you react to Samuel's recorded answers,
              building HIS score; his recorded verdicts on YOUR answers build
              yours, revealed one per turn as you play (§2.2). Both need 70%. */
-          let QF, TOTW;
+          let QF, TOTW, FLADDER = null;
           function fbuild(){
             QF = MMQ.buildSet().map(q => ({
               q, w: MMQ.DIMS[q.dim], ans: MMASYNC.theirAnswer(q.id)
@@ -3299,8 +3294,12 @@
               '<div class="slot"><div class="in">'
               + '<div class="face front"><b>'+(n+1)+'</b></div>'
               + '<div class="face back"></div></div></div>').join('');
-            document.getElementById('fmini').innerHTML = QF.map((t,n) =>
-              '<div class="minitok" data-i="'+n+'">'+(n+1)+'</div>').join('');
+            /* Samuel's verdicts on YOUR answers — the same ladder the arena
+               draws, laid out along the axis this strip already used. */
+            const rungs = QF.map(t => ({ dim: t.q.dim, w: t.w }));
+            if (FLADDER) FLADDER.reset(rungs);
+            else FLADDER = MMLADDER.mount(document.getElementById('fmini'),
+              { rungs, subject: "Samuel's reactions to you", layout: 'compact' });
           }
           let fi=0, gotThem=0, gotYou=0, verdicts={};
           const $=id=>document.getElementById(id);
@@ -3344,8 +3343,7 @@
             /* his verdict on YOUR answer to this question lands at the same
                beat — that is the reciprocity §2.2 wants visible during play */
             const hv = MMASYNC.theirVerdict(t.q.id);
-            const tok = document.querySelector('#S-F3 .minitok[data-i="'+fi+'"]');
-            if(tok){ tok.classList.add('on', hv); tok.textContent = hv==='move' ? '♥' : '·'; }
+            FLADDER.set(fi, hv);
             if(hv==='move') gotYou += t.w;
 
             paint();
