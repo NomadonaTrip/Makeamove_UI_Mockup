@@ -627,7 +627,7 @@
   .ladder .lrungs::-webkit-scrollbar{display:none}
   .ladder .lrung{flex:0 0 auto; height:var(--lrung); display:flex; align-items:center;
     gap:8px; padding:0 10px; border-radius:8px; background:rgba(255,255,255,.04);
-    border:1px solid rgba(255,255,255,.08); transition:.35s var(--ease-show)}
+    border:1px solid rgba(255,255,255,.08)}
   .ladder .lrung .ln{font-family:var(--display); font-weight:900; font-size:11px;
     color:var(--ink-faint); min-width:12px}
   .ladder .lrung .ld{font-size:11.5px; color:var(--ink-dim); flex:1;
@@ -643,7 +643,7 @@
   @keyframes rungpop{from{transform:scale(.9) translateY(6px); opacity:0}}
   .ladder .lgate{flex:0 0 auto; display:flex; align-items:center; gap:8px;
     font-family:var(--display); font-weight:800; font-size:9.5px; letter-spacing:.14em;
-    text-transform:uppercase; color:var(--pass); transition:.4s}
+    text-transform:uppercase; color:var(--pass)}
   .ladder .lgate::before, .ladder .lgate::after{content:""; flex:1; height:2px;
     background:repeating-linear-gradient(90deg,var(--pass) 0 5px,transparent 5px 9px)}
   .ladder .lgate.dim{color:var(--ink-faint); filter:grayscale(1); opacity:.55}
