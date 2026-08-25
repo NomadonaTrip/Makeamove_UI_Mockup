@@ -128,7 +128,14 @@ above rung 4. Nothing about the gate may be precomputed or hardcoded.
 
 ## Rendering
 
-**Order.** Rungs climb bottom-to-top, rendered in **reversed DOM order** rather
+**Order.** *(Corrected during the Task 6 sweep: reversal applies to the **rail
+only**. The compact strip is a horizontal reading line, its tiles carry no rung
+number, and it sits directly above a flip board that numbers its slots 1..N
+downward — so reversing it made it fill right-to-left with nothing to say so.
+Compact emits rungs forward, with the divider after the gate rung instead of
+before it; that is the same boundary either way.)*
+
+Rungs climb bottom-to-top, rendered in **reversed DOM order** rather
 than with `flex-direction: column-reverse`. Reversed DOM keeps visual order and
 reading order in sync; `column-reverse` would have a screen reader announce the
 rungs backwards.
@@ -211,10 +218,18 @@ gate divider inserted at `gateIndex` and the foot readout inline beneath.
 `freact()`'s `tok.classList.add('on', hv)` (`index.html:3143`) becomes
 `ladder.set(fi, hv)`; `FSHOW.reset()` calls `ladder.reset()`.
 
-The flip board, its `32vh` cap and its scroll behaviour are untouched. The
-comment at `index.html:3016` — *"Phase 3 replaces this with a windowed
-ladder"* — is now wrong and must be rewritten to say what Phase 3 actually
-did, so it stops promising a rewrite that is not happening.
+The flip board and its scroll behaviour are untouched. The comment at
+`index.html:3016` — *"Phase 3 replaces this with a windowed ladder"* — is now
+wrong and must be rewritten to say what Phase 3 actually did, so it stops
+promising a rewrite that is not happening.
+
+**Correction, recorded during the Task 6 sweep.** The `32vh` cap was *not* left
+untouched, because it could not be: the compact ladder is 49px tall at 10 rungs
+and 78px at 15 (it wraps) where the token strip it replaced was 22px, and that
+difference came straight out of `.stagef`, printing the answer card over the
+Move/Stay tickets — at 390×844 under Model B, not only on short phones. The cap
+is now `28vh`, and `24vh` under `@media (max-height:720px)`. Only the cap moved;
+how the board behaves is unchanged.
 
 ## Out of scope
 

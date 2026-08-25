@@ -1217,17 +1217,25 @@
 
     function draw(){
       const m = window.MMLADDER.model(rungs, verdicts);
-      /* Reversed DOM order, not flex column-reverse: the rail climbs upward
-         and a screen reader must announce it in the order it is seen. */
+      const gateHTML = () => '<div class="lgate' + (m.reachable ? '' : ' dim') + '">'
+        + '<span>70% gate &middot; ' + m.gatePts + ' pts</span></div>';
+      /* The rail climbs upward, so it emits rungs in REVERSED DOM order — not
+         flex column-reverse, because a screen reader must announce them in the
+         order they are seen. The compact strip is a horizontal reading line and
+         must run FORWARD: its tiles carry no rung number (.ln is hidden), so a
+         reversed strip fills right-to-left with nothing to say so, against a
+         flip board directly beneath it that numbers its slots 1..N downward.
+         Either way the divider marks the same boundary — between the gate rung
+         and the next one up: above it climbing, after it reading across. */
+      const up = layout !== 'compact';
       const parts = [];
-      for (let i = m.rungs.length - 1; i >= 0; i--){
-        /* Iterating top-down, the divider is pushed just BEFORE its rung, so
-           it renders above it: [5, 4, GATE, 3, 2, 1]. */
-        if (m.rungs[i].n === m.gateIndex)
-          parts.push('<div class="lgate' + (m.reachable ? '' : ' dim') + '">'
-            + '<span>70% gate &middot; ' + m.gatePts + ' pts</span></div>');
+      const emit = i => {
+        if (up && m.rungs[i].n === m.gateIndex) parts.push(gateHTML());
         parts.push(rungHTML(m.rungs[i]));
-      }
+        if (!up && m.rungs[i].n === m.gateIndex) parts.push(gateHTML());
+      };
+      if (up) for (let i = m.rungs.length - 1; i >= 0; i--) emit(i);
+      else    for (let i = 0; i < m.rungs.length; i++) emit(i);
       rowsEl.innerHTML = parts.join('');
       footEl.innerHTML = '<b>' + m.won + '</b> won &middot; <b>' + m.toGo
         + '</b> to go &middot; ' + m.left + ' left';
@@ -3213,9 +3221,22 @@
              score row. Phase 3 deliberately left this board alone: it tracks
              SAMUEL's score, while the ladder tracks yours, so converting it
              would have changed what the object means. The ladder took over
-             the .mini strip above instead. */
-          #S-F3 .board{max-height:32vh; overflow:hidden}
-          #S-F3 .slots{max-height:calc(32vh - 30px); overflow-y:auto; scrollbar-width:none}
+             the .mini strip above instead.
+             The cap came down from 32vh in Phase 3's regression pass: the
+             ladder that replaced the strip is 49px tall at 10 rungs and 78px
+             at 15 (it wraps), where the strip was 22px. That difference has to
+             come from somewhere, and it was coming out of .stagef — far enough
+             that the answer card printed over the Move/Stay tickets. The board
+             already scrolls, so the cap is what gives the room back; nothing
+             about how the board behaves changes. */
+          #S-F3 .board{max-height:28vh; overflow:hidden}
+          #S-F3 .slots{max-height:calc(28vh - 30px); overflow-y:auto; scrollbar-width:none}
+          /* Short phones (SE, 8, most 16:9 Androids) start over budget before
+             the ladder is counted, so they need a deeper cut than tall ones. */
+          @media (max-height:720px){
+            #S-F3 .board{max-height:24vh}
+            #S-F3 .slots{max-height:calc(24vh - 30px)}
+          }
           #S-F3 .slots::-webkit-scrollbar{display:none}
           /* the floor must keep enough room for the answer card + buttons */
           #S-F3 .stagef{min-height:190px; overflow:visible}
