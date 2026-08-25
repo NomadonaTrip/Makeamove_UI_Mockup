@@ -740,7 +740,11 @@ Replace the entire contents of `S-F3`'s `<script>` (the whole IIFE) with:
             setTimeout(()=>{ fi++; frender(); }, 950);
           }
           function ffinish(){
-            const them = Math.round(gotThem/TOTW*100), you = Math.round(gotYou/TOTW*100);
+            /* One canonical derivation for the recorded result — the running
+               gotThem/gotYou totals drive the live display only, so the number
+               shown and the number stored cannot drift apart. */
+            const s = MMASYNC.scores(verdicts);
+            const them = s.them, you = s.you;
             const pass = them>=70 && you>=70;
             MMASYNC.saveResult({ you, them, verdicts });
             $('fboard').classList.add('done');
@@ -1370,7 +1374,7 @@ Then add this `<script>` immediately before `S-F1`'s closing `</section>`:
               return;
             }
             const need = [];
-            if(e.needConfirmed) need.push(e.needConfirmed + ' more answered about you');
+            if(e.needConfirmed) need.push(e.needConfirmed + ' more things confirmed about you');
             if(e.needAnswered)  need.push(e.needAnswered + ' more questions');
             host.innerHTML =
                 '<div class="card" style="text-align:left">'
@@ -1509,8 +1513,11 @@ async () => {
   location.hash = 'S-D2'; DSHOW.reset();
   await sleep(60);
   // play four turns; the 'you' turns are the ones that record an answer
+  /* Six turns, not four: the thin demo fixture already answers the two
+     questions that fall on the player's turns in the first four, and
+     recordAnswer dedupes by id — so no growth is observable until turn 5. */
   let guard = 0;
-  while (guard++ < 4 && location.hash === '#S-D2') {
+  while (guard++ < 6 && location.hash === '#S-D2') {
     const lockBtn = document.getElementById('act').querySelector('button[onclick*="lock"]');
     if (lockBtn) { DSHOW.lock(); await sleep(700); document.getElementById('rnext').click(); }
     else { DSHOW.react('move'); await sleep(850); }
@@ -1634,7 +1641,113 @@ For each, check and report: does any element overlap another; is any text clippe
 
 Write up the sweep with one line per screen per viewport. Flag anything that looks wrong even if you are unsure.
 
-- [ ] **Step 7: Commit any fixes you were asked to make**
+- [ ] **Step 7: Fix the ambiguous fee label on S-F2**
+
+`S-F2`'s fee card reads **"Your fee, charged now"**, but it sits above a Send
+button the user has not pressed yet — read literally it says the charge already
+fired. On a payment screen that ambiguity is not acceptable. Change that label
+to:
+
+```html
+            <div style="display:flex;justify-content:space-between"><span>Your fee, charged when you send</span><b>£19.00</b></div>
+```
+
+Leave the contrasting "Samuel's fee · On his consent" row exactly as it is —
+the pairing is what makes the two triggers legible.
+
+- [ ] **Step 8: Fix the out-of-scope `.t2` class on S-F2A**
+
+`S-F2A`'s rendered pursuer-questions use `class="t2"`, but the only `.t2` rule
+in the file is scoped `.row .grow .t2` — these divs are not inside a `.row`, so
+they render at inherited size instead of the intended small muted style.
+
+Fix at the call site rather than by adding a bare `.t2` base rule: that class is
+used widely and changing its specificity this late risks shifting layouts the
+phase has already verified. In `S-F2A`'s inline script, change the question line
+to use an existing global class:
+
+```js
+            host.innerHTML = shown.map(t =>
+              '<div class="muted" style="font-size:12px" data-pursuer-q>· ' + t + '</div>').join('')
+```
+
+Keep the `data-pursuer-q` attribute — an assertion counts those elements.
+
+- [ ] **Step 9: Merge the duplicate `#S-F3 .board` sizing rules**
+
+Task 5 revealed that `S-F3`'s scoped style block ended up with **two**
+same-selector, same-specificity `.board`/`.slots` max-height rules. They were
+made to agree at 32vh, which removed the bug — but not the trap. Two rules that
+match only by construction is exactly how the silent-override returns, and
+Phase 3 rebuilds this very CSS into a windowed ladder.
+
+Delete the **earlier, redundant** block (currently around line 2775) — these
+three lines:
+
+```css
+          /* the board shrinks a little to make room for the second score row */
+          #S-F3 .board{max-height:32vh}
+          #S-F3 .slots{max-height:calc(32vh - 30px)}
+```
+
+The later block already sets the same two properties plus `overflow`, so it
+fully supersedes them. Keep the useful comment by folding it into the surviving
+block, which becomes:
+
+```css
+          /* The board holds one slot per question — 10 under Model A, up to 15
+             under Model B — so it must scroll rather than push the stage into
+             the button row, and it is capped to leave room for the second
+             score row. Phase 3 replaces this with a windowed ladder. */
+          #S-F3 .board{max-height:32vh; overflow:hidden}
+```
+
+Leave the `.slots` rules in that block untouched.
+
+**Then re-measure.** Deleting the wrong rule would silently restore the overlap
+this phase exists to prevent, so confirm at 1280×800 and 390×844 under both
+question-count models that the answer card's bottom edge is still above the
+action bar's top edge. Report the four numbers.
+
+- [ ] **Step 10: Fix S-F4's stale title and complete the mirror-row theming**
+
+Two leftovers from the `S-F4` rebuild.
+
+**(a) The screen's title still describes the old payment model.** `S-F4` carries
+`data-title="Async result + buy-in soft-hold"` — but there is no soft-hold any
+more, and this string is user-visible: the breadcrumb and the ☰ screen index
+both render from `dataset.title`. Change it to:
+
+```html
+      <section class="screen dark" id="S-F4" data-group="F · Async game" data-title="Async result + the reveal">
+```
+
+While you are there, check the other `F · Async game` titles for the same
+staleness and report anything you find — do not fix those without saying so.
+
+**(b) Two mirror-row colours have no `paper` variant.** Every other faint colour
+in that component gets a `.paper` override; these two were missed, which breaks
+the standing convention that shared components work on both surfaces. Add
+alongside the existing overrides in the main `<style>` block:
+
+```css
+.paper .mirrorrow .mr-v.stay{color:var(--t-faint)}
+```
+
+And in `S-F4`'s inline script, the "asked N ways" flag hardcodes
+`style="color:var(--ink-faint)"`. Replace that inline colour with a class so it
+themes with everything else — add to the main `<style>`:
+
+```css
+.mirrorrow .mr-flag.soft{color:var(--ink-faint)}
+.paper .mirrorrow .mr-flag.soft{color:var(--t-faint)}
+```
+
+and change the flag's markup in the script from
+`'<span class="mr-flag" style="color:var(--ink-faint)">'` to
+`'<span class="mr-flag soft">'`.
+
+- [ ] **Step 11: Commit any fixes you were asked to make**
 
 ```bash
 git add index.html
