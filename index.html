@@ -1074,6 +1074,48 @@
                      lockEligibility, lockedEligibility, clearEligibility };
 })();
 </script>
+    <script id="mmladder">
+/* ===== MMLADDER — the Millionaire ladder (spec 2026-08-25, from decision 3.1)
+   One rung = ONE VERDICT ON YOU. In the arena that is your answering turns
+   only (S-D2 alternates); on the async board every question carries one.
+   model() is pure so the arithmetic can be asserted without a DOM. */
+(function(){
+  const PTS = w => Math.round(w * 10);
+
+  /* The screens pass on Math.round(won/total*100) >= 70, which is true from
+     0.695 upward — NOT 0.70. Deriving the threshold any other way makes the
+     foot readout say "1 to go" while the score head already reads 70%. */
+  const GATE_FRAC = 0.695;
+
+  function model(rungs, verdicts){
+    verdicts = verdicts || [];
+    const r = rungs.map((x, i) => ({
+      n: i + 1, dim: x.dim, w: x.w, pts: PTS(x.w),
+      state: verdicts[i] || 'pending'
+    }));
+    const totalPts = r.reduce((s, x) => s + x.pts, 0);
+    const gatePts  = Math.ceil(GATE_FRAC * totalPts);
+
+    /* The gate line sits above the first rung at which the points available
+       so far could carry you over. Statement: win everything below this line
+       and you have cleared. */
+    let cum = 0, gateIndex = r.length;
+    for (let i = 0; i < r.length; i++){
+      cum += r[i].pts;
+      if (cum >= gatePts){ gateIndex = i + 1; break; }
+    }
+
+    const won  = r.filter(x => x.state === 'move').reduce((s, x) => s + x.pts, 0);
+    const left = r.filter(x => x.state === 'pending').reduce((s, x) => s + x.pts, 0);
+    return { rungs:r, totalPts, gatePts, gateIndex, won, left,
+             toGo: Math.max(0, gatePts - won),
+             cleared: won >= gatePts,
+             reachable: (won + left) >= gatePts };
+  }
+
+  window.MMLADDER = { PTS, GATE_FRAC, model };
+})();
+</script>
     <div class="screenwrap" id="screenwrap">
       <!-- ============ GROUP A · ONBOARDING ============ -->
       <section class="screen dark" id="S-A1" data-group="A · Onboarding" data-title="Landing / referral">
