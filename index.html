@@ -2880,16 +2880,37 @@
           </div>
           <div class="note">Accepting charges you now. <b>Neither fee is refunded if the game ends under the gate</b> — you're paying for the game, not the result. Leave it unfinished past 72 hours and you forfeit; finish it and you're covered either way.</div>
         </div>
-        <div class="foot">
-          <a class="btn move block" href="#S-F3">Accept &amp; pay · start playing</a>
-          <a class="link center" href="#S-F6">No thanks — decline</a>
-        </div>
+        <div class="foot" id="f2aGate"></div>
         <script>
         (function(){
+          /* Eligibility is checked at consent as well as at invite (spec 2.7),
+             and frozen on accept so a later profile correction cannot evaporate
+             a game already in progress. */
+          function paintGate(){
+            const host = document.getElementById('f2aGate');
+            if(!host) return;
+            const e = MMQ.eligibility();
+            if(e.ok){
+              host.innerHTML =
+                  '<a class="btn move block" href="#S-F3" onclick="MMASYNC.lockEligibility()">Accept &amp; pay · start playing</a>'
+                + '<a class="link center" href="#S-F6">No thanks — decline</a>';
+              return;
+            }
+            const need = [];
+            if(e.needConfirmed) need.push(e.needConfirmed + ' more things confirmed about you');
+            if(e.needAnswered)  need.push(e.needAnswered + ' more questions');
+            host.innerHTML =
+                '<div class="note">Before you can accept, we need to know you a little better — '
+              + need.join(' and ') + '. Nothing is charged until you do.</div>'
+              + '<a class="btn ghost disabled block">Accept &amp; pay · start playing</a>'
+              + '<a class="btn move block" style="margin-top:8px" href="#S-QD1">Answer a few more ›</a>'
+              + '<a class="link center" href="#S-F6">No thanks — decline</a>';
+          }
           /* The pursuer's custom questions are shown BEFORE payment (§2.4).
              Falls back to a representative set when the deck is empty, so the
              screen never renders as a blank promise. */
           function paint(){
+            paintGate();
             const host = document.getElementById('pursuerQs');
             if(!host) return;
             const deck = MMQ.deck().filter(q => q.src !== 'bank');
