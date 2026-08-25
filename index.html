@@ -864,6 +864,23 @@
       { qid:'q-lif-02', opt:1, why:'' },
       { qid:'q-fin-01', opt:1, why:'Shared goals, honest numbers, some fun money.' }
     ],
+    /* Twelve answers, consistent across four probes — clears both thresholds
+       with one to spare. wants-children, core-value, closeness and
+       money-model each get their three variations answered the same way. */
+    answersFull: [
+      { qid:'q-fam-01', opt:0, why:'I always pictured a bigger, noisier house.' },
+      { qid:'q-fam-03', opt:1, why:'' },
+      { qid:'q-fam-06', opt:0, why:'' },
+      { qid:'q-val-01', opt:0, why:'Honesty. And kindness when no one is watching.' },
+      { qid:'q-val-03', opt:0, why:'' },
+      { qid:'q-val-04', opt:0, why:'' },
+      { qid:'q-int-01', opt:0, why:'Tea made without asking.' },
+      { qid:'q-int-02', opt:0, why:'' },
+      { qid:'q-int-03', opt:0, why:'' },
+      { qid:'q-fin-01', opt:1, why:'Shared goals, honest numbers, some fun money.' },
+      { qid:'q-fin-02', opt:1, why:'' },
+      { qid:'q-fin-03', opt:1, why:'' }
+    ],
     /* David's recorded answers, keyed by question id, for the arena. */
     them: {
       'q-fam-01': { opt:0, why:"Two, ideally. I'm a deputy head; kids are my world." },
@@ -908,10 +925,52 @@
          + why + '</div>';
   }
 
+  /* ===== async eligibility (spec 2.7) =====
+     You must be *known* before you can pursue or be pursued. Measured by
+     confirmed attributes rather than raw answer count, because confidence
+     only rises when variations of the same probe agree — it cannot be
+     reached by answering fast. The answered floor is a secondary guard
+     against someone consistent on very few questions. */
+  const ELIG_CONFIRMED = 3, ELIG_ANSWERED = 12;
+  function eligibility(ans){
+    ans = ans || answers();
+    const confirmedProbes = probes().filter(p => {
+      const c = confidence(p, ans);
+      return c !== null && c >= CONF_GATE;
+    });
+    const confirmed = confirmedProbes.length, answered = ans.length;
+    return { confirmed, confirmedProbes, answered,
+             ok: confirmed >= ELIG_CONFIRMED && answered >= ELIG_ANSWERED,
+             needConfirmed: Math.max(0, ELIG_CONFIRMED - confirmed),
+             needAnswered:  Math.max(0, ELIG_ANSWERED - answered) };
+  }
+  /* Prototype switch between a thin profile and a well-answered one, so both
+     sides of the gate are demoable. Writing mm_answers is also what makes
+     answers() return something other than the sparse demo fixture. */
+  function setProfileDepth(d){
+    if(d === 'full') sessionStorage.setItem('mm_answers', JSON.stringify(DEMO.answersFull));
+    else sessionStorage.removeItem('mm_answers');
+  }
+  /* Answers accumulate across modes (§2.7): what you answer in a sync show
+     counts toward async eligibility and toward confirming attributes. Answering
+     the same question again overwrites — people change their minds, and the
+     profile is progressively reconciled rather than fixed at onboarding. */
+  function recordAnswer(ans){
+    if(!ans || !ans.qid) return null;
+    const all = answers().slice();
+    const rec = { qid:ans.qid, opt:ans.opt, why:ans.why || '' };
+    const at = all.findIndex(a => a.qid === ans.qid);
+    if(at === -1) all.push(rec); else all[at] = rec;
+    sessionStorage.setItem('mm_answers', JSON.stringify(all));
+    return all.length;
+  }
+
   window.MMQ = { DIMS, BANK, DEMO, CONF_GATE, MAX_DECK, ATTEMPTS,
                  qById, deck, saveDeck, model, setModel, answers,
                  buildSet, confidence, confLabel, probes, mirrorPairs,
-                 reviewQuestion, genOptions, answerCard, o };
+                 reviewQuestion, genOptions, answerCard, o,
+                 ELIG_CONFIRMED, ELIG_ANSWERED, eligibility, setProfileDepth,
+                 recordAnswer };
 })();
 </script>
     <script id="mmasync">
@@ -991,9 +1050,25 @@
                      catch(e){ return null; } }
   function clearResult(){ sessionStorage.removeItem(RES); }
 
+  /* Eligibility is frozen when a game starts (§2.7). Without this, correcting
+     a wrong inference on S-E6 mid-game could drop you under the threshold and
+     evaporate a match already in progress. */
+  const ELG = 'mm_async_elig';
+  function lockEligibility(){
+    const e = MMQ.eligibility();
+    sessionStorage.setItem(ELG, JSON.stringify(e));
+    return e;
+  }
+  function lockedEligibility(){
+    try { return JSON.parse(sessionStorage.getItem(ELG)) || null; }
+    catch(e){ return null; }
+  }
+  function clearEligibility(){ sessionStorage.removeItem(ELG); }
+
   window.MMASYNC = { WINDOW_MS, deadline, resetWindow, expire, remaining, fmt,
                      myAnswer, theirAnswer, theirVerdict, scores,
-                     saveResult, result, clearResult, paintAll };
+                     saveResult, result, clearResult, paintAll,
+                     lockEligibility, lockedEligibility, clearEligibility };
 })();
 </script>
     <div class="screenwrap" id="screenwrap">
@@ -2435,7 +2510,9 @@
           }
           function addTok(kind){ const d=document.createElement('div'); d.className='tok '+(kind==='move'?'m':'s'); d.innerHTML=kind==='move'?'<svg class="icon"><use href="#i-heart"/></svg>':'<svg class="icon"><use href="#i-x"/></svg>'; $('tokens').appendChild(d); }
           function lock(){ // you answered -> LOCKED, hold the beat, then reveal David's verdict (PRIMETIME §7)
-            const t=TURNS[i]; const v=t.verdict||'move'; yA+=W[t.q.dim]; if(v==='move') yE+=W[t.q.dim];
+            const t=TURNS[i]; const v=t.verdict||'move';
+            MMQ.recordAnswer(t.ans);   // sync play feeds the profile (§2.7)
+            yA+=W[t.q.dim]; if(v==='move') yE+=W[t.q.dim];
             const r=$('reveal'); r.className='reveal on lock';
             $('rverdict').textContent='LOCKED';
             $('rmsg').textContent='Your answer is in. David is deciding…';
@@ -2723,8 +2800,45 @@
             </ul>
           </div>
           <div class="note" style="text-align:left">The fee buys the game, not the outcome — <b>a result under the gate is not refunded</b>. Whoever leaves a game unfinished past 72 hours forfeits; the other side gets a credit back.</div>
-          <a class="btn move block" href="#S-F2">Start an async game</a>
+          <div id="f1gate"></div>
         </div>
+        <script>
+        (function(){
+          /* Async is what you UNLOCK, never what you are locked out of —
+             matching and the sync show stay open to everyone (spec 2.7). */
+          function paint(){
+            const host = document.getElementById('f1gate');
+            if(!host) return;
+            const e = MMQ.eligibility();
+            if(e.ok){
+              host.innerHTML = '<a class="btn move block" href="#S-F2" '
+                + 'onclick="MMASYNC.lockEligibility()">Start an async game</a>';
+              return;
+            }
+            const need = [];
+            if(e.needConfirmed) need.push(e.needConfirmed + ' more things confirmed about you');
+            if(e.needAnswered)  need.push(e.needAnswered + ' more questions');
+            host.innerHTML =
+                '<div class="card" style="text-align:left">'
+              + '<div class="eyebrow" style="color:var(--bulb)">Not unlocked yet</div>'
+              + '<div class="muted" style="font-size:12.5px;margin-top:6px;line-height:1.55">'
+              + 'Async only works when we know you both well enough to be sure a match is real. '
+              + 'You need ' + need.join(' and ') + '.</div>'
+              + '<div class="prog" style="margin-top:10px"><i style="width:'
+              + Math.round(Math.min(1, e.confirmed / MMQ.ELIG_CONFIRMED) * 100)
+              + '%;background:var(--bulb)"></i></div>'
+              + '<div class="muted" style="font-size:11px;margin-top:6px">'
+              + e.confirmed + ' of ' + MMQ.ELIG_CONFIRMED + ' things confirmed · '
+              + e.answered + ' of ' + MMQ.ELIG_ANSWERED + ' questions answered</div>'
+              + '</div>'
+              + '<a class="btn disabled block" style="margin-top:10px">Start an async game</a>'
+              + '<a class="btn move block" style="margin-top:8px" href="#S-QD1">Answer a few more ›</a>';
+          }
+          window.MMELIG = { paint };
+          window.addEventListener('hashchange', paint);
+          paint();
+        })();
+        </script>
       </section>
 
       <section class="screen paper" id="S-F2" data-group="F · Async game" data-title="Async invite (pursuer)">
@@ -2757,6 +2871,7 @@
             <div class="eyebrow" style="color:var(--move)">What Tolu will ask you</div>
             <div class="muted" style="font-size:11.5px;margin-top:4px">You see her questions before you decide — not after.</div>
             <div id="pursuerQs" style="margin-top:10px;display:flex;flex-direction:column;gap:6px"></div>
+            <div id="f2aKnown" class="muted" style="font-size:11.5px;margin-top:8px"></div>
           </div>
 
           <div class="card">
@@ -2785,6 +2900,18 @@
               '<div class="t2" data-pursuer-q>· ' + t + '</div>').join('')
               + '<div class="muted" style="font-size:11px;margin-top:6px">'
               + 'Plus the standard set — ' + MMQ.buildSet().length + ' questions in total.</div>';
+            /* The ask is only small because eligibility guaranteed answers are
+               already on file (§2.7) — say so, or it reads as 15 cold questions. */
+            const known = document.getElementById('f2aKnown');
+            if(known){
+              const set = MMQ.buildSet(), mine = MMQ.answers();
+              const have = set.filter(q => mine.some(a => a.qid === q.id)).length;
+              const fresh = set.length - have;
+              known.innerHTML = have
+                ? 'You\'ve already answered <b>' + have + '</b> of these. Only <b>'
+                  + fresh + '</b> are new.'
+                : 'All <b>' + set.length + '</b> are new to you.';
+            }
           }
           window.addEventListener('hashchange', paint);
           paint();
@@ -3562,12 +3689,23 @@
       const m = MMQ.model();
       a.classList.toggle('on', m === 'A');
       b.classList.toggle('on', m === 'B');
+      const pt = document.getElementById('devpt'), pf = document.getElementById('devpf');
+      if(pt && pf){
+        const full = !!sessionStorage.getItem('mm_answers');
+        pt.classList.toggle('on', !full);
+        pf.classList.toggle('on', full);
+      }
     },
     setModel(m){
       MMQ.setModel(m); MMDEV.paint();
       /* rebuild any board that is already on screen so the change is visible */
       if(window.DSHOW) DSHOW.reset();
       if(window.FSHOW) FSHOW.reset();
+    },
+    setDepth(d){
+      MMQ.setProfileDepth(d); MMDEV.paint();
+      if(window.MMELIG)  MMELIG.paint();
+      if(window.MMCONF)  MMCONF.paint();
     }
   };
   MMDEV.paint();
@@ -3651,6 +3789,14 @@
       <button id="devqb" onclick="MMDEV.setModel('B')">B · 10 + 5</button>
     </div>
     <div class="note2">A replaces up to 5 bank questions with yours. B adds yours on top, max 15.</div>
+  </div>
+  <div class="devrow">
+    <div class="lbl2">Profile depth</div>
+    <div class="seg">
+      <button id="devpt" onclick="MMDEV.setDepth('thin')">Thin</button>
+      <button id="devpf" onclick="MMDEV.setDepth('full')">Complete</button>
+    </div>
+    <div class="note2">Switches the demo answer set, so you can see both sides of the async eligibility gate.</div>
   </div>
   <div style="text-align:right;margin-top:12px">
     <button class="tbtn" onclick="MMDEV.close()">Close</button>
