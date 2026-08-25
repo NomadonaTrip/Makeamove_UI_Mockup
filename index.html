@@ -607,11 +607,14 @@
   .mirrorrow .mr-v{font-family:var(--display); font-weight:700; font-size:10px;
     letter-spacing:.1em; text-transform:uppercase; white-space:nowrap}
   .mirrorrow .mr-v.move{color:var(--move)} .mirrorrow .mr-v.stay{color:var(--ink-faint)}
+  .paper .mirrorrow .mr-v.stay{color:var(--t-faint)}
   /* a profile fills in progressively — an unanswered side is stated plainly,
      never filled with a default that implies an answer nobody gave */
   .mirrorrow .mr-side.mr-none{opacity:.55; font-style:italic}
   .mirrorrow .mr-flag{display:inline-block; margin-top:6px; font-size:10px; letter-spacing:.1em;
     text-transform:uppercase; font-family:var(--display); font-weight:700; color:var(--bulb)}
+  .mirrorrow .mr-flag.soft{color:var(--ink-faint)}
+  .paper .mirrorrow .mr-flag.soft{color:var(--t-faint)}
 </style>
 </head>
 <body>
@@ -2848,7 +2851,7 @@
           <div class="note info">You're the <b>pursuer</b>. You'll both answer the full set, then react to each other's answers — and you each need <b>70%</b> to pass.</div>
           <div class="card" id="attachF2"></div>
           <div class="card">
-            <div style="display:flex;justify-content:space-between"><span>Your fee, charged now</span><b>£19.00</b></div>
+            <div style="display:flex;justify-content:space-between"><span>Your fee, charged when you send</span><b>£19.00</b></div>
             <div class="muted" style="font-size:12px;margin-top:4px">Free during launch — covered by your free credit.</div>
             <div style="display:flex;justify-content:space-between;margin-top:10px"><span class="muted" style="font-size:12.5px">Samuel's fee</span><span class="tag warn">On his consent</span></div>
           </div>
@@ -2918,7 +2921,7 @@
               : ['Would you move abroad for the right person?',
                  'How do you handle a disagreement that lasts more than a day?'];
             host.innerHTML = shown.map(t =>
-              '<div class="t2" data-pursuer-q>· ' + t + '</div>').join('')
+              '<div class="muted" style="font-size:12px" data-pursuer-q>· ' + t + '</div>').join('')
               + '<div class="muted" style="font-size:11px;margin-top:6px">'
               + 'Plus the standard set — ' + MMQ.buildSet().length + ' questions in total.</div>';
             /* The ask is only small because eligibility guaranteed answers are
@@ -2966,9 +2969,6 @@
             font-size:9px; color:var(--ink-faint); transition:.35s var(--ease-show)}
           #S-F3 .minitok.on.move{background:var(--move); border-color:var(--move); color:#fff}
           #S-F3 .minitok.on.stay{background:rgba(255,255,255,.14); color:var(--ink-dim)}
-          /* the board shrinks a little to make room for the second score row */
-          #S-F3 .board{max-height:32vh}
-          #S-F3 .slots{max-height:calc(32vh - 30px)}
           /* THE BOARD — bulb-framed, five flip slots (the Feud object) */
           #S-F3 .board{flex:0 0 auto; position:relative; margin:10px 14px 4px; padding:15px 13px;
             background:linear-gradient(180deg,var(--stage-800),var(--stage-850)); border-radius:18px;
@@ -2978,7 +2978,8 @@
           #S-F3 .board.done::before{animation-duration:.45s}
           /* The board holds one slot per question — 10 under Model A, up to 15
              under Model B — so it must scroll rather than push the stage into
-             the button row. Phase 3 replaces this with a windowed ladder. */
+             the button row, and it is capped to leave room for the second
+             score row. Phase 3 replaces this with a windowed ladder. */
           #S-F3 .board{max-height:32vh; overflow:hidden}
           #S-F3 .slots{max-height:calc(32vh - 30px); overflow-y:auto; scrollbar-width:none}
           #S-F3 .slots::-webkit-scrollbar{display:none}
@@ -3143,7 +3144,7 @@
         </script>
       </section>
 
-      <section class="screen dark" id="S-F4" data-group="F · Async game" data-title="Async result + buy-in soft-hold">
+      <section class="screen dark" id="S-F4" data-group="F · Async game" data-title="Async result + the reveal">
         <div class="raywrap"><div class="rays"></div></div>
         <div class="body" style="justify-content:flex-start;text-align:center;gap:14px;padding:26px 22px">
           <div id="f4icon" style="font-size:36px"></div>
@@ -3209,7 +3210,7 @@
                     + '<span class="mr-v">—</span></div>')
               + (r.answersDiffer ? '<span class="mr-flag">↯ you answered differently</span>' : '')
               + (!r.answersDiffer && r.verdictsDiffer ? '<span class="mr-flag">↯ same answer, different verdict</span>' : '')
-              + (r.qs.length > 1 ? ' <span class="mr-flag" style="color:var(--ink-faint)">asked ' + r.qs.length + ' ways</span>' : '')
+              + (r.qs.length > 1 ? ' <span class="mr-flag soft">asked ' + r.qs.length + ' ways</span>' : '')
               + '</div>').join('');
 
             document.getElementById('f4cta').innerHTML = pass
