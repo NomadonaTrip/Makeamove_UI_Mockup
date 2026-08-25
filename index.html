@@ -701,6 +701,11 @@
       opts:[o('A painful truth','honesty'), o('A kind lie','kindness'),
             o('Neither, honestly','neither'), o('It would depend entirely','depends')] },
 
+    { id:'q-val-04', dim:'Values', depth:'Exploratory', probe:'core-value',
+      text:'A partner does something generous nobody will ever know about. What does that tell you?',
+      opts:[o('That they are honest to the core','honesty'), o('That they are genuinely kind','kindness'),
+            o('That they are building something','ambition'), o('That their faith is real','faith')] },
+
     { id:'q-lif-01', dim:'Lifestyle', depth:'Screening', probe:'weekend',
       text:'Describe your ideal Saturday.',
       opts:[o('Out with family','family'), o('Quiet at home','home'),
@@ -710,6 +715,11 @@
       text:'Describe your perfect weekend.',
       opts:[o('A long lunch with people I love','family'), o('Nothing planned at all','home'),
             o('A trip somewhere unfamiliar','adventure'), o('Deep in a project','work')] },
+
+    { id:'q-lif-03', dim:'Lifestyle', depth:'Exploratory', probe:'weekend',
+      text:'A free Sunday appears with nothing planned. What happens to it?',
+      opts:[o('It fills up with people I love','family'), o('It stays gloriously empty','home'),
+            o('I get in the car and go somewhere','adventure'), o('I finally finish that thing','work')] },
 
     { id:'q-fin-01', dim:'Finances', depth:'Screening', probe:'money-model',
       text:'What does financial partnership look like to you?',
@@ -721,6 +731,11 @@
       opts:[o('Open books, one budget','joint'), o('Shared goals, own accounts','hybrid'),
             o('We each cover our own','separate'), o("I'd rather not manage it",'earner')] },
 
+    { id:'q-fin-03', dim:'Finances', depth:'Deep dive', probe:'money-model',
+      text:'One of you out-earns the other three to one. How do the bills work?',
+      opts:[o('One pot — it is all ours','joint'), o('Proportional, separate accounts','hybrid'),
+            o('Straight down the middle regardless','separate'), o('The higher earner carries it','earner')] },
+
     { id:'q-amb-01', dim:'Ambition', depth:'Screening', probe:'five-year',
       text:'Where do you want to be in five years?',
       opts:[o('Further along in my career','career'), o('Settled with a family','family'),
@@ -729,7 +744,17 @@
     { id:'q-int-01', dim:'Intimacy', depth:'Screening', probe:'closeness',
       text:'What does closeness look like for you?',
       opts:[o('Small daily rituals','rituals'), o('Long honest conversations','talk'),
-            o('Physical affection','touch'), o('Being in the same room','presence')] }
+            o('Physical affection','touch'), o('Being in the same room','presence')] },
+
+    { id:'q-int-02', dim:'Intimacy', depth:'Exploratory', probe:'closeness',
+      text:'After a hard day, what do you actually want from a partner?',
+      opts:[o('The usual comforts, without asking','rituals'), o('To talk it all the way through','talk'),
+            o('To be held','touch'), o('Just company, no talking','presence')] },
+
+    { id:'q-int-03', dim:'Intimacy', depth:'Deep dive', probe:'closeness',
+      text:'What would make you feel most distant from someone you live with?',
+      opts:[o('The small rituals stopping','rituals'), o('No real conversations any more','talk'),
+            o('No physical affection','touch'), o('Never being in the same room','presence')] }
   ];
 
   /* Questions sharing a probe are each other's mirror in async play, so a
