@@ -2547,10 +2547,9 @@
           #S-D2 .ans{font-size:15px; line-height:1.45; color:var(--ink); background:rgba(255,255,255,.05); border:1px solid rgba(255,182,39,.35); border-radius:14px; padding:14px; max-width:30ch}
           #S-D2 .ans .lbl{font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-faint); font-weight:700; margin-bottom:6px}
           #S-D2 .base{flex:0 0 auto; padding:8px 16px; border-top:1px solid rgba(255,255,255,.08)}
-          #S-D2 .base .blbl{font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-faint); font-weight:700; margin-bottom:6px}
-          #S-D2 .tokens{display:flex; gap:5px; flex-wrap:wrap; min-height:24px}
-          #S-D2 .tok{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff}
-          #S-D2 .tok.m{background:var(--move)} #S-D2 .tok.s{background:var(--stay)}
+          /* ~5-rung window, anchored on the current rung (decision 3.1).
+             The +26px is the gate divider, which lives in the same flow. */
+          #S-D2 .base .lrungs{max-height:calc(5 * var(--lrung) + 4 * var(--lgap) + 26px)}
           /* PRIMETIME §4 — Move/Stay are the two hero Tickets: Move glows pink, Stay is flat & muted */
           #S-D2 .act{flex:0 0 auto; padding:10px 16px calc(16px + env(safe-area-inset-bottom)); display:flex; gap:10px;
             filter:drop-shadow(0 4px 16px rgba(255,45,111,.30))}
@@ -2574,8 +2573,6 @@
           #S-D2 .head{transition:.3s}
           #S-D2 .head.lit{animation:litbreathe 2.4s ease-in-out infinite}
           @keyframes litbreathe{50%{box-shadow:0 0 38px rgba(255,182,39,.34); border-color:var(--bulb-soft)}}
-          #S-D2 .tok{animation:tokpop .38s var(--ease-show) both}
-          @keyframes tokpop{from{transform:scale(.2) rotate(-90deg); opacity:0}}
           #S-D2 .pct{transition:.2s}
           /* the verdict SLAMS in, shockwave rings ripple, the room shakes for a MOVE */
           #S-D2 .reveal .verdict{animation:slam .5s var(--ease-show) both}
@@ -2613,7 +2610,7 @@
         <div class="turnflag" id="turnflag">Question <b id="qn">1</b> / —</div>
         <div class="esc" id="esc"><svg class="icon"><use href="#i-bolt"/></svg> Stay-cluster in Family — going deeper (L3)</div>
         <div class="stage" id="stage"></div>
-        <div class="base"><div class="blbl">David's reactions to you ↓</div><div class="tokens" id="tokens"></div></div>
+        <div class="base"><div id="dladder"></div></div>
         <div class="act" id="act"></div>
         <div class="reveal" id="reveal"><span class="ring"></span><span class="ring"></span><div class="burst"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="verdict" id="rverdict">MOVE</div><p id="rmsg"></p><a class="btn ghost sm" id="rnext" style="width:auto;padding:10px 22px">Continue ›</a></div>
         <script>
@@ -2640,7 +2637,21 @@
               verdict: MMQ.DEMO.verdict[q.id] || 'move'
             }));
           }
-          dbuild();
+          /* One rung per verdict on you — only even turns produce one, so the
+             turn index has to be mapped onto the rung index. */
+          let RUNGOF = {}, LADDER = null;
+          function lbuild(){
+            const rungs = []; RUNGOF = {};
+            TURNS.forEach((t, n) => {
+              if (t.mode !== 'you') return;
+              RUNGOF[n] = rungs.length;
+              rungs.push({ dim: t.q.dim, w: W[t.q.dim] });
+            });
+            if (LADDER) LADDER.reset(rungs);
+            else LADDER = MMLADDER.mount(document.getElementById('dladder'),
+              { rungs, subject: "David's reactions to you", layout: 'rail' });
+          }
+          dbuild(); lbuild();
           let i=0, yA=0,yE=0,tA=0,tE=0, sd=0;
           const $=id=>document.getElementById(id);
           function pc(a,e){return a>0?Math.round(e/a*100):null;}
@@ -2673,6 +2684,7 @@
               $('stage').innerHTML = chip + '<div class="qtext">'+t.q.text+'</div>'
                 + MMQ.answerCard(t.q, t.ans, 'Your answer');
               $('act').innerHTML='<button class="btn move" onclick="DSHOW.lock()">Lock my answer</button>';
+              if (LADDER) LADDER.focus(RUNGOF[i]);
             }else{
               $('turnflag').innerHTML='Question <b>'+(i+1)+'</b> / '+total
                 +' · <b style="color:var(--spotlight-soft)">David is answering — you react</b>';
@@ -2682,7 +2694,6 @@
             }
             paint();
           }
-          function addTok(kind){ const d=document.createElement('div'); d.className='tok '+(kind==='move'?'m':'s'); d.innerHTML=kind==='move'?'<svg class="icon"><use href="#i-heart"/></svg>':'<svg class="icon"><use href="#i-x"/></svg>'; $('tokens').appendChild(d); }
           function lock(){ // you answered -> LOCKED, hold the beat, then reveal David's verdict (PRIMETIME §7)
             const t=TURNS[i]; const v=t.verdict||'move';
             MMQ.recordAnswer(t.ans);   // sync play feeds the profile (§2.7)
@@ -2691,7 +2702,7 @@
             $('rverdict').textContent='LOCKED';
             $('rmsg').textContent='Your answer is in. David is deciding…';
             setTimeout(()=>{
-              addTok(v);
+              LADDER.set(RUNGOF[i], v);
               r.className='reveal on '+v;
               $('rverdict').textContent=v==='move'?'MOVE':'STAY';
               $('rmsg').innerHTML=v==='move'?'David <b style="color:var(--move)">moved</b> on your answer. You\'re being wanted — in real time.':'David held a <b>Stay</b> here. Honest, not cruel.';
@@ -2710,7 +2721,12 @@
             sessionStorage.setItem('mm_py',py); sessionStorage.setItem('mm_pt',pt);
             location.hash = pass ? 'S-D5' : 'S-D6';
           }
-          window.DSHOW={lock,react,reset(){dbuild();i=0;yA=yE=tA=tE=sd=0;$('tokens').innerHTML='';$('reveal').className='reveal';render();}};
+          window.DSHOW={ lock, react,
+            /* exposed so the regression pass in Task 6 can compare the rail's
+               arithmetic against the score head's without replaying the board */
+            ladder:()=>LADDER,
+            reset(){ dbuild(); lbuild(); i=0; yA=yE=tA=tE=sd=0;
+                     $('reveal').className='reveal'; render(); } };
           render();
         })();
         </script>
