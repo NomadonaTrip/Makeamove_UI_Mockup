@@ -2841,7 +2841,7 @@
               + e.answered + ' of ' + MMQ.ELIG_ANSWERED + ' questions answered</div>'
               + '</div>'
               + '<a class="btn ghost disabled block" style="margin-top:10px">Start an async game</a>'
-              + '<a class="btn move block" style="margin-top:8px" href="#S-P3">Tell us more about you ›</a>';
+              + '<a class="btn move block" style="margin-top:8px" href="#S-B2">Play a show — it\'s how we get to know you ›</a>';
           }
           window.MMELIG = { paint };
           window.addEventListener('hashchange', paint);
@@ -2886,7 +2886,7 @@
                 '<div class="note">Before you can send, we need to know you a little better — '
               + need.join(' and ') + '.</div>'
               + '<a class="btn ghost disabled block">Send · Samuel consents next</a>'
-              + '<a class="btn move block" style="margin-top:8px" href="#S-P3">Tell us more about you ›</a>';
+              + '<a class="btn move block" style="margin-top:8px" href="#S-B2">Play a show — it\'s how we get to know you ›</a>';
           }
           window.addEventListener('hashchange', paint);
           paint();
@@ -2940,7 +2940,7 @@
                 '<div class="note">Before you can accept, we need to know you a little better — '
               + need.join(' and ') + '. Nothing is charged until you do.</div>'
               + '<a class="btn ghost disabled block">Accept &amp; pay · start playing</a>'
-              + '<a class="btn move block" style="margin-top:8px" href="#S-P3">Tell us more about you ›</a>'
+              + '<a class="btn move block" style="margin-top:8px" href="#S-B2">Play a show — it\'s how we get to know you ›</a>'
               + '<a class="link center" href="#S-F6">No thanks — decline</a>';
           }
           /* The pursuer's custom questions are shown BEFORE payment (§2.4).
@@ -3157,6 +3157,7 @@
             const them = s.them, you = s.you;
             const pass = them>=70 && you>=70;
             MMASYNC.saveResult({ you, them, verdicts });
+            if(window.MMASYNC) MMASYNC.clearEligibility();
             $('fboard').classList.add('done');
             $('fstage').innerHTML='<div class="qbar" style="text-align:center">Board complete.</div>'
               +'<div class="wnote">'+(pass
@@ -3172,7 +3173,6 @@
             $('halfThem').classList.remove('pass'); $('halfYou').classList.remove('pass');
             $('fboard').classList.remove('done');
             MMASYNC.clearResult();
-            MMASYNC.clearEligibility();
             fbuild(); fslots(); frender(); }};
           fbuild(); fslots(); frender();
         })();
