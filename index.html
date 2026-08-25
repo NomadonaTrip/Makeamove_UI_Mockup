@@ -539,6 +539,30 @@
     /* ============ IMMERSIVE (full-bleed, capped measure) ============ */
     .lay-immersive .heads, .lay-immersive .turnflag, .lay-immersive .stage,
     .lay-immersive .base, .lay-immersive .act{ max-width:620px; margin-inline:auto; width:100% }
+
+    /* S-D2 only — the full ladder as a right rail (decision 3.1). S-E1 is the
+       other IMMERSIVE screen and must keep the stacked layout, so this is
+       scoped by id, not by archetype.
+       `.on` is REQUIRED: without it, #S-D2.lay-immersive would outrank
+       `.screen{display:none}` and paint a hidden screen over the live one. */
+    #S-D2.lay-immersive.on{
+      display:grid; column-gap:28px; justify-content:center; padding:0 24px;
+      grid-template-columns:minmax(0,620px) 240px;
+      grid-template-rows:auto auto 1fr auto;
+      grid-template-areas:"heads ladder" "flag ladder" "stage ladder" "act ladder"}
+    #S-D2.lay-immersive.on .heads{grid-area:heads}
+    #S-D2.lay-immersive.on .turnflag{grid-area:flag}
+    #S-D2.lay-immersive.on .stage{grid-area:stage}
+    #S-D2.lay-immersive.on .act{grid-area:act}
+    #S-D2.lay-immersive.on .base{grid-area:ladder; align-self:center; max-width:none;
+      border-top:0; padding:38px 0 16px; min-height:0}
+    #S-D2.lay-immersive.on .base .lrungs{max-height:none; overflow:visible}
+    #S-D2.lay-immersive.on .base .ladder{--lrung:34px; --lgap:6px}
+    /* .esc is absolutely positioned at left:50% and would centre on the
+       viewport, not on the stage column. The ladder column is a fixed
+       240px + 28px gap, so the stage column's centre is always 134px left
+       of the grid's centre — exact at every width from 768px up. */
+    #S-D2.lay-immersive.on .esc{left:calc(50% - 134px)}
   }
 
   /* large desktops: a touch more generosity */
