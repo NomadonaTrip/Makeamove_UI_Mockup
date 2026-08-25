@@ -2,7 +2,9 @@
 
 **Date:** 2026-08-24
 **Source:** `prompt_2.md` (20 feature requests)
-**Status:** Phase 0 complete — all 29 decisions resolved; awaiting review before Phase 1
+**Status:** Phase 1 merged (PR #3). Phase 2 in planning. 31 decisions resolved —
+the original 29 from Phase 0, plus §2.7 and §6.6 added 2026-08-24 from a design
+conversation about why the pursued party ghosts.
 
 ## How this document works
 
@@ -19,11 +21,11 @@ All implementation lands in `index.html` only. `index_mobile_mockup.html` and
 | Phase | Cluster | prompt_2 items | Screens touched | Decisions |
 |-------|---------|----------------|-----------------|-----------|
 | 1 | Question engine & authoring | 1, 2, 3, 7, 8, 9 | new deck-authoring screens, `S-C1`, `S-D2`, `S-F2`, `S-F3`, `S-E6`, `S-H3` | 7 ✅ |
-| 2 | Async game restructure | 5, 6, 12, 20 | `S-F1`–`S-F4`, `S-G3`, new consent screen | 5 ✅ |
+| 2 | Async game restructure | 5, 6, 12, 20 | `S-F1`–`S-F4`, `S-G3`, new consent screen | 6 ✅ |
 | 3 | Moves stacking (ladder) | 4 | `S-D2` | 1 ✅ |
 | 4 | Scheduling core | 13, 15, ⭐ | `S-C1`, `S-C4`, `S-E3`, `S-E4`, new post-async call screen | 4 ✅ |
 | 5 | Reviews & personality profile | 14, 17, 18 | `S-E2`, `S-E5`, `S-E6` | 4 ✅ |
-| 6 | Karma points (badges deferred) | 10, 11 | `S-B2`, `S-C3`, cross-cutting + new karma screen | 4 ✅ |
+| 6 | Karma points (badges deferred) | 10, 11 | `S-B2`, `S-C3`, cross-cutting + new karma screen | 5 ✅ |
 | 7 | Safety & two-sided fairness | 16, 19 | `S-I1`, `S-H2`, onboarding, new SOS screen | 4 ✅ |
 
 Build order is dependency-driven: the question engine is foundational, since the
@@ -59,6 +61,11 @@ table is the evidence for the gate.
 
 One item is only partly resolved: item 10's badge system is deferred (6.5).
 Everything else is fully decided.
+
+Two decisions do not trace to a numbered request in `prompt_2.md` — §2.7 (async
+eligibility) and §6.6 (its surfacing) came out of a design conversation on
+2026-08-24 about why the pursued party ghosts. They are recorded here because
+they change what Phases 2 and 6 build.
 
 ## Conflicts with the current prototype
 
@@ -169,6 +176,38 @@ answers one at a time to Move or Stay on.
 `S-F1`'s explanatory copy ("One-on-one, asymmetric", "Score = pursued's
 weights · your Moves") is now wrong and must be rewritten.
 
+**Why symmetry survives the eligibility gate.** Revised 2026-08-24. Symmetric
+play was originally justified on information grounds — both parties needed to
+be characterised for the match to mean anything. §2.7's gate now guarantees
+that *before the game starts*, so **that justification is obsolete** and should
+not be cited again. With confident preference data the pursued's score could
+in principle be computed and their board skipped entirely.
+
+It is kept anyway, for two reasons the gate cannot supply:
+
+- **Endorsement is an act, not a prediction.** A computed score predicts that
+  the pursued would have said yes; it is not them saying yes. Consent at
+  `S-F2A` is real but it is consent to *engage*, not endorsement of the
+  outcome — and "I'll give this a go" is far easier to walk away from than ten
+  discrete judgments you made about who this specific person is. Inferring
+  agreement is a subtler version of the problem symmetry exists to solve.
+- **It is the freshest preference data the system ever gets.** Reacting to a
+  real person's real answers is higher-signal than abstract preference
+  questions. Remove the pursued's board and an async game produces no new
+  preference data from them at all — the profile stops sharpening on that
+  path, which contradicts the progressive reconciliation in 2.7 that the gate
+  itself depends on.
+
+There is also a product argument: if the pursued reacts to nothing, they have
+paid to have a system compute whether they would like someone, which is a
+worse product than playing a game with a person.
+
+**Length is deliberately unchanged for now.** The gate means fewer reactions
+would still reach a confident verdict, so there is headroom to shorten the
+board. That is left to evidence rather than guesswork — the Model A/B toggle
+from 1.2 can test length without a code change, so the decision waits for
+real drop-off data.
+
 ### 2.2 Presentation — two boards, yours live, theirs filling in
 
 You play your board slot by slot. A second, smaller board shows their verdicts
@@ -230,6 +269,102 @@ miss. Consistent with the answer pattern in Cluster 1.1.
 Collected reasons are written to the rejector's profile. Note the deliberate
 contrast with item 14 (Cluster 5), where a date decline is free-text *only* —
 there the friction is the point, because no algorithm consumes it.
+
+### 2.7 Async eligibility — you must be known to play
+
+Added 2026-08-24, after Phase 1 shipped, from a design conversation about why
+the pursued party ghosts.
+
+**The rule.** A user may neither initiate an async pursuit nor be pursued
+unless the system knows enough about them: **3 attributes at `Confirmed`
+(≥70% confidence) AND 12 questions answered.** Both thresholds must be met.
+
+**Why this exists.** The original argument for symmetric async was that the
+pursued needs skin in the game so they don't leave the pursuer hanging. On
+examination the skin is already provided by charging at consent (2.3), the
+72-hour forfeit (2.5) and karma's effect on match visibility (6.3). What
+symmetry actually fixes is different and more fundamental: the old asymmetric
+model *manufactured matches the pursued had never endorsed* — they were a
+scoring rubric, not a participant, so of course they ghosted.
+
+The eligibility gate extends that logic. Endorsement is only meaningful if it
+is informed, and §2.1's premise — that all preference and attribute data is
+collected before the game begins — is only true if both parties already have
+answers on file. The gate makes that premise structurally true rather than
+merely asserted, and removes the friction of asking a pursued party to answer
+10–15 questions cold at the exact moment they are deciding whether to bother.
+
+**Measured by confirmed attributes, not answered questions.** A raw count
+rewards spraying. Confidence (1.4) only rises when *variations* of the same
+underlying probe agree, so it cannot be reached by answering fast or
+carelessly. The question floor of 12 is a secondary guard against a user who
+answered very few questions but happened to be consistent on them.
+
+**Applies both ways.** Under-threshold users can neither pursue nor be
+pursued. The pursued half is the important one — a 70% match resting on a
+thinly-known person is exactly the case that produces ghosting.
+
+**Eligibility is locked at game start.** Checked at invite and again at
+consent, then frozen for the duration of that game. Otherwise a user who
+corrects a wrong inference on `S-E6` mid-game could drop below the threshold
+and evaporate a match already in progress.
+
+**Sync stays ungated.** Matching and the sync show remain open to everyone.
+This preserves the standing constraint from the candidate-gallery work that
+users must never feel they have to complete a profile to be matched. Async is
+what you *unlock*, never what you are *locked out of* — that framing is the
+difference between a reward and a wall.
+
+**Prerequisite: the question bank must grow.** Verified against the live bank
+on 2026-08-24: with 15 questions across 10 probes, only `wants-children` has
+the three variations needed to clear the 70 gate. Nine probes cap at 67 or 33,
+so a 3-confirmed requirement would be unsatisfiable. The bank expands to 20,
+giving `core-value`, `weekend`, `money-model` a third variation each and
+`closeness` two more — five confirmable attributes. The expansion is additive,
+so Phase 1's pinned confidence fixtures do not move.
+
+**Answers accumulate across modes.** The eligibility thresholds are not a
+separate chore to grind through. Every question answered **during a sync
+show** counts toward the answered total, and attribute confirmation draws on
+sync-game responses *and* the user profile (`S-P1`–`S-P5`) together. Playing
+the flagship mode is how you unlock async.
+
+This makes the gate fair rather than punitive: a user who has played two sync
+shows has already done most of the work without being asked to. It also means
+`mm_answers` — which Phase 1 left as a read-only key with no writer — must
+actually be written by `S-D2` when a turn is locked.
+
+**Prototype limitation, recorded honestly (added 2026-08-25).** The above is
+production intent. The prototype **does not currently demonstrate it**: a game
+draws a fixed ten questions from the front of the bank, so replaying the sync
+show re-asks the same set and `recordAnswer`'s dedupe means the answered count
+saturates. Measured at the end of Phase 2: a thin profile sits at 1 confirmed /
+8 answered, and reaches 1 / 9 after one show and stays there.
+
+Making play the real unlock path needs a question-selection strategy — ask what
+we do not yet know — and that pulls against the mirrored-pairs reveal (1.5),
+which needs a mix of answered and unanswered rows to be worth showing at all.
+That trade-off is a design decision, not a defect, and it is deferred.
+
+**Until it is resolved, the thresholds are reached in the prototype via the
+dev-settings profile-depth toggle.** Do not cite "playing the flagship mode is
+how you unlock async" as implemented — it is intended, not built.
+
+**The profile is progressively reconciled.** Confirmation is not a one-time
+capture. As users play more and discover more about themselves, answers
+accumulate, confidence moves, and the correction control on `S-E6` (1.4) lets
+them overrule an inference that no longer fits. A user's picture is expected
+to sharpen and occasionally change direction over time, not to be fixed at
+onboarding.
+
+**Consequence for the async result screen.** Because a profile fills in
+progressively, a user can legitimately reach a game with no recorded answer to
+some questions. The mirrored-pairs reveal (1.5) must therefore render an
+explicit **"not answered yet"** state for those rows rather than falling back
+to a default option and implying an answer the user never gave. Those blanks
+are honest, and they double as a visible pull toward answering more.
+
+**Surfacing is deferred to Phase 6** — see 6.6.
 
 ---
 
@@ -408,6 +543,31 @@ Undecided between behavioural traits and a numeric score, so the mockup
 
 Same toggle pattern as Cluster 1.2's question-count models; the two toggles
 should share one dev-settings surface rather than each inventing their own.
+
+### 6.6 Surfacing async eligibility — "people wanted to reach you"
+
+Added 2026-08-24 alongside 2.7, which it completes.
+
+An under-threshold user who cannot be pursued has no way of knowing it. They
+do not know async exists, do not know they are excluded, and do not know good
+matches are bouncing off them. **An incentive nobody perceives is not an
+incentive** — it is just a quieter product.
+
+So the gate is paired with truthful surfacing: **"N people wanted to pursue
+you this month. Finish your profile to see who."** This converts an invisible
+penalty into a visible, flattering invitation, and it is likely the single
+most motivating message in the product.
+
+Two hard constraints:
+
+- **The number must be real.** An inflated or vague count turns this into a
+  dark pattern. If nobody tried to pursue them, the message does not appear.
+- **It must lead somewhere actionable** — straight into the specific questions
+  that would confirm their next attribute, not a generic "complete your
+  profile" nag.
+
+This belongs in Phase 6 rather than Phase 2 because it is a reward mechanic
+and should be consistent with the karma surfacing decided in 6.4.
 
 ### 6.5 Deferred — badges
 
