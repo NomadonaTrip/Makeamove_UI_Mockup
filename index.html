@@ -615,6 +615,61 @@
     text-transform:uppercase; font-family:var(--display); font-weight:700; color:var(--bulb)}
   .mirrorrow .mr-flag.soft{color:var(--ink-faint)}
   .paper .mirrorrow .mr-flag.soft{color:var(--t-faint)}
+
+  /* ===== ladder — the Millionaire rail (spec 2026-08-25 / decision 3.1)
+     Mounted by S-D2 (layout:rail) and S-F3 (layout:compact). Stage palette
+     only: no paper screen mounts one. */
+  .ladder{--lrung:30px; --lgap:5px; display:flex; flex-direction:column; gap:6px; min-height:0}
+  .ladder .lhead{font-size:10px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--ink-faint); font-weight:700}
+  .ladder .lrungs{display:flex; flex-direction:column; gap:var(--lgap);
+    overflow-y:auto; scrollbar-width:none; min-height:0}
+  .ladder .lrungs::-webkit-scrollbar{display:none}
+  .ladder .lrung{flex:0 0 auto; height:var(--lrung); display:flex; align-items:center;
+    gap:8px; padding:0 10px; border-radius:8px; background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.08); transition:.35s var(--ease-show)}
+  .ladder .lrung .ln{font-family:var(--display); font-weight:900; font-size:11px;
+    color:var(--ink-faint); min-width:12px}
+  .ladder .lrung .ld{font-size:11.5px; color:var(--ink-dim); flex:1;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .ladder .lrung .lp{font-family:var(--display); font-weight:900; font-size:12.5px;
+    color:var(--ink-faint); min-width:38px; text-align:right}
+  .ladder .lrung.move{background:rgba(255,45,111,.14); border-color:rgba(255,45,111,.45)}
+  .ladder .lrung.move .ld{color:var(--ink)}
+  .ladder .lrung.move .lp{color:var(--bulb); text-shadow:0 0 12px rgba(255,182,39,.5)}
+  .ladder .lrung.stay{background:rgba(255,255,255,.03); border-color:rgba(255,255,255,.06)}
+  .ladder .lrung.stay .ld, .ladder .lrung.stay .lp{color:var(--stay-soft)}
+  .ladder .lrung.on{animation:rungpop .4s var(--ease-show) both}
+  @keyframes rungpop{from{transform:scale(.9) translateY(6px); opacity:0}}
+  .ladder .lgate{flex:0 0 auto; display:flex; align-items:center; gap:8px;
+    font-family:var(--display); font-weight:800; font-size:9.5px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--pass); transition:.4s}
+  .ladder .lgate::before, .ladder .lgate::after{content:""; flex:1; height:2px;
+    background:repeating-linear-gradient(90deg,var(--pass) 0 5px,transparent 5px 9px)}
+  .ladder .lgate.dim{color:var(--ink-faint); filter:grayscale(1); opacity:.55}
+  .ladder .lgate.dim::before, .ladder .lgate.dim::after{
+    background:repeating-linear-gradient(90deg,var(--ink-faint) 0 5px,transparent 5px 9px)}
+  .ladder .lfoot{font-size:10.5px; color:var(--ink-dim); font-weight:600}
+  .ladder .lfoot b{color:var(--ink)}
+
+  /* compact — S-F3 has no room for a vertical window and carries up to 15
+     rungs, so the same model lays out along the axis its strip already used.
+     Header and foot share one line to buy back the vertical space. */
+  .ladder[data-layout="compact"]{--lrung:26px; gap:4px}
+  .ladder[data-layout="compact"] .lrungs{flex-direction:row; flex-wrap:wrap;
+    gap:3px; justify-content:center; overflow:visible}
+  .ladder[data-layout="compact"] .lrung{width:var(--lrung); height:var(--lrung);
+    flex-direction:column; gap:0; padding:0; justify-content:center}
+  .ladder[data-layout="compact"] .lrung .ln,
+  .ladder[data-layout="compact"] .lrung .ld{display:none}
+  .ladder[data-layout="compact"] .lrung .lp{min-width:0; font-size:10px; text-align:center}
+  .ladder[data-layout="compact"] .lgate{flex:0 0 auto; width:0; height:var(--lrung);
+    padding:0; border-left:2px dashed var(--pass); font-size:0; gap:0}
+  .ladder[data-layout="compact"] .lgate::before,
+  .ladder[data-layout="compact"] .lgate::after{display:none}
+  .ladder[data-layout="compact"] .lgate.dim{border-left-color:var(--ink-faint)}
+  .ladder[data-layout="compact"] .lhead{display:none}
+  .ladder[data-layout="compact"] .lfoot{text-align:center; font-size:10px}
 </style>
 </head>
 <body>
@@ -1113,7 +1168,75 @@
              reachable: (won + left) >= gatePts };
   }
 
-  window.MMLADDER = { PTS, GATE_FRAC, model };
+  const esc = s => String(s).replace(/[&<>"]/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  function rungHTML(r){
+    const body = r.state === 'move' ? '<span class="lp">&hearts; ' + r.pts + '</span>'
+               : r.state === 'stay' ? '<span class="lp">&#10005; &mdash;</span>'
+               :                      '<span class="lp">' + r.pts + '</span>';
+    return '<div class="lrung ' + r.state + '" data-n="' + r.n + '">'
+         + '<span class="ln">' + r.n + '</span>'
+         + '<span class="ld">' + esc(r.dim) + '</span>' + body + '</div>';
+  }
+
+  function mount(el, opts){
+    let rungs = opts.rungs.slice(), verdicts = [];
+    const layout = opts.layout || 'rail';
+
+    el.innerHTML = '<div class="ladder" data-layout="' + layout + '">'
+      + '<div class="lhead"></div><div class="lrungs"></div><div class="lfoot"></div></div>';
+    const root  = el.firstChild;
+    const rowsEl = root.querySelector('.lrungs');
+    const footEl = root.querySelector('.lfoot');
+    root.querySelector('.lhead').textContent = opts.subject || '';
+
+    function draw(){
+      const m = window.MMLADDER.model(rungs, verdicts);
+      /* Reversed DOM order, not flex column-reverse: the rail climbs upward
+         and a screen reader must announce it in the order it is seen. */
+      const parts = [];
+      for (let i = m.rungs.length - 1; i >= 0; i--){
+        /* Iterating top-down, the divider is pushed just BEFORE its rung, so
+           it renders above it: [5, 4, GATE, 3, 2, 1]. */
+        if (m.rungs[i].n === m.gateIndex)
+          parts.push('<div class="lgate' + (m.reachable ? '' : ' dim') + '">'
+            + '<span>70% gate &middot; ' + m.gatePts + ' pts</span></div>');
+        parts.push(rungHTML(m.rungs[i]));
+      }
+      rowsEl.innerHTML = parts.join('');
+      footEl.innerHTML = '<b>' + m.won + '</b> won &middot; <b>' + m.toGo
+        + '</b> to go &middot; ' + m.left + ' left';
+      return m;
+    }
+
+    draw();
+
+    return {
+      set(i, verdict){
+        verdicts[i] = verdict;
+        draw();
+        const cell = rowsEl.querySelector('.lrung[data-n="' + (i + 1) + '"]');
+        if (cell) cell.classList.add('on');
+        this.focus(i);
+      },
+      focus(i){
+        /* compact (.lrungs is overflow:visible there) sits inside S-F3's
+           scrolling board — scrollIntoView would walk up to .screen (the
+           nearest overflow-y:auto ancestor) and yank the whole board's
+           scroll position on every single reaction. rail owns its own
+           ~5-rung scroll window, so it is the only layout where focusing
+           the just-answered rung is safe. Do not "fix" this back. */
+        if (layout === 'compact') return;
+        const cell = rowsEl.querySelector('.lrung[data-n="' + (i + 1) + '"]');
+        if (cell && cell.scrollIntoView) cell.scrollIntoView({ block:'nearest' });
+      },
+      reset(next){ rungs = (next || rungs).slice(); verdicts = []; draw(); },
+      state(){ return window.MMLADDER.model(rungs, verdicts); }
+    };
+  }
+
+  window.MMLADDER = { PTS, GATE_FRAC, model, mount };
 })();
 </script>
     <div class="screenwrap" id="screenwrap">
