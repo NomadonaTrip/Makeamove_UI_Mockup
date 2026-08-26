@@ -1009,34 +1009,24 @@
          + why + '</div>';
   }
 
-  /* ===== async eligibility (spec 2.7) =====
-     You must be *known* before you can pursue or be pursued. Measured by
-     confirmed attributes rather than raw answer count, because confidence
-     only rises when variations of the same probe agree — it cannot be
-     reached by answering fast. The answered floor is a secondary guard
-     against someone consistent on very few questions. */
-  const ELIG_CONFIRMED = 3, ELIG_ANSWERED = 12;
-  function eligibility(ans){
-    ans = ans || answers();
-    const confirmedProbes = probes().filter(p => {
-      const c = confidence(p, ans);
-      return c !== null && c >= CONF_GATE;
-    });
-    const confirmed = confirmedProbes.length, answered = ans.length;
-    return { confirmed, confirmedProbes, answered,
-             ok: confirmed >= ELIG_CONFIRMED && answered >= ELIG_ANSWERED,
-             needConfirmed: Math.max(0, ELIG_CONFIRMED - confirmed),
-             needAnswered:  Math.max(0, ELIG_ANSWERED - answered) };
-  }
-  /* Prototype switch between a thin profile and a well-answered one, so both
-     sides of the gate are demoable. Writing mm_answers is also what makes
-     answers() return something other than the sparse demo fixture. */
+  /* The async eligibility gate (spec 2.7) was ROLLED BACK on 2026-08-26.
+     Async is open to every pursuer and every pursued, regardless of how much
+     the system knows about them. The thresholds, the eligibility() reducer and
+     the freeze-at-game-start helpers in MMASYNC are all gone with it.
+     The decision log still carries §2.7 and its dependent §6.6 — updating
+     those is a separate pass. */
+
+  /* Prototype switch between a thin profile and a well-answered one. It still
+     earns its place: the depth drives S-E6's confidence meters and how many
+     rows of S-F4's mirrored-pairs reveal read "not answered yet". Writing
+     mm_answers is also what makes answers() return something other than the
+     sparse demo fixture. */
   function setProfileDepth(d){
     if(d === 'full') sessionStorage.setItem('mm_answers', JSON.stringify(DEMO.answersFull));
     else sessionStorage.removeItem('mm_answers');
   }
   /* Answers accumulate across modes (§2.7): what you answer in a sync show
-     counts toward async eligibility and toward confirming attributes. Answering
+     counts toward confirming attributes on S-E6. Answering
      the same question again overwrites — people change their minds, and the
      profile is progressively reconciled rather than fixed at onboarding. */
   function recordAnswer(ans){
@@ -1053,8 +1043,7 @@
                  qById, deck, saveDeck, model, setModel, answers,
                  buildSet, confidence, confLabel, probes, mirrorPairs,
                  reviewQuestion, genOptions, answerCard, o,
-                 ELIG_CONFIRMED, ELIG_ANSWERED, eligibility, setProfileDepth,
-                 recordAnswer };
+                 setProfileDepth, recordAnswer };
 })();
 </script>
     <script id="mmasync">
@@ -1134,25 +1123,13 @@
                      catch(e){ return null; } }
   function clearResult(){ sessionStorage.removeItem(RES); }
 
-  /* Eligibility is frozen when a game starts (§2.7). Without this, correcting
-     a wrong inference on S-E6 mid-game could drop you under the threshold and
-     evaporate a match already in progress. */
-  const ELG = 'mm_async_elig';
-  function lockEligibility(){
-    const e = MMQ.eligibility();
-    sessionStorage.setItem(ELG, JSON.stringify(e));
-    return e;
-  }
-  function lockedEligibility(){
-    try { return JSON.parse(sessionStorage.getItem(ELG)) || null; }
-    catch(e){ return null; }
-  }
-  function clearEligibility(){ sessionStorage.removeItem(ELG); }
+  /* The freeze-at-game-start helpers went with the eligibility gate
+     (rolled back 2026-08-26). Nothing can drop you out of a game in progress
+     any more, because nothing gates entry to one. */
 
   window.MMASYNC = { WINDOW_MS, deadline, resetWindow, expire, remaining, fmt,
                      myAnswer, theirAnswer, theirVerdict, scores,
-                     saveResult, result, clearResult, paintAll,
-                     lockEligibility, lockedEligibility, clearEligibility };
+                     saveResult, result, clearResult, paintAll };
 })();
 </script>
     <script id="mmladder">
@@ -3030,7 +3007,7 @@
       </section>
 
       <!-- ============ GROUP F · ASYNC GAME (threshold-activated) ============ -->
-      <section class="screen dark" id="S-F1" data-group="F · Async game" data-title="Async unlock entry">
+      <section class="screen dark" id="S-F1" data-group="F · Async game" data-title="Async entry">
         <div class="body" style="justify-content:center;text-align:center;gap:16px;padding:40px 26px">
           <span class="chip" style="align-self:center">Unlocked at 200 users</span>
           <h2 class="scrn" style="font-size:32px;max-width:14ch;margin:0 auto">Can't both be live? Play <span style="color:var(--move)">async.</span></h2>
@@ -3045,45 +3022,8 @@
             </ul>
           </div>
           <div class="note" style="text-align:left">The fee buys the game, not the outcome — <b>a result under the gate is not refunded</b>. Whoever leaves a game unfinished past 72 hours forfeits; the other side gets a credit back.</div>
-          <div id="f1gate"></div>
+          <a class="btn move block" href="#S-F2">Start an async game</a>
         </div>
-        <script>
-        (function(){
-          /* Async is what you UNLOCK, never what you are locked out of —
-             matching and the sync show stay open to everyone (spec 2.7). */
-          function paint(){
-            const host = document.getElementById('f1gate');
-            if(!host) return;
-            const e = MMASYNC.lockedEligibility() || MMQ.eligibility();
-            if(e.ok){
-              host.innerHTML = '<a class="btn move block" href="#S-F2" '
-                + 'onclick="MMASYNC.lockEligibility()">Start an async game</a>';
-              return;
-            }
-            const need = [];
-            if(e.needConfirmed) need.push(e.needConfirmed + ' more things confirmed about you');
-            if(e.needAnswered)  need.push(e.needAnswered + ' more questions');
-            host.innerHTML =
-                '<div class="card" style="text-align:left">'
-              + '<div class="eyebrow" style="color:var(--bulb)">Not unlocked yet</div>'
-              + '<div class="muted" style="font-size:12.5px;margin-top:6px;line-height:1.55">'
-              + 'Async only works when we know you both well enough to be sure a match is real. '
-              + 'You need ' + need.join(' and ') + '.</div>'
-              + '<div class="prog" style="margin-top:10px"><i style="width:'
-              + Math.round(Math.min(1, e.confirmed / MMQ.ELIG_CONFIRMED) * 100)
-              + '%;background:var(--bulb)"></i></div>'
-              + '<div class="muted" style="font-size:11px;margin-top:6px">'
-              + e.confirmed + ' of ' + MMQ.ELIG_CONFIRMED + ' things confirmed · '
-              + e.answered + ' of ' + MMQ.ELIG_ANSWERED + ' questions answered</div>'
-              + '</div>'
-              + '<a class="btn ghost disabled block" style="margin-top:10px">Start an async game</a>'
-              + '<a class="btn move block" style="margin-top:8px" href="#S-B2">Play a show — it\'s how we get to know you ›</a>';
-          }
-          window.MMELIG = { paint };
-          window.addEventListener('hashchange', paint);
-          paint();
-        })();
-        </script>
       </section>
 
       <section class="screen paper" id="S-F2" data-group="F · Async game" data-title="Async invite (pursuer)">
@@ -3099,35 +3039,7 @@
           </div>
           <div class="note">Both fees are taken before the game begins. <b>Neither is refunded if you don't clear the gate</b> — the fee buys the game, not the result.</div>
         </div>
-        <div class="foot" id="f2gate"></div>
-        <script>
-        (function(){
-          /* Send is also a gate, not just entry (spec 2.7) — S-F1 only checks
-             on the way in, but S-F2 is reachable directly from the ☰ index,
-             Prev/Next, or a deep link, so the send action must check and lock
-             for itself too. Mirrors S-F1's paint(). */
-          function paint(){
-            const host = document.getElementById('f2gate');
-            if(!host) return;
-            const e = MMASYNC.lockedEligibility() || MMQ.eligibility();
-            if(e.ok){
-              host.innerHTML = '<a class="btn move block" href="#S-F2A" '
-                + 'onclick="MMASYNC.lockEligibility()">Send · Samuel consents next</a>';
-              return;
-            }
-            const need = [];
-            if(e.needConfirmed) need.push(e.needConfirmed + ' more things confirmed about you');
-            if(e.needAnswered)  need.push(e.needAnswered + ' more questions');
-            host.innerHTML =
-                '<div class="note">Before you can send, we need to know you a little better — '
-              + need.join(' and ') + '.</div>'
-              + '<a class="btn ghost disabled block">Send · Samuel consents next</a>'
-              + '<a class="btn move block" style="margin-top:8px" href="#S-B2">Play a show — it\'s how we get to know you ›</a>';
-          }
-          window.addEventListener('hashchange', paint);
-          paint();
-        })();
-        </script>
+        <div class="foot"><a class="btn move block" href="#S-F2A">Send &middot; Samuel consents next</a></div>
       </section>
 
       <section class="screen paper" id="S-F2A" data-group="F · Async game" data-title="Async consent + charge (pursued)">
@@ -3153,37 +3065,16 @@
           </div>
           <div class="note">Accepting charges you now. <b>Neither fee is refunded if the game ends under the gate</b> — you're paying for the game, not the result. Leave it unfinished past 72 hours and you forfeit; finish it and you're covered either way.</div>
         </div>
-        <div class="foot" id="f2aGate"></div>
+        <div class="foot">
+          <a class="btn move block" href="#S-F3">Accept &amp; pay &middot; start playing</a>
+          <a class="link center" href="#S-F6">No thanks — decline</a>
+        </div>
         <script>
         (function(){
-          /* Eligibility is checked at consent as well as at invite (spec 2.7),
-             and frozen on accept so a later profile correction cannot evaporate
-             a game already in progress. */
-          function paintGate(){
-            const host = document.getElementById('f2aGate');
-            if(!host) return;
-            const e = MMASYNC.lockedEligibility() || MMQ.eligibility();
-            if(e.ok){
-              host.innerHTML =
-                  '<a class="btn move block" href="#S-F3" onclick="MMASYNC.lockEligibility()">Accept &amp; pay · start playing</a>'
-                + '<a class="link center" href="#S-F6">No thanks — decline</a>';
-              return;
-            }
-            const need = [];
-            if(e.needConfirmed) need.push(e.needConfirmed + ' more things confirmed about you');
-            if(e.needAnswered)  need.push(e.needAnswered + ' more questions');
-            host.innerHTML =
-                '<div class="note">Before you can accept, we need to know you a little better — '
-              + need.join(' and ') + '. Nothing is charged until you do.</div>'
-              + '<a class="btn ghost disabled block">Accept &amp; pay · start playing</a>'
-              + '<a class="btn move block" style="margin-top:8px" href="#S-B2">Play a show — it\'s how we get to know you ›</a>'
-              + '<a class="link center" href="#S-F6">No thanks — decline</a>';
-          }
           /* The pursuer's custom questions are shown BEFORE payment (§2.4).
              Falls back to a representative set when the deck is empty, so the
              screen never renders as a blank promise. */
           function paint(){
-            paintGate();
             const host = document.getElementById('pursuerQs');
             if(!host) return;
             const deck = MMQ.deck().filter(q => q.src !== 'bank');
@@ -3194,8 +3085,9 @@
               '<div class="muted" style="font-size:12px" data-pursuer-q>· ' + t + '</div>').join('')
               + '<div class="muted" style="font-size:11px;margin-top:6px">'
               + 'Plus the standard set — ' + MMQ.buildSet().length + ' questions in total.</div>';
-            /* The ask is only small because eligibility guaranteed answers are
-               already on file (§2.7) — say so, or it reads as 15 cold questions. */
+            /* Say how much is already on file, or the set reads as 15 cold
+               questions. Async is open to everyone, so a thin profile lands
+               here legitimately and will see "all of these are new". */
             const known = document.getElementById('f2aKnown');
             if(known){
               const set = MMQ.buildSet(), mine = MMQ.answers();
@@ -3404,7 +3296,6 @@
             const them = s.them, you = s.you;
             const pass = them>=70 && you>=70;
             MMASYNC.saveResult({ you, them, verdicts });
-            if(window.MMASYNC) MMASYNC.clearEligibility();
             $('fboard').classList.add('done');
             $('fstage').innerHTML='<div class="qbar" style="text-align:center">Board complete.</div>'
               +'<div class="wnote">'+(pass
@@ -3562,7 +3453,6 @@
             if(!chosen) return false;          // a reason is required
             const note = (document.getElementById('declineNote')||{}).value || '';
             sessionStorage.setItem('mm_decline', JSON.stringify({ reason:chosen, note }));
-            if(window.MMASYNC) MMASYNC.clearEligibility(); // abandoned — re-evaluate next time
             return true;
           }
           window.MMDECLINE = { pick, submit };
@@ -4014,7 +3904,6 @@
     },
     setDepth(d){
       MMQ.setProfileDepth(d); MMDEV.paint();
-      if(window.MMELIG)  MMELIG.paint();
       if(window.MMCONF)  MMCONF.paint();
     }
   };
@@ -4106,7 +3995,7 @@
       <button id="devpt" onclick="MMDEV.setDepth('thin')">Thin</button>
       <button id="devpf" onclick="MMDEV.setDepth('full')">Complete</button>
     </div>
-    <div class="note2">Switches the demo answer set, so you can see both sides of the async eligibility gate.</div>
+    <div class="note2">Switches the demo answer set. Drives S-E6's confidence meters and how much of S-F4's mirrored-pairs reveal reads "not answered yet".</div>
   </div>
   <div style="text-align:right;margin-top:12px">
     <button class="tbtn" onclick="MMDEV.close()">Close</button>
