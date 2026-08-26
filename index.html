@@ -557,7 +557,9 @@
     #S-D2.lay-immersive.on .base{grid-area:ladder; align-self:center; max-width:none;
       border-top:0; padding:38px 0 16px; min-height:0}
     #S-D2.lay-immersive.on .base .lrungs{max-height:none; overflow:visible}
-    #S-D2.lay-immersive.on .base .ladder{--lrung:34px; --lgap:6px}
+    /* `gap` is restated so the short-phone rail geometry further down cannot
+       leak into the desktop rail on a laptop window under 800px tall. */
+    #S-D2.lay-immersive.on .base .ladder{--lrung:34px; --lgap:6px; gap:6px}
     /* .esc is absolutely positioned at left:50% and would centre on the
        viewport, not on the stage column. The ladder column is a fixed
        240px + 28px gap, so the stage column's centre is always 134px left
@@ -2582,6 +2584,27 @@
           /* ~5-rung window, anchored on the current rung (decision 3.1).
              The +26px is the gate divider, which lives in the same flow. */
           #S-D2 .base .lrungs{max-height:calc(5 * var(--lrung) + 4 * var(--lgap) + 26px)}
+          /* Short phones — the rail is the shock absorber (same reasoning as
+             S-F3's board cap). This column is fixed: .heads (155) + .turnflag
+             (21) + .act (71) + the screen's top offset leave the stage
+             `vh - 288 - .base`. Measured at 375–390px wide, the tallest turn
+             the bank produces needs a 252px stage under BOTH count models, so
+             the whole ladder has to fit in `vh - 540` before a question starts
+             printing over the score heads. The 5-rung window costs 242, which
+             only clears 252 above ~782px tall. Two steps buy it back: fewer
+             rungs in the window, tighter rungs, less chrome around them.
+             Nothing is hidden — .lrungs still scrolls to every rung, and
+             focus() still anchors the window on the rung in play. */
+          @media (max-height:800px) and (max-width:932px){
+            #S-D2 .base{padding:4px 16px}
+            #S-D2 .base .ladder{--lrung:26px; --lgap:4px; gap:4px}
+            /* 3 rungs -> .base 148, stage vh-436: clears 252 down to 688px */
+            #S-D2 .base .lrungs{max-height:calc(3 * var(--lrung) + 2 * var(--lgap) + 18px)}
+          }
+          @media (max-height:740px) and (max-width:932px){
+            /* 2 rungs -> .base 118, stage vh-406: clears 252 down to 658px */
+            #S-D2 .base .lrungs{max-height:calc(2 * var(--lrung) + 1 * var(--lgap) + 18px)}
+          }
           /* PRIMETIME §4 — Move/Stay are the two hero Tickets: Move glows pink, Stay is flat & muted */
           #S-D2 .act{flex:0 0 auto; padding:10px 16px calc(16px + env(safe-area-inset-bottom)); display:flex; gap:10px;
             filter:drop-shadow(0 4px 16px rgba(255,45,111,.30))}

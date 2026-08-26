@@ -182,9 +182,14 @@ instead of clearing `#tokens`.
 `scrollIntoView({block:'nearest'})` — the technique already proven on the async
 board at `index.html:3126`.
 
-The rail costs the `.stage` roughly 150px. That is affordable at 667px tall and
-tight below; the question ticket keeps full width, which matters at 23px
-display type.
+A five-rung window costs the `.stage` 182px against the old token strip — not
+the ~150px estimated here, and not affordable at 667px tall, where the tallest
+turn the bank produces needs a 252px stage and only gets 137px. Measured, the
+five-rung window only clears that from about 782px up. So the window is
+stepped down on short viewports: three rungs at 26px below 800px tall, two
+below 740px, with the rail's own padding tightened to match. Every rung stays
+reachable — the window scrolls, and `focus()` still anchors it on the rung in
+play. The question ticket keeps full width, which matters at 23px display type.
 
 **Desktop (≥768px).** `S-D2` is already in the `IMMERSIVE` set
 (`index.html:3536`). §3.1 asks for the full ladder as a right rail, so
