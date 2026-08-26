@@ -539,6 +539,32 @@
     /* ============ IMMERSIVE (full-bleed, capped measure) ============ */
     .lay-immersive .heads, .lay-immersive .turnflag, .lay-immersive .stage,
     .lay-immersive .base, .lay-immersive .act{ max-width:620px; margin-inline:auto; width:100% }
+
+    /* S-D2 only — the full ladder as a right rail (decision 3.1). S-E1 is the
+       other IMMERSIVE screen and must keep the stacked layout, so this is
+       scoped by id, not by archetype.
+       `.on` is REQUIRED: without it, #S-D2.lay-immersive would outrank
+       `.screen{display:none}` and paint a hidden screen over the live one. */
+    #S-D2.lay-immersive.on{
+      display:grid; column-gap:28px; justify-content:center; padding:0 24px;
+      grid-template-columns:minmax(0,620px) 240px;
+      grid-template-rows:auto auto 1fr auto;
+      grid-template-areas:"heads ladder" "flag ladder" "stage ladder" "act ladder"}
+    #S-D2.lay-immersive.on .heads{grid-area:heads}
+    #S-D2.lay-immersive.on .turnflag{grid-area:flag}
+    #S-D2.lay-immersive.on .stage{grid-area:stage}
+    #S-D2.lay-immersive.on .act{grid-area:act}
+    #S-D2.lay-immersive.on .base{grid-area:ladder; align-self:center; max-width:none;
+      border-top:0; padding:38px 0 16px; min-height:0}
+    #S-D2.lay-immersive.on .base .lrungs{max-height:none; overflow:visible}
+    /* `gap` is restated so the short-phone rail geometry further down cannot
+       leak into the desktop rail on a laptop window under 800px tall. */
+    #S-D2.lay-immersive.on .base .ladder{--lrung:34px; --lgap:6px; gap:6px}
+    /* .esc is absolutely positioned at left:50% and would centre on the
+       viewport, not on the stage column. The ladder column is a fixed
+       240px + 28px gap, so the stage column's centre is always 134px left
+       of the grid's centre — exact at every width from 768px up. */
+    #S-D2.lay-immersive.on .esc{left:calc(50% - 134px)}
   }
 
   /* large desktops: a touch more generosity */
@@ -615,6 +641,61 @@
     text-transform:uppercase; font-family:var(--display); font-weight:700; color:var(--bulb)}
   .mirrorrow .mr-flag.soft{color:var(--ink-faint)}
   .paper .mirrorrow .mr-flag.soft{color:var(--t-faint)}
+
+  /* ===== ladder — the Millionaire rail (spec 2026-08-25 / decision 3.1)
+     Mounted by S-D2 (layout:rail) and S-F3 (layout:compact). Stage palette
+     only: no paper screen mounts one. */
+  .ladder{--lrung:30px; --lgap:5px; display:flex; flex-direction:column; gap:6px; min-height:0}
+  .ladder .lhead{font-size:10px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--ink-faint); font-weight:700}
+  .ladder .lrungs{display:flex; flex-direction:column; gap:var(--lgap);
+    overflow-y:auto; scrollbar-width:none; min-height:0}
+  .ladder .lrungs::-webkit-scrollbar{display:none}
+  .ladder .lrung{flex:0 0 auto; height:var(--lrung); display:flex; align-items:center;
+    gap:8px; padding:0 10px; border-radius:8px; background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.08)}
+  .ladder .lrung .ln{font-family:var(--display); font-weight:900; font-size:11px;
+    color:var(--ink-faint); min-width:12px}
+  .ladder .lrung .ld{font-size:11.5px; color:var(--ink-dim); flex:1;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .ladder .lrung .lp{font-family:var(--display); font-weight:900; font-size:12.5px;
+    color:var(--ink-faint); min-width:38px; text-align:right}
+  .ladder .lrung.move{background:rgba(255,45,111,.14); border-color:rgba(255,45,111,.45)}
+  .ladder .lrung.move .ld{color:var(--ink)}
+  .ladder .lrung.move .lp{color:var(--bulb); text-shadow:0 0 12px rgba(255,182,39,.5)}
+  .ladder .lrung.stay{background:rgba(255,255,255,.03); border-color:rgba(255,255,255,.06)}
+  .ladder .lrung.stay .ld, .ladder .lrung.stay .lp{color:var(--stay-soft)}
+  .ladder .lrung.on{animation:rungpop .4s var(--ease-show) both}
+  @keyframes rungpop{from{transform:scale(.9) translateY(6px); opacity:0}}
+  .ladder .lgate{flex:0 0 auto; display:flex; align-items:center; gap:8px;
+    font-family:var(--display); font-weight:800; font-size:9.5px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--pass)}
+  .ladder .lgate::before, .ladder .lgate::after{content:""; flex:1; height:2px;
+    background:repeating-linear-gradient(90deg,var(--pass) 0 5px,transparent 5px 9px)}
+  .ladder .lgate.dim{color:var(--ink-faint); filter:grayscale(1); opacity:.55}
+  .ladder .lgate.dim::before, .ladder .lgate.dim::after{
+    background:repeating-linear-gradient(90deg,var(--ink-faint) 0 5px,transparent 5px 9px)}
+  .ladder .lfoot{font-size:10.5px; color:var(--ink-dim); font-weight:600}
+  .ladder .lfoot b{color:var(--ink)}
+
+  /* compact — S-F3 has no room for a vertical window and carries up to 15
+     rungs, so the same model lays out along the axis its strip already used.
+     Header and foot share one line to buy back the vertical space. */
+  .ladder[data-layout="compact"]{--lrung:26px; gap:4px}
+  .ladder[data-layout="compact"] .lrungs{flex-direction:row; flex-wrap:wrap;
+    gap:3px; justify-content:center; overflow:visible}
+  .ladder[data-layout="compact"] .lrung{width:var(--lrung); height:var(--lrung);
+    flex-direction:column; gap:0; padding:0; justify-content:center}
+  .ladder[data-layout="compact"] .lrung .ln,
+  .ladder[data-layout="compact"] .lrung .ld{display:none}
+  .ladder[data-layout="compact"] .lrung .lp{min-width:0; font-size:10px; text-align:center}
+  .ladder[data-layout="compact"] .lgate{flex:0 0 auto; width:0; height:var(--lrung);
+    padding:0; border-left:2px dashed var(--pass); font-size:0; gap:0}
+  .ladder[data-layout="compact"] .lgate::before,
+  .ladder[data-layout="compact"] .lgate::after{display:none}
+  .ladder[data-layout="compact"] .lgate.dim{border-left-color:var(--ink-faint)}
+  .ladder[data-layout="compact"] .lhead{display:none}
+  .ladder[data-layout="compact"] .lfoot{text-align:center; font-size:10px}
 </style>
 </head>
 <body>
@@ -1072,6 +1153,124 @@
                      myAnswer, theirAnswer, theirVerdict, scores,
                      saveResult, result, clearResult, paintAll,
                      lockEligibility, lockedEligibility, clearEligibility };
+})();
+</script>
+    <script id="mmladder">
+/* ===== MMLADDER — the Millionaire ladder (spec 2026-08-25, from decision 3.1)
+   One rung = ONE VERDICT ON YOU. In the arena that is your answering turns
+   only (S-D2 alternates); on the async board every question carries one.
+   model() is pure so the arithmetic can be asserted without a DOM. */
+(function(){
+  const PTS = w => Math.round(w * 10);
+
+  /* The screens pass on Math.round(won/total*100) >= 70, which is true from
+     0.695 upward — NOT 0.70. Deriving the threshold any other way makes the
+     foot readout say "1 to go" while the score head already reads 70%. */
+  const GATE_FRAC = 0.695;
+
+  function model(rungs, verdicts){
+    verdicts = verdicts || [];
+    const r = rungs.map((x, i) => ({
+      n: i + 1, dim: x.dim, w: x.w, pts: PTS(x.w),
+      state: verdicts[i] || 'pending'
+    }));
+    const totalPts = r.reduce((s, x) => s + x.pts, 0);
+    const gatePts  = Math.ceil(GATE_FRAC * totalPts);
+
+    /* The gate line sits above the first rung at which the points available
+       so far could carry you over. Statement: win everything below this line
+       and you have cleared. */
+    let cum = 0, gateIndex = r.length;
+    for (let i = 0; i < r.length; i++){
+      cum += r[i].pts;
+      if (cum >= gatePts){ gateIndex = i + 1; break; }
+    }
+
+    const won  = r.filter(x => x.state === 'move').reduce((s, x) => s + x.pts, 0);
+    const left = r.filter(x => x.state === 'pending').reduce((s, x) => s + x.pts, 0);
+    return { rungs:r, totalPts, gatePts, gateIndex, won, left,
+             toGo: Math.max(0, gatePts - won),
+             cleared: won >= gatePts,
+             reachable: (won + left) >= gatePts };
+  }
+
+  const esc = s => String(s).replace(/[&<>"]/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  function rungHTML(r){
+    const body = r.state === 'move' ? '<span class="lp">&hearts; ' + r.pts + '</span>'
+               : r.state === 'stay' ? '<span class="lp">&#10005; &mdash;</span>'
+               :                      '<span class="lp">' + r.pts + '</span>';
+    return '<div class="lrung ' + r.state + '" data-n="' + r.n + '">'
+         + '<span class="ln">' + r.n + '</span>'
+         + '<span class="ld">' + esc(r.dim) + '</span>' + body + '</div>';
+  }
+
+  function mount(el, opts){
+    let rungs = opts.rungs.slice(), verdicts = [];
+    const layout = opts.layout || 'rail';
+
+    el.innerHTML = '<div class="ladder" data-layout="' + layout + '">'
+      + '<div class="lhead"></div><div class="lrungs"></div><div class="lfoot"></div></div>';
+    const root  = el.firstChild;
+    const rowsEl = root.querySelector('.lrungs');
+    const footEl = root.querySelector('.lfoot');
+    root.querySelector('.lhead').textContent = opts.subject || '';
+
+    function draw(){
+      const m = window.MMLADDER.model(rungs, verdicts);
+      const gateHTML = () => '<div class="lgate' + (m.reachable ? '' : ' dim') + '">'
+        + '<span>70% gate &middot; ' + m.gatePts + ' pts</span></div>';
+      /* The rail climbs upward, so it emits rungs in REVERSED DOM order — not
+         flex column-reverse, because a screen reader must announce them in the
+         order they are seen. The compact strip is a horizontal reading line and
+         must run FORWARD: its tiles carry no rung number (.ln is hidden), so a
+         reversed strip fills right-to-left with nothing to say so, against a
+         flip board directly beneath it that numbers its slots 1..N downward.
+         Either way the divider marks the same boundary — between the gate rung
+         and the next one up: above it climbing, after it reading across. */
+      const up = layout !== 'compact';
+      const parts = [];
+      const emit = i => {
+        if (up && m.rungs[i].n === m.gateIndex) parts.push(gateHTML());
+        parts.push(rungHTML(m.rungs[i]));
+        if (!up && m.rungs[i].n === m.gateIndex) parts.push(gateHTML());
+      };
+      if (up) for (let i = m.rungs.length - 1; i >= 0; i--) emit(i);
+      else    for (let i = 0; i < m.rungs.length; i++) emit(i);
+      rowsEl.innerHTML = parts.join('');
+      footEl.innerHTML = '<b>' + m.won + '</b> won &middot; <b>' + m.toGo
+        + '</b> to go &middot; ' + m.left + ' left';
+      return m;
+    }
+
+    draw();
+
+    return {
+      set(i, verdict){
+        verdicts[i] = verdict;
+        draw();
+        const cell = rowsEl.querySelector('.lrung[data-n="' + (i + 1) + '"]');
+        if (cell) cell.classList.add('on');
+        this.focus(i);
+      },
+      focus(i){
+        /* compact (.lrungs is overflow:visible there) sits inside S-F3's
+           scrolling board — scrollIntoView would walk up to .screen (the
+           nearest overflow-y:auto ancestor) and yank the whole board's
+           scroll position on every single reaction. rail owns its own
+           ~5-rung scroll window, so it is the only layout where focusing
+           the just-answered rung is safe. Do not "fix" this back. */
+        if (layout === 'compact') return;
+        const cell = rowsEl.querySelector('.lrung[data-n="' + (i + 1) + '"]');
+        if (cell && cell.scrollIntoView) cell.scrollIntoView({ block:'nearest' });
+      },
+      reset(next){ rungs = (next || rungs).slice(); verdicts = []; draw(); },
+      state(){ return window.MMLADDER.model(rungs, verdicts); }
+    };
+  }
+
+  window.MMLADDER = { PTS, GATE_FRAC, model, mount };
 })();
 </script>
     <div class="screenwrap" id="screenwrap">
@@ -2382,10 +2581,30 @@
           #S-D2 .ans{font-size:15px; line-height:1.45; color:var(--ink); background:rgba(255,255,255,.05); border:1px solid rgba(255,182,39,.35); border-radius:14px; padding:14px; max-width:30ch}
           #S-D2 .ans .lbl{font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-faint); font-weight:700; margin-bottom:6px}
           #S-D2 .base{flex:0 0 auto; padding:8px 16px; border-top:1px solid rgba(255,255,255,.08)}
-          #S-D2 .base .blbl{font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-faint); font-weight:700; margin-bottom:6px}
-          #S-D2 .tokens{display:flex; gap:5px; flex-wrap:wrap; min-height:24px}
-          #S-D2 .tok{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff}
-          #S-D2 .tok.m{background:var(--move)} #S-D2 .tok.s{background:var(--stay)}
+          /* ~5-rung window, anchored on the current rung (decision 3.1).
+             The +26px is the gate divider, which lives in the same flow. */
+          #S-D2 .base .lrungs{max-height:calc(5 * var(--lrung) + 4 * var(--lgap) + 26px)}
+          /* Short phones — the rail is the shock absorber (same reasoning as
+             S-F3's board cap). This column is fixed: .heads (155) + .turnflag
+             (21) + .act (71) + the screen's top offset leave the stage
+             `vh - 288 - .base`. Measured at 375–390px wide, the tallest turn
+             the bank produces needs a 252px stage under BOTH count models, so
+             the whole ladder has to fit in `vh - 540` before a question starts
+             printing over the score heads. The 5-rung window costs 242, which
+             only clears 252 above ~782px tall. Two steps buy it back: fewer
+             rungs in the window, tighter rungs, less chrome around them.
+             Nothing is hidden — .lrungs still scrolls to every rung, and
+             focus() still anchors the window on the rung in play. */
+          @media (max-height:800px) and (max-width:932px){
+            #S-D2 .base{padding:4px 16px}
+            #S-D2 .base .ladder{--lrung:26px; --lgap:4px; gap:4px}
+            /* 3 rungs -> .base 148, stage vh-436: clears 252 down to 688px */
+            #S-D2 .base .lrungs{max-height:calc(3 * var(--lrung) + 2 * var(--lgap) + 18px)}
+          }
+          @media (max-height:740px) and (max-width:932px){
+            /* 2 rungs -> .base 118, stage vh-406: clears 252 down to 658px */
+            #S-D2 .base .lrungs{max-height:calc(2 * var(--lrung) + 1 * var(--lgap) + 18px)}
+          }
           /* PRIMETIME §4 — Move/Stay are the two hero Tickets: Move glows pink, Stay is flat & muted */
           #S-D2 .act{flex:0 0 auto; padding:10px 16px calc(16px + env(safe-area-inset-bottom)); display:flex; gap:10px;
             filter:drop-shadow(0 4px 16px rgba(255,45,111,.30))}
@@ -2409,8 +2628,6 @@
           #S-D2 .head{transition:.3s}
           #S-D2 .head.lit{animation:litbreathe 2.4s ease-in-out infinite}
           @keyframes litbreathe{50%{box-shadow:0 0 38px rgba(255,182,39,.34); border-color:var(--bulb-soft)}}
-          #S-D2 .tok{animation:tokpop .38s var(--ease-show) both}
-          @keyframes tokpop{from{transform:scale(.2) rotate(-90deg); opacity:0}}
           #S-D2 .pct{transition:.2s}
           /* the verdict SLAMS in, shockwave rings ripple, the room shakes for a MOVE */
           #S-D2 .reveal .verdict{animation:slam .5s var(--ease-show) both}
@@ -2448,7 +2665,7 @@
         <div class="turnflag" id="turnflag">Question <b id="qn">1</b> / —</div>
         <div class="esc" id="esc"><svg class="icon"><use href="#i-bolt"/></svg> Stay-cluster in Family — going deeper (L3)</div>
         <div class="stage" id="stage"></div>
-        <div class="base"><div class="blbl">David's reactions to you ↓</div><div class="tokens" id="tokens"></div></div>
+        <div class="base"><div id="dladder"></div></div>
         <div class="act" id="act"></div>
         <div class="reveal" id="reveal"><span class="ring"></span><span class="ring"></span><div class="burst"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="verdict" id="rverdict">MOVE</div><p id="rmsg"></p><a class="btn ghost sm" id="rnext" style="width:auto;padding:10px 22px">Continue ›</a></div>
         <script>
@@ -2475,7 +2692,21 @@
               verdict: MMQ.DEMO.verdict[q.id] || 'move'
             }));
           }
-          dbuild();
+          /* One rung per verdict on you — only even turns produce one, so the
+             turn index has to be mapped onto the rung index. */
+          let RUNGOF = {}, LADDER = null;
+          function lbuild(){
+            const rungs = []; RUNGOF = {};
+            TURNS.forEach((t, n) => {
+              if (t.mode !== 'you') return;
+              RUNGOF[n] = rungs.length;
+              rungs.push({ dim: t.q.dim, w: W[t.q.dim] });
+            });
+            if (LADDER) LADDER.reset(rungs);
+            else LADDER = MMLADDER.mount(document.getElementById('dladder'),
+              { rungs, subject: "David's reactions to you", layout: 'rail' });
+          }
+          dbuild(); lbuild();
           let i=0, yA=0,yE=0,tA=0,tE=0, sd=0;
           const $=id=>document.getElementById(id);
           function pc(a,e){return a>0?Math.round(e/a*100):null;}
@@ -2508,6 +2739,7 @@
               $('stage').innerHTML = chip + '<div class="qtext">'+t.q.text+'</div>'
                 + MMQ.answerCard(t.q, t.ans, 'Your answer');
               $('act').innerHTML='<button class="btn move" onclick="DSHOW.lock()">Lock my answer</button>';
+              if (LADDER) LADDER.focus(RUNGOF[i]);
             }else{
               $('turnflag').innerHTML='Question <b>'+(i+1)+'</b> / '+total
                 +' · <b style="color:var(--spotlight-soft)">David is answering — you react</b>';
@@ -2517,7 +2749,6 @@
             }
             paint();
           }
-          function addTok(kind){ const d=document.createElement('div'); d.className='tok '+(kind==='move'?'m':'s'); d.innerHTML=kind==='move'?'<svg class="icon"><use href="#i-heart"/></svg>':'<svg class="icon"><use href="#i-x"/></svg>'; $('tokens').appendChild(d); }
           function lock(){ // you answered -> LOCKED, hold the beat, then reveal David's verdict (PRIMETIME §7)
             const t=TURNS[i]; const v=t.verdict||'move';
             MMQ.recordAnswer(t.ans);   // sync play feeds the profile (§2.7)
@@ -2526,7 +2757,7 @@
             $('rverdict').textContent='LOCKED';
             $('rmsg').textContent='Your answer is in. David is deciding…';
             setTimeout(()=>{
-              addTok(v);
+              LADDER.set(RUNGOF[i], v);
               r.className='reveal on '+v;
               $('rverdict').textContent=v==='move'?'MOVE':'STAY';
               $('rmsg').innerHTML=v==='move'?'David <b style="color:var(--move)">moved</b> on your answer. You\'re being wanted — in real time.':'David held a <b>Stay</b> here. Honest, not cruel.';
@@ -2545,7 +2776,12 @@
             sessionStorage.setItem('mm_py',py); sessionStorage.setItem('mm_pt',pt);
             location.hash = pass ? 'S-D5' : 'S-D6';
           }
-          window.DSHOW={lock,react,reset(){dbuild();i=0;yA=yE=tA=tE=sd=0;$('tokens').innerHTML='';$('reveal').className='reveal';render();}};
+          window.DSHOW={ lock, react,
+            /* exposed so the regression pass in Task 6 can compare the rail's
+               arithmetic against the score head's without replaying the board */
+            ladder:()=>LADDER,
+            reset(){ dbuild(); lbuild(); i=0; yA=yE=tA=tE=sd=0;
+                     $('reveal').className='reveal'; render(); } };
           render();
         })();
         </script>
@@ -2995,14 +3231,6 @@
           #S-F3 .half.pass .pctf{color:var(--pass); text-shadow:0 0 16px rgba(46,204,113,.4)}
           #S-F3 .gateline{flex:0 0 auto; text-align:center; font-size:9.5px; letter-spacing:.14em;
             text-transform:uppercase; color:var(--ink-faint); margin:5px 0 0}
-          /* their verdicts on YOUR answers, arriving as you play (§2.2) */
-          #S-F3 .mini{flex:0 0 auto; display:flex; gap:4px; justify-content:center;
-            padding:6px 14px 0; flex-wrap:wrap}
-          #S-F3 .minitok{width:16px; height:16px; border-radius:5px; background:rgba(255,255,255,.07);
-            border:1px solid rgba(255,255,255,.1); display:flex; align-items:center; justify-content:center;
-            font-size:9px; color:var(--ink-faint); transition:.35s var(--ease-show)}
-          #S-F3 .minitok.on.move{background:var(--move); border-color:var(--move); color:#fff}
-          #S-F3 .minitok.on.stay{background:rgba(255,255,255,.14); color:var(--ink-dim)}
           /* THE BOARD — bulb-framed, five flip slots (the Feud object) */
           #S-F3 .board{flex:0 0 auto; position:relative; margin:10px 14px 4px; padding:15px 13px;
             background:linear-gradient(180deg,var(--stage-800),var(--stage-850)); border-radius:18px;
@@ -3013,9 +3241,25 @@
           /* The board holds one slot per question — 10 under Model A, up to 15
              under Model B — so it must scroll rather than push the stage into
              the button row, and it is capped to leave room for the second
-             score row. Phase 3 replaces this with a windowed ladder. */
-          #S-F3 .board{max-height:32vh; overflow:hidden}
-          #S-F3 .slots{max-height:calc(32vh - 30px); overflow-y:auto; scrollbar-width:none}
+             score row. Phase 3 deliberately left this board alone: it tracks
+             SAMUEL's score, while the ladder tracks yours, so converting it
+             would have changed what the object means. The ladder took over
+             the .mini strip above instead.
+             The cap came down from 32vh in Phase 3's regression pass: the
+             ladder that replaced the strip is 49px tall at 10 rungs and 78px
+             at 15 (it wraps), where the strip was 22px. That difference has to
+             come from somewhere, and it was coming out of .stagef — far enough
+             that the answer card printed over the Move/Stay tickets. The board
+             already scrolls, so the cap is what gives the room back; nothing
+             about how the board behaves changes. */
+          #S-F3 .board{max-height:28vh; overflow:hidden}
+          #S-F3 .slots{max-height:calc(28vh - 30px); overflow-y:auto; scrollbar-width:none}
+          /* Short phones (SE, 8, most 16:9 Androids) start over budget before
+             the ladder is counted, so they need a deeper cut than tall ones. */
+          @media (max-height:720px){
+            #S-F3 .board{max-height:24vh}
+            #S-F3 .slots{max-height:calc(24vh - 30px)}
+          }
           #S-F3 .slots::-webkit-scrollbar{display:none}
           /* the floor must keep enough room for the answer card + buttons */
           #S-F3 .stagef{min-height:190px; overflow:visible}
@@ -3073,7 +3317,7 @@
           </div>
         </div>
         <div class="gateline">both need 70% to pass</div>
-        <div class="mini" id="fmini"></div>
+        <div id="fmini" style="flex:0 0 auto; padding:6px 14px 0"></div>
         <div class="board" id="fboard"><div class="slots" id="fslots"></div></div>
         <div class="stagef" id="fstage"></div>
         <div class="actf" id="fact"></div>
@@ -3082,7 +3326,7 @@
           /* Symmetric async (§2.1): you react to Samuel's recorded answers,
              building HIS score; his recorded verdicts on YOUR answers build
              yours, revealed one per turn as you play (§2.2). Both need 70%. */
-          let QF, TOTW;
+          let QF, TOTW, FLADDER = null;
           function fbuild(){
             QF = MMQ.buildSet().map(q => ({
               q, w: MMQ.DIMS[q.dim], ans: MMASYNC.theirAnswer(q.id)
@@ -3094,8 +3338,12 @@
               '<div class="slot"><div class="in">'
               + '<div class="face front"><b>'+(n+1)+'</b></div>'
               + '<div class="face back"></div></div></div>').join('');
-            document.getElementById('fmini').innerHTML = QF.map((t,n) =>
-              '<div class="minitok" data-i="'+n+'">'+(n+1)+'</div>').join('');
+            /* Samuel's verdicts on YOUR answers — the same ladder the arena
+               draws, laid out along the axis this strip already used. */
+            const rungs = QF.map(t => ({ dim: t.q.dim, w: t.w }));
+            if (FLADDER) FLADDER.reset(rungs);
+            else FLADDER = MMLADDER.mount(document.getElementById('fmini'),
+              { rungs, subject: "Samuel's reactions to you", layout: 'compact' });
           }
           let fi=0, gotThem=0, gotYou=0, verdicts={};
           const $=id=>document.getElementById(id);
@@ -3139,8 +3387,7 @@
             /* his verdict on YOUR answer to this question lands at the same
                beat — that is the reciprocity §2.2 wants visible during play */
             const hv = MMASYNC.theirVerdict(t.q.id);
-            const tok = document.querySelector('#S-F3 .minitok[data-i="'+fi+'"]');
-            if(tok){ tok.classList.add('on', hv); tok.textContent = hv==='move' ? '♥' : '·'; }
+            FLADDER.set(fi, hv);
             if(hv==='move') gotYou += t.w;
 
             paint();
