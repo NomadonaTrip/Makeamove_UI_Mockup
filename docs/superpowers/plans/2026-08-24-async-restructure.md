@@ -1,5 +1,15 @@
 # Async Game Restructure Implementation Plan
 
+> **Superseded in part, 2026-08-26.** Task 9 built the §2.7 async eligibility
+> gate. **That gate was rolled back** and no longer exists in `index.html`:
+> `MMQ.eligibility()`, `MMQ.ELIG_CONFIRMED`, `MMQ.ELIG_ANSWERED`,
+> `MMASYNC.lockEligibility()`, `MMASYNC.lockedEligibility()`,
+> `MMASYNC.clearEligibility()` and `MMELIG.paint()` are all gone, and `S-F1`,
+> `S-F2` and `S-F2A` render their CTAs unconditionally. Task 8's bank expansion
+> to 20 questions **stands** — `S-E6`'s confidence still needs it. This plan is
+> left as the accurate record of what was built at the time; see §2.7 of
+> `docs/superpowers/specs/2026-08-24-prompt2-decisions.md` for the current rule.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Turn the async game symmetric — both parties answer everything up front, each reacts to the other's answers, both are charged before play, a 72-hour window governs completion — gate the whole mode on knowing both people well enough, and render the mirrored-pairs reveal that Phase 1 built the data for.
