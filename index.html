@@ -716,7 +716,13 @@
      S-D2's .reveal, so it never pushes the screen's flex column. It anchors
      to `.screen` (position:absolute; index.html:64) deliberately — no mount
      div should ever get position:relative, or this gets trapped inside it
-     instead of covering the screen. */
+     instead of covering the screen. Watch out: the mount div is itself a
+     direct child of `.body`, so the entrance stagger below also puts a
+     `transform` on it — even an identity matrix left behind by that
+     animation's `both` fill-mode establishes a containing block just like
+     position:relative would. Neutralise the animation on any `.body` child
+     that hosts a `.schedgrid` so `.screen` stays the real anchor. */
+  .screen.on .body>*:has(>.schedgrid){animation:none}
   .schedgrid{position:absolute; inset:0; z-index:70; display:none;
     flex-direction:column; background:var(--paper); padding:18px 16px}
   .schedgrid.on{display:flex; animation:scin .28s var(--ease-show)}
@@ -2702,24 +2708,26 @@
             <span class="av g2 s28">T</span> Tolu &nbsp;<span style="width:14px;height:8px;border-radius:3px;background:var(--move);display:inline-block"></span> her slots &nbsp;
             <span class="av g1 s28">D</span> David &nbsp;<span style="width:14px;height:8px;border-radius:3px;background:var(--spotlight);display:inline-block"></span> yours
           </div>
-          <div class="card">
-            <div class="muted" style="font-size:12px;font-weight:700;margin-bottom:8px">SATURDAY 21 JUN</div>
-            <div class="opt sel" onclick="pick(this)" style="justify-content:space-between"><span><b>8:00 pm</b></span><span class="tag pass">✓ Mutual overlap</span></div>
-          </div>
-          <div class="card">
-            <div class="muted" style="font-size:12px;font-weight:700;margin-bottom:8px">SUNDAY 22 JUN</div>
-            <div class="opt" onclick="pick(this)" style="justify-content:space-between"><span>7:30 pm</span><span class="tag move">Tolu only</span></div>
-            <div class="opt" onclick="pick(this)" style="justify-content:space-between;margin-top:8px"><span>4:00 pm</span><span class="tag" style="background:rgba(47,107,255,.14);color:var(--spotlight)">David only</span></div>
-          </div>
-          <div class="note">A session is scheduled when one of you confirms a stated slot, or you both pick a computed overlap. The 8pm Saturday slot works for both.</div>
+          <div id="c4sched"></div>
+          <div class="note">A session is scheduled when you both land on the same time. The suggestions are the times you are both free; <b>see all times</b> opens the full week.</div>
         </div>
-        <div class="foot"><a class="btn move block" href="#S-C5">Confirm Sat · 8:00 pm</a></div>
+        <div class="foot"><a class="btn move block" href="#S-C5">Confirm & continue</a></div>
+        <script>
+        (function(){
+          /* Choose mode (spec 4.1): three best mutual times, one tap, with the
+             full week behind "see all times". */
+          MMSCHED.mount(document.getElementById('c4sched'), {
+            mode:'choose', key:'session',
+            self:{ name:'Tolu', tz:'GMT' }, other:{ name:'David', tz:'GMT' }
+          });
+        })();
+        </script>
       </section>
 
       <section class="screen paper" id="S-C5" data-group="C · Invite & schedule" data-title="Scheduled · soft-hold + CRA waiver">
         <div class="pbar"><h1>Confirm & commit</h1></div>
         <div class="body">
-          <div class="note pass">✓ Saturday 21 Jun · 8:00 pm agreed by both. This is the moment commitment bites.</div>
+          <div class="note pass" id="c5slot">✓ Agreed by both. This is the moment commitment bites.</div>
           <div class="card">
             <div style="display:flex;justify-content:space-between;align-items:center"><div style="font-weight:700">Session soft-hold</div><div class="big-num" style="font-size:22px">£0.00</div></div>
             <div class="muted" style="font-size:12px;margin-top:4px">Free during launch — your 1 free credit covers this. After the moratorium a hold is placed here and <b>captured only when you play</b>.</div>
@@ -2735,6 +2743,22 @@
           <label class="opt" style="cursor:pointer;align-items:flex-start"><input type="checkbox" checked style="width:18px;height:18px;accent-color:var(--move);margin-top:2px"> <span style="font-size:12.5px;font-weight:500">I agree to start now and <b>waive my 14-day cooling-off</b> for this scheduled session (Consumer Rights Act 2015).</span></label>
         </div>
         <div class="foot"><a class="btn move block" href="#S-D1">Lock it in</a></div>
+        <script>
+        (function(){
+          function paint(){
+            if (location.hash !== '#S-C5') return;
+            const s = MMSCHED.chosen('session');
+            const el = document.getElementById('c5slot');
+            if (!el) return;
+            el.innerHTML = s
+              ? '✓ <b>' + s.day + ' · ' + MMSCHED.fmtLine(s,'GMT','GMT') + '</b> ('
+                + MMSCHED.fmtLine(s,'GMT','WAT') + ') agreed by both. This is the moment commitment bites.'
+              : '✓ Agreed by both. This is the moment commitment bites.';
+          }
+          window.addEventListener('hashchange', paint);
+          paint();
+        })();
+        </script>
       </section>
 
       <section class="screen dark" id="S-C6" data-group="C · Invite & schedule" data-title="⚠ Invite declined">
