@@ -3,3 +3,5 @@ docs/
 .claude/
 questions.md
 prompt.md
+prompt_2.md
+*.pptx
