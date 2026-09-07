@@ -701,12 +701,18 @@
      Mounted by S-C1 (propose), S-C4 / S-E0 / S-E2A (choose). Paper surfaces
      only: every consuming screen is `paper`. */
   .sched{display:flex; flex-direction:column; gap:8px}
-  .sched .sched-slot{align-items:center}
-  .sched .sgrow{display:flex; flex-direction:column; gap:2px; flex:1; min-width:0}
-  .sched .sgrow b{font-size:13.5px; font-weight:700}
-  .sched .tzline{display:flex; flex-direction:column; gap:1px}
-  .sched .tzline span{font-size:11px; color:var(--t-dim); line-height:1.35}
-  .sched .tzline span + span{color:var(--t-faint)}
+  /* .sched-slot / .sgrow / .tzline render inside BOTH the list (a `.sched`
+     descendant) and the grid overlay (a `.schedgrid` descendant, a SIBLING
+     of `.sched`, not nested under it) — `mount()`'s slotHTML() is shared by
+     both. Scope these on their own class, not under `.sched`, or the grid's
+     copies silently fall back to unstyled defaults (tzline collapses to
+     `display:inline`, running both zone lines onto one visual line). */
+  .sched-slot{align-items:center}
+  .sgrow{display:flex; flex-direction:column; gap:2px; flex:1; min-width:0}
+  .sgrow b{font-size:13.5px; font-weight:700}
+  .tzline{display:flex; flex-direction:column; gap:1px}
+  .tzline span{font-size:11px; color:var(--t-dim); line-height:1.35}
+  .tzline span + span{color:var(--t-faint)}
   .sched .sched-more{align-self:flex-start; font-size:12.5px; font-weight:700;
     color:var(--spotlight); cursor:pointer; text-decoration:underline; background:none;
     border:0; padding:4px 0}
@@ -720,8 +726,15 @@
      direct child of `.body`, so the entrance stagger below also puts a
      `transform` on it — even an identity matrix left behind by that
      animation's `both` fill-mode establishes a containing block just like
-     position:relative would. Neutralise the animation on any `.body` child
-     that hosts a `.schedgrid` so `.screen` stays the real anchor. */
+     position:relative would (confirmed: it never reverts to `none`, so the
+     trap is permanent, not just mid-animation). Neutralise the animation on
+     any `.body` child that hosts a `.schedgrid` so `.screen` stays the real
+     anchor. The `:has(>.schedgrid)` selector below only matches when the
+     mount div is a DIRECT child of `.body` AND `.schedgrid` is a DIRECT
+     child of the mount div — nest the mount div one level deeper (e.g.
+     inside a wrapper) and this rule silently stops matching, reintroducing
+     the trap with no visible error. Any future screen mounting MMSCHED must
+     keep that direct-child shape or update this selector to match. */
   .screen.on .body>*:has(>.schedgrid){animation:none}
   .schedgrid{position:absolute; inset:0; z-index:70; display:none;
     flex-direction:column; background:var(--paper); padding:18px 16px}
