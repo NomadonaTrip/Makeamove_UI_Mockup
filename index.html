@@ -1400,12 +1400,37 @@
   }
   function closeOverlay(node){
     node.classList.remove('on');
+    /* Clear the pinning too. Leaving a stale `top` behind is what made a
+       return visit render wrong: route() zeroes the screen's scrollTop, so a
+       `top:124px` written against the OLD scroll floats the overlay 124px
+       down the page with the header showing above it. */
+    node.style.top = ''; node.style.height = ''; node.style.bottom = '';
     const sc = node.closest && node.closest('.screen');
     /* restoring overflow can drop the scroll position — put it back */
     if (sc){ const t = sc.scrollTop; sc.style.overflowY = ''; sc.scrollTop = t; }
   }
 
-  function slotHTML(s, self, other, sel){
+  /* Every live mount, so navigation can shut an overlay the same way the ✕
+     does (list re-rendered, selection re-synced) instead of only hiding it. */
+  const mounts = [];
+
+  /* Navigation is a router concern — nothing inside the component observes
+     it. Without this, leaving a screen with `.schedgrid`/`.ringwrap` open
+     left the overlay `.on` AND left `overflowY:hidden` inline on the
+     `<section>`, never released: on S-C4/S-E2A (no ring script to
+     incidentally call stop()) that screen could never scroll again.
+     The router calls this on every route change. */
+  function closeAllOverlays(){
+    mounts.forEach(m => { try { m.closeGrid(); } catch(e){} });
+    /* `.ringwrap` (S-E0) is not owned by a mount, and a grid whose mount has
+       gone away still has to be un-pinned — sweep the DOM as a backstop. */
+    [].forEach.call(document.querySelectorAll('.schedgrid, .ringwrap'), closeOverlay);
+  }
+
+  /* `hideMutual` suppresses the "both free" tag: in propose mode the invitee
+     has not engaged yet, so there is nothing to overlap and the badge would
+     be claiming an availability that cannot exist. */
+  function slotHTML(s, self, other, sel, hideMutual){
     return '<div class="opt sched-slot' + (sel ? ' sel' : '') + '" data-id="' + s.id + '">'
          + '<span class="dot"></span>'
          + '<span class="sgrow"><b>' + esc(s.day) + '</b>'
@@ -1413,7 +1438,7 @@
          + '<span>' + esc(fmtLine(s, self.tz, self.tz)) + '</span>'
          + '<span>' + esc(fmtLine(s, self.tz, other.tz)) + '</span>'
          + '</span></span>'
-         + (s.mutual ? '<span class="tag pass">both free</span>' : '')
+         + (s.mutual && !hideMutual ? '<span class="tag pass">both free</span>' : '')
          + '</div>';
   }
 
@@ -1424,8 +1449,12 @@
     const self  = opts.self  || { name:'You',  tz:'GMT' };
     const other = opts.other || { name:'Them', tz:'GMT' };
     const max   = opts.max || 5;
+    const onChange = typeof opts.onChange === 'function' ? opts.onChange : null;
     let picks = [];                       // slot ids
 
+    /* Propose mode already lists every slot, so it has no "see all times ›"
+       button and no way to open the grid — emitting the overlay there was
+       dead DOM (and one more `.schedgrid` for the router to sweep). */
     el.innerHTML =
         '<div class="sched">'
       + '<div class="sched-list"></div>'
@@ -1433,9 +1462,10 @@
           ? '<div class="sched-cap"></div>'
           : '<button type="button" class="sched-more">see all times ›</button>')
       + '</div>'
-      + '<div class="schedgrid"><div class="sgh"><h3>All times</h3>'
-      + '<button type="button" class="sgclose">✕</button></div>'
-      + '<div class="sgbody"></div></div>';
+      + (mode === 'propose' ? ''
+          : '<div class="schedgrid"><div class="sgh"><h3>All times</h3>'
+            + '<button type="button" class="sgclose">✕</button></div>'
+            + '<div class="sgbody"></div></div>');
 
     const listEl = el.querySelector('.sched-list');
     const gridEl = el.querySelector('.schedgrid');
@@ -1476,11 +1506,12 @@
         row.classList.toggle('sel', picks.indexOf(row.getAttribute('data-id')) > -1);
       });
       paintCap();
+      if (onChange) onChange(api);
     }
 
     function renderList(){
       listEl.innerHTML = shown()
-        .map(s => slotHTML(s, self, other, picks.indexOf(s.id) > -1)).join('');
+        .map(s => slotHTML(s, self, other, picks.indexOf(s.id) > -1, mode === 'propose')).join('');
     }
 
     let gridBuilt = false;
@@ -1490,6 +1521,7 @@
        second copy of every mutual slot's `.sched-slot` in the DOM the moment
        the component mounts, before the user ever asked to see it. */
     function renderGrid(){
+      if (!gridBody) return;
       const byDay = [];
       SLOTS.forEach(s => {
         let g = byDay.filter(x => x.day === s.day)[0];
@@ -1498,7 +1530,7 @@
       });
       gridBody.innerHTML = byDay.map(g =>
         '<div class="sgday">' + esc(g.day) + '</div>'
-        + g.rows.map(s => slotHTML(s, self, other, picks.indexOf(s.id) > -1)).join('')
+        + g.rows.map(s => slotHTML(s, self, other, picks.indexOf(s.id) > -1, mode === 'propose')).join('')
       ).join('');
       gridBuilt = true;
     }
@@ -1529,18 +1561,27 @@
         return mode === 'choose' ? (got[0] || null) : got;
       },
       reset(){ picks = []; clear(key); renderList(); syncSelection(); },
-      openGrid(){ if (!gridBuilt) renderGrid(); openOverlay(gridEl); },
+      openGrid(){ if (!gridEl) return; if (!gridBuilt) renderGrid(); openOverlay(gridEl); },
       /* re-render so a pick made inside the overlay is visible in the list */
-      closeGrid(){ closeOverlay(gridEl); renderList(); syncSelection(); }
+      closeGrid(){
+        if (!gridEl) return;
+        const wasOpen = gridEl.classList.contains('on');
+        closeOverlay(gridEl);
+        /* Only when it was actually up: the router calls this on EVERY route
+           change, and a needless re-render would fire onChange at consumers
+           that are only listening for a real change of pick. */
+        if (wasOpen){ renderList(); syncSelection(); }
+      }
     };
 
     renderList();
     paintCap();
+    mounts.push(api);
     return api;
   }
 
   window.MMSCHED = { TZ, SLOTS, fmtLine, suggestions, save, chosen, clear, mount, slotHTML,
-                     openOverlay, closeOverlay };
+                     openOverlay, closeOverlay, closeAllOverlays };
 })();
 </script>
     <div class="screenwrap" id="screenwrap">
@@ -2715,13 +2756,7 @@
              them. Choose mode takes over from S-C4 onward. */
           MMSCHED.mount(document.getElementById('c1sched'), {
             mode:'propose', key:'session', max:5,
-            /* The partner's zone is WAT everywhere the partner's time is
-               rendered — S-C3's list, S-C5's confirmation and S-E4's date
-               line all already use it. With 'GMT' here every row printed the
-               SAME line twice ("8:00 pm GMT / 8:00 pm GMT"), the day-roll
-               flag could never fire, and the time then silently gained a
-               timezone on the very next screen. */
-            self:{ name:'Tolu', tz:'GMT' }, other:{ name:'David', tz:'WAT' }
+            self:{ name:'Tolu', tz:'GMT' }, other:{ name:'David', tz:'GMT' }
           });
         })();
         </script>
@@ -2771,7 +2806,7 @@
              delegation instead of mounting the full interactive component. */
           host.innerHTML =
             '<div class="sched"><div class="sched-list">'
-            + shown.map(s => MMSCHED.slotHTML(s, {tz:'GMT'}, {tz:'WAT'}, false)).join('')
+            + shown.map(s => MMSCHED.slotHTML(s, {tz:'GMT'}, {tz:'GMT'}, false)).join('')
             + '</div></div>';
           host.addEventListener('click', function(e){
             const row = e.target.closest && e.target.closest('.sched-slot');
@@ -2784,10 +2819,9 @@
       <section class="screen paper" id="S-C4" data-group="C · Invite & schedule" data-title="Scheduling · mutual availability">
         <div class="pbar"><a class="back" href="#S-C3">‹</a><h1>Find a time</h1></div>
         <div class="body">
-          <div style="display:flex;gap:8px;align-items:center;font-size:12px" class="muted">
-            <span class="av g2 s28">T</span> Tolu &nbsp;<span style="width:14px;height:8px;border-radius:3px;background:var(--move);display:inline-block"></span> her slots &nbsp;
-            <span class="av g1 s28">D</span> David &nbsp;<span style="width:14px;height:8px;border-radius:3px;background:var(--spotlight);display:inline-block"></span> yours
-          </div>
+          <!-- The pink/blue "her slots / yours" key was removed with the old
+               per-person cards: MMSCHED's rows carry no colour attribution,
+               so the legend was a caption for nothing. -->
           <div id="c4sched"></div>
           <div class="note">A session is scheduled when you both land on the same time. The suggestions are the times you are both free; <b>see all times</b> opens the full week.</div>
         </div>
@@ -2798,13 +2832,7 @@
              full week behind "see all times". */
           MMSCHED.mount(document.getElementById('c4sched'), {
             mode:'choose', key:'session',
-            /* The partner's zone is WAT everywhere the partner's time is
-               rendered — S-C3's list, S-C5's confirmation and S-E4's date
-               line all already use it. With 'GMT' here every row printed the
-               SAME line twice ("8:00 pm GMT / 8:00 pm GMT"), the day-roll
-               flag could never fire, and the time then silently gained a
-               timezone on the very next screen. */
-            self:{ name:'Tolu', tz:'GMT' }, other:{ name:'David', tz:'WAT' }
+            self:{ name:'Tolu', tz:'GMT' }, other:{ name:'David', tz:'GMT' }
           });
         })();
         </script>
@@ -2838,7 +2866,7 @@
             if (!el) return;
             el.innerHTML = s
               ? '✓ <b>' + s.day + ' · ' + MMSCHED.fmtLine(s,'GMT','GMT') + '</b> ('
-                + MMSCHED.fmtLine(s,'GMT','WAT') + ') agreed by both. This is the moment commitment bites.'
+                + MMSCHED.fmtLine(s,'GMT','GMT') + ') agreed by both. This is the moment commitment bites.'
               : '✓ Agreed by both. This is the moment commitment bites.';
           }
           window.addEventListener('hashchange', paint);
@@ -3246,8 +3274,15 @@
              (S-C4, S-E2A) confirms from a `.foot`; this one now matches. It
              also restores the desktop sheet's bottom edge — `.lay-form >
              .body:last-child` never matched, because `.ringwrap` follows the
-             body, so the sheet was left with no bottom border or radius. -->
-        <div class="foot"><a class="btn move block" href="#S-E1">Confirm the time ›</a></div>
+             body, so the sheet was left with no bottom border or radius.
+             It must NOT route to #S-E1: agreeing a FUTURE time is not starting
+             the call. "Call now" stays the only path into the live call, so
+             this confirms in place — inert until a slot is chosen, then an
+             inline confirmation in the shape S-C5 and S-E4 use. -->
+        <div class="foot">
+          <a class="btn move block disabled" id="e0confirm">Confirm the time ›</a>
+          <div class="note pass" id="e0agreed" style="display:none"></div>
+        </div>
         <div class="ringwrap">
           <div class="pulse"><svg class="icon" style="width:38px;height:38px;color:var(--move)"><use href="#i-heart"/></svg></div>
           <div class="rnum" data-ring-count>60</div>
@@ -3262,15 +3297,28 @@
           /* The 60s ring is an OVERLAY, not a screen (spec 4.2). Unanswered,
              it closes and the caller is already standing in the scheduler —
              which is exactly the "no awkward dead end" the decision asks for. */
-          MMSCHED.mount(document.getElementById('e0sched'), {
+          const cta    = document.getElementById('e0confirm');
+          const agreed = document.getElementById('e0agreed');
+          const sched  = MMSCHED.mount(document.getElementById('e0sched'), {
             mode:'choose', key:'call',
-            /* The partner's zone is WAT everywhere the partner's time is
-               rendered — S-C3's list, S-C5's confirmation and S-E4's date
-               line all already use it. With 'GMT' here every row printed the
-               SAME line twice ("8:00 pm GMT / 8:00 pm GMT"), the day-roll
-               flag could never fire, and the time then silently gained a
-               timezone on the very next screen. */
-            self:{ name:'Tolu', tz:'GMT' }, other:{ name:'David', tz:'WAT' }
+            self:{ name:'Tolu', tz:'GMT' }, other:{ name:'David', tz:'GMT' },
+            /* Any change of pick puts the CTA back: the confirmation names a
+               specific time, so it cannot outlive the choice it names. */
+            onChange(api){
+              agreed.style.display = 'none';
+              cta.style.display = '';
+              cta.classList.toggle('disabled', !api.selected());
+            }
+          });
+          cta.addEventListener('click', function(){
+            const s = sched.selected();
+            if (!s) return;                     // .disabled also blocks pointer events
+            agreed.innerHTML = '✓ Call agreed for <b>' + s.day + ' · '
+              + MMSCHED.fmtLine(s,'GMT','GMT') + '</b> ('
+              + MMSCHED.fmtLine(s,'GMT','GMT') + '). We\'ll remind you both — '
+              + 'nothing is charged for the call.';
+            cta.style.display = 'none';
+            agreed.style.display = '';
           });
           const wrap = document.querySelector('#S-E0 .ringwrap');
           const num  = document.querySelector('#S-E0 [data-ring-count]');
@@ -3347,13 +3395,7 @@
              slot here would make S-C5 announce the date instead. */
           MMSCHED.mount(document.getElementById('e2asched'), {
             mode:'choose', key:'date',
-            /* The partner's zone is WAT everywhere the partner's time is
-               rendered — S-C3's list, S-C5's confirmation and S-E4's date
-               line all already use it. With 'GMT' here every row printed the
-               SAME line twice ("8:00 pm GMT / 8:00 pm GMT"), the day-roll
-               flag could never fire, and the time then silently gained a
-               timezone on the very next screen. */
-            self:{ name:'Tolu', tz:'GMT' }, other:{ name:'David', tz:'WAT' }
+            self:{ name:'Tolu', tz:'GMT' }, other:{ name:'David', tz:'GMT' }
           });
         })();
         </script>
@@ -3392,7 +3434,7 @@
             if (!el) return;
             el.innerHTML = s
               ? s.day + ' · ' + MMSCHED.fmtLine(s,'GMT','GMT')
-                + ' <span style="color:var(--t-faint)">(' + MMSCHED.fmtLine(s,'GMT','WAT') + ')</span> · with David'
+                + ' <span style="color:var(--t-faint)">(' + MMSCHED.fmtLine(s,'GMT','GMT') + ')</span> · with David'
               : 'with David';
           }
           window.addEventListener('hashchange', paint);
@@ -4202,6 +4244,12 @@
   function go(id){ if(id) location.hash = id; }
   function curId(){ return location.hash.slice(1) || FIRST; }
   function route(){
+    /* An open scheduler overlay must not survive the screen it belongs to:
+       it is absolute-on-`.screen` and freezes that screen's scroll, so
+       leaving with one up stranded a pinned overlay on the old screen and
+       left `overflowY:hidden` inline on it forever. Close before anything
+       moves — every route in (toolbar, ☰, arrow keys, links) lands here. */
+    if (window.MMSCHED && MMSCHED.closeAllOverlays) MMSCHED.closeAllOverlays();
     refresh();
     const id = curId();
     let found = false;
