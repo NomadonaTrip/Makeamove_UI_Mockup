@@ -555,9 +555,11 @@ Navigate to `#S-C1` and evaluate:
 () => {
   const host = document.querySelector('#S-C1 #c1sched .sched');
   if (!host) return { ok:false, reason:'no scheduler mounted in S-C1' };
-  const rows = [...document.querySelectorAll('#S-C1 .sched-slot')];
+  /* Scope to .sched-list: the grid overlay renders .sched-slot rows too, and
+     an unscoped query counts both lists. */
+  const rows = [...document.querySelectorAll('#S-C1 .sched-list .sched-slot')];
   rows.slice(0, 6).forEach(r => r.click());          // try 6 against a cap of 5
-  const sel = document.querySelectorAll('#S-C1 .sched-slot.sel').length;
+  const sel = document.querySelectorAll("#S-C1 .sched-list .sched-slot.sel").length;
   const cap = document.querySelector('#S-C1 .sched-cap');
 
   // S-C3's stated count must match what it actually lists.
