@@ -513,6 +513,15 @@
     .lay-form > .foot .btn.block{ max-width:360px; margin-inline:auto }
     /* the phone-sized date picker would balloon in a wide sheet — keep it tidy */
     .lay-form .cal{ max-width:430px; width:100%; margin-inline:auto }
+    /* The week-grid overlay anchors to `.screen`, which out here is the whole
+       page — so its rows stretched the full 1440px and stranded the "both
+       free" tag against the right edge, ignoring the centred sheet entirely.
+       Let the scrim stay full-bleed (it is a modal) but hold its CONTENT to
+       the same column as `.lay-form > .body`. No statusbar out here either,
+       so the 42px phone offset comes back off. */
+    .schedgrid{ padding-top:18px }
+    .schedgrid .sgh, .schedgrid .sgbody{
+      width:min(100% - 48px, var(--pagw)); margin-inline:auto }
 
     /* ============ FEED (responsive grid) ============ */
     .lay-feed{ overflow-y:auto; padding-bottom:64px }
@@ -713,6 +722,11 @@
   .tzline{display:flex; flex-direction:column; gap:1px}
   .tzline span{font-size:11px; color:var(--t-dim); line-height:1.35}
   .tzline span + span{color:var(--t-faint)}
+  /* A selected row becomes a gold (or pink) ticket — `--t-dim`/`--t-faint` are
+     greys picked for the white row and wash out on it, so the partner's time
+     went nearly unreadable exactly when it mattered. Inherit the row's ink. */
+  .opt.sel .tzline span{color:inherit}
+  .opt.sel .tzline span + span{color:inherit; opacity:.72}
   .sched .sched-more{align-self:flex-start; font-size:12.5px; font-weight:700;
     color:var(--spotlight); cursor:pointer; text-decoration:underline; background:none;
     border:0; padding:4px 0}
@@ -736,8 +750,12 @@
      the trap with no visible error. Any future screen mounting MMSCHED must
      keep that direct-child shape or update this selector to match. */
   .screen.on .body>*:has(>.schedgrid){animation:none}
+  /* padding-top clears the 34px .statusbar (index.html:60), which sits at
+     z-index 90 — ABOVE this overlay. At 18px the "All times" heading and the
+     ✕ ran straight through the clock and the battery. Mirror `.pbar`'s 42px;
+     the ≥768px block drops it back to 18px, where the statusbar is hidden. */
   .schedgrid{position:absolute; inset:0; z-index:70; display:none;
-    flex-direction:column; background:var(--paper); padding:18px 16px}
+    flex-direction:column; background:var(--paper); padding:42px 16px 18px}
   .schedgrid.on{display:flex; animation:scin .28s var(--ease-show)}
   .schedgrid .sgh{display:flex; align-items:center; justify-content:space-between;
     gap:10px; margin-bottom:10px}
@@ -1361,6 +1379,32 @@
   const esc = s => String(s).replace(/[&<>"]/g, c =>
     ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
+  /* Full-screen overlays inside a screen (`.schedgrid`, S-E0's `.ringwrap`)
+     are `position:absolute; inset:0` on `.screen`. But `.screen` is ITSELF
+     the scroll container (index.html:64, overflow-y:auto), so `inset:0`
+     resolves against its unscrolled padding box and the overlay then scrolls
+     WITH the content: scroll a screen down 50px, open the overlay, and it
+     sits 50px too high — its header and close button are clipped off the top
+     (unreachable) while the screen shows through the 50px gap underneath.
+     Pin the overlay to the visible band instead, and freeze the screen's
+     scroll while it is up so it cannot drift back out of alignment. */
+  function openOverlay(node){
+    const sc = node.closest && node.closest('.screen');
+    if (sc){
+      node.style.top    = sc.scrollTop + 'px';
+      node.style.height = sc.clientHeight + 'px';
+      node.style.bottom = 'auto';
+      sc.style.overflowY = 'hidden';
+    }
+    node.classList.add('on');
+  }
+  function closeOverlay(node){
+    node.classList.remove('on');
+    const sc = node.closest && node.closest('.screen');
+    /* restoring overflow can drop the scroll position — put it back */
+    if (sc){ const t = sc.scrollTop; sc.style.overflowY = ''; sc.scrollTop = t; }
+  }
+
   function slotHTML(s, self, other, sel){
     return '<div class="opt sched-slot' + (sel ? ' sel' : '') + '" data-id="' + s.id + '">'
          + '<span class="dot"></span>'
@@ -1398,7 +1442,22 @@
     const gridBody = el.querySelector('.sgbody');
     const capEl  = el.querySelector('.sched-cap');
 
-    function shown(){ return mode === 'propose' ? SLOTS : suggestions(3); }
+    /* Choose mode lists the three mutual suggestions — plus whatever was
+       picked in the full-week overlay, if that slot is not already one of
+       them. Without the second half, choosing "Sat 28 Jun 11:30 pm" from the
+       overlay and closing it drops you back onto three UNSELECTED rows: the
+       choice is saved and S-C5 announces it, but on screen it looks lost. */
+    function shown(){
+      if (mode === 'propose') return SLOTS;
+      const list = suggestions(3);
+      picks.forEach(id => {
+        if (!list.filter(s => s.id === id).length){
+          const s = SLOTS.filter(x => x.id === id)[0];
+          if (s) list.push(s);
+        }
+      });
+      return list;
+    }
 
     function paintCap(){
       if (!capEl) return;
@@ -1469,9 +1528,10 @@
         const got = picks.map(id => SLOTS.filter(s => s.id === id)[0]);
         return mode === 'choose' ? (got[0] || null) : got;
       },
-      reset(){ picks = []; clear(key); syncSelection(); },
-      openGrid(){ if (!gridBuilt) renderGrid(); gridEl.classList.add('on'); },
-      closeGrid(){ gridEl.classList.remove('on'); }
+      reset(){ picks = []; clear(key); renderList(); syncSelection(); },
+      openGrid(){ if (!gridBuilt) renderGrid(); openOverlay(gridEl); },
+      /* re-render so a pick made inside the overlay is visible in the list */
+      closeGrid(){ closeOverlay(gridEl); renderList(); syncSelection(); }
     };
 
     renderList();
@@ -1479,7 +1539,8 @@
     return api;
   }
 
-  window.MMSCHED = { TZ, SLOTS, fmtLine, suggestions, save, chosen, clear, mount, slotHTML };
+  window.MMSCHED = { TZ, SLOTS, fmtLine, suggestions, save, chosen, clear, mount, slotHTML,
+                     openOverlay, closeOverlay };
 })();
 </script>
     <div class="screenwrap" id="screenwrap">
@@ -2654,7 +2715,13 @@
              them. Choose mode takes over from S-C4 onward. */
           MMSCHED.mount(document.getElementById('c1sched'), {
             mode:'propose', key:'session', max:5,
-            self:{ name:'Tolu', tz:'GMT' }, other:{ name:'David', tz:'GMT' }
+            /* The partner's zone is WAT everywhere the partner's time is
+               rendered — S-C3's list, S-C5's confirmation and S-E4's date
+               line all already use it. With 'GMT' here every row printed the
+               SAME line twice ("8:00 pm GMT / 8:00 pm GMT"), the day-roll
+               flag could never fire, and the time then silently gained a
+               timezone on the very next screen. */
+            self:{ name:'Tolu', tz:'GMT' }, other:{ name:'David', tz:'WAT' }
           });
         })();
         </script>
@@ -2731,7 +2798,13 @@
              full week behind "see all times". */
           MMSCHED.mount(document.getElementById('c4sched'), {
             mode:'choose', key:'session',
-            self:{ name:'Tolu', tz:'GMT' }, other:{ name:'David', tz:'GMT' }
+            /* The partner's zone is WAT everywhere the partner's time is
+               rendered — S-C3's list, S-C5's confirmation and S-E4's date
+               line all already use it. With 'GMT' here every row printed the
+               SAME line twice ("8:00 pm GMT / 8:00 pm GMT"), the day-roll
+               flag could never fire, and the time then silently gained a
+               timezone on the very next screen. */
+            self:{ name:'Tolu', tz:'GMT' }, other:{ name:'David', tz:'WAT' }
           });
         })();
         </script>
@@ -3168,6 +3241,13 @@
           <div id="e0sched"></div>
           <div class="note">Nothing is charged for the call. <a class="link" onclick="MMCALL.ring()">demo · ring ›</a></div>
         </div>
+        <!-- Agreeing a time here had no forward step at all: the only exit was
+             the ring overlay's "he answers". Every sibling scheduling screen
+             (S-C4, S-E2A) confirms from a `.foot`; this one now matches. It
+             also restores the desktop sheet's bottom edge — `.lay-form >
+             .body:last-child` never matched, because `.ringwrap` follows the
+             body, so the sheet was left with no bottom border or radius. -->
+        <div class="foot"><a class="btn move block" href="#S-E1">Confirm the time ›</a></div>
         <div class="ringwrap">
           <div class="pulse"><svg class="icon" style="width:38px;height:38px;color:var(--move)"><use href="#i-heart"/></svg></div>
           <div class="rnum" data-ring-count>60</div>
@@ -3184,16 +3264,26 @@
              which is exactly the "no awkward dead end" the decision asks for. */
           MMSCHED.mount(document.getElementById('e0sched'), {
             mode:'choose', key:'call',
-            self:{ name:'Tolu', tz:'GMT' }, other:{ name:'David', tz:'GMT' }
+            /* The partner's zone is WAT everywhere the partner's time is
+               rendered — S-C3's list, S-C5's confirmation and S-E4's date
+               line all already use it. With 'GMT' here every row printed the
+               SAME line twice ("8:00 pm GMT / 8:00 pm GMT"), the day-roll
+               flag could never fire, and the time then silently gained a
+               timezone on the very next screen. */
+            self:{ name:'Tolu', tz:'GMT' }, other:{ name:'David', tz:'WAT' }
           });
           const wrap = document.querySelector('#S-E0 .ringwrap');
           const num  = document.querySelector('#S-E0 [data-ring-count]');
           let t = null, left = 60;
-          function stop(){ if(t){ clearInterval(t); t = null; } wrap.classList.remove('on'); }
+          /* openOverlay/closeOverlay, not classList alone: this overlay is
+             absolute-on-`.screen` and `.screen` scrolls, so at 390×667 (where
+             this screen does overflow) a raw `inset:0` overlay opens offset by
+             the scroll and leaves the screen showing through beneath it. */
+          function stop(){ if(t){ clearInterval(t); t = null; } MMSCHED.closeOverlay(wrap); }
           window.MMCALL = {
             ring(){
               left = 60; num.textContent = left;
-              wrap.classList.add('on');
+              MMSCHED.openOverlay(wrap);
               if (t) clearInterval(t);
               t = setInterval(() => {
                 left--; num.textContent = left;
@@ -3257,7 +3347,13 @@
              slot here would make S-C5 announce the date instead. */
           MMSCHED.mount(document.getElementById('e2asched'), {
             mode:'choose', key:'date',
-            self:{ name:'Tolu', tz:'GMT' }, other:{ name:'David', tz:'GMT' }
+            /* The partner's zone is WAT everywhere the partner's time is
+               rendered — S-C3's list, S-C5's confirmation and S-E4's date
+               line all already use it. With 'GMT' here every row printed the
+               SAME line twice ("8:00 pm GMT / 8:00 pm GMT"), the day-roll
+               flag could never fire, and the time then silently gained a
+               timezone on the very next screen. */
+            self:{ name:'Tolu', tz:'GMT' }, other:{ name:'David', tz:'WAT' }
           });
         })();
         </script>
