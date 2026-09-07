@@ -3089,7 +3089,7 @@
           </div>
           <p class="muted" style="max-width:30ch;margin:0 auto;line-height:1.5">Both halves cleared 70%. It's a match. Next: a 30-minute video call to feel the chemistry, then a real date.</p>
           <div class="note pass">We celebrate the <b>exit</b>, not the streak. The goal was always to get you off the app — together.</div>
-          <a class="btn pass block" href="#S-E1">Start the video call</a>
+          <a class="btn pass block" href="#S-E0">Set up the video call</a>
         </div>
       </section>
 
@@ -3137,6 +3137,81 @@
       </section>
 
       <!-- ============ GROUP E · POST-SHOW ============ -->
+      <section class="screen paper" id="S-E0" data-group="E · Post-show" data-title="Set up the video call">
+        <style>
+          #S-E0 .ringwrap{position:absolute; inset:0; z-index:80; display:none;
+            flex-direction:column; align-items:center; justify-content:center; gap:16px;
+            background:radial-gradient(70% 50% at 50% 40%, #1b2440, #0d1226); color:var(--ink); text-align:center; padding:30px}
+          #S-E0 .ringwrap.on{display:flex; animation:scin .3s ease}
+          #S-E0 .ringwrap .rnum{font-family:var(--display); font-weight:900; font-size:54px; color:var(--bulb)}
+          #S-E0 .ringwrap .rsub{font-size:13px; color:var(--ink-dim); max-width:28ch}
+          #S-E0 .ringwrap .pulse{width:96px; height:96px; border-radius:50%;
+            background:rgba(255,45,111,.18); display:flex; align-items:center; justify-content:center;
+            animation:ringpulse 1.1s ease-in-out infinite}
+          @keyframes ringpulse{50%{transform:scale(1.12); background:rgba(255,45,111,.32)}}
+          /* S-E0 is a paper screen, so plain .btn.ghost resolves to var(--t)
+             (dark navy) — invisible against this overlay's own dark gradient.
+             .dark .btn.ghost would fix it but never applies here (the SCREEN
+             is paper, not dark); mirror that rule scoped to the overlay only. */
+          #S-E0 .ringwrap .btn.ghost{border-color:rgba(255,255,255,.22); color:var(--ink)}
+        </style>
+        <div class="pbar"><h1>Set up the call</h1></div>
+        <div class="body">
+          <div class="note pass">You both cleared 70%. Next: a 30-minute video call.</div>
+          <div class="card" style="display:flex;gap:12px;align-items:center">
+            <div class="av g1 s52">D</div>
+            <div><div style="font-weight:800">Call David now</div>
+              <div class="muted" style="font-size:12px">Rings for 60 seconds. No answer, and you'll pick a time instead.</div></div>
+          </div>
+          <a class="btn move block" data-call-now onclick="MMCALL.ring()">Call now</a>
+          <div class="muted" style="font-size:12px;font-weight:700">Or agree a time</div>
+          <div id="e0sched"></div>
+          <div class="note">Nothing is charged for the call. <a class="link" onclick="MMCALL.ring()">demo · ring ›</a></div>
+        </div>
+        <div class="ringwrap">
+          <div class="pulse"><svg class="icon" style="width:38px;height:38px;color:var(--move)"><use href="#i-heart"/></svg></div>
+          <div class="rnum" data-ring-count>60</div>
+          <div class="rsub">Ringing David… we'll drop you back to scheduling if he doesn't pick up.</div>
+          <div class="btnrow">
+            <a class="btn ghost sm" onclick="MMCALL.noAnswer()">Cancel</a>
+            <a class="btn move sm" onclick="MMCALL.answer()">Demo: he answers ›</a>
+          </div>
+        </div>
+        <script>
+        (function(){
+          /* The 60s ring is an OVERLAY, not a screen (spec 4.2). Unanswered,
+             it closes and the caller is already standing in the scheduler —
+             which is exactly the "no awkward dead end" the decision asks for. */
+          MMSCHED.mount(document.getElementById('e0sched'), {
+            mode:'choose', key:'call',
+            self:{ name:'Tolu', tz:'GMT' }, other:{ name:'David', tz:'GMT' }
+          });
+          const wrap = document.querySelector('#S-E0 .ringwrap');
+          const num  = document.querySelector('#S-E0 [data-ring-count]');
+          let t = null, left = 60;
+          function stop(){ if(t){ clearInterval(t); t = null; } wrap.classList.remove('on'); }
+          window.MMCALL = {
+            ring(){
+              left = 60; num.textContent = left;
+              wrap.classList.add('on');
+              if (t) clearInterval(t);
+              t = setInterval(() => {
+                left--; num.textContent = left;
+                if (left <= 0) MMCALL.noAnswer();
+              }, 1000);
+            },
+            answer(){ stop(); location.hash = 'S-E1'; },
+            noAnswer(){ stop(); }
+          };
+          /* Leaving the screen must kill the timer, or it keeps counting and
+             yanks the user back here from wherever they navigated to. */
+          window.addEventListener('hashchange', () => {
+            if (location.hash !== '#S-E0') stop();
+          });
+        })();
+        </script>
+      </section>
+
       <section class="screen dark" id="S-E1" data-group="E · Post-show" data-title="Whereby video call">
         <div style="position:absolute;inset:0;display:flex;flex-direction:column">
           <div style="flex:1;background:linear-gradient(160deg,#1c2a52,#0e1630);display:flex;align-items:center;justify-content:center;position:relative">
@@ -3677,7 +3752,7 @@
               + '</div>').join('');
 
             document.getElementById('f4cta').innerHTML = pass
-              ? '<a class="btn pass block" href="#S-E1">Schedule the video call</a>'
+              ? '<a class="btn pass block" href="#S-E0">Schedule the video call</a>'
               : '<a class="btn primary block" href="#S-B2">Back to your matches</a>';
           }
           window.MMRESULT = { paint };
