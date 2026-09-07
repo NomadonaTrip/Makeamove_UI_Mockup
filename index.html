@@ -1460,7 +1460,7 @@
     return api;
   }
 
-  window.MMSCHED = { TZ, SLOTS, fmtLine, suggestions, save, chosen, clear, mount };
+  window.MMSCHED = { TZ, SLOTS, fmtLine, suggestions, save, chosen, clear, mount, slotHTML };
 })();
 </script>
     <div class="screenwrap" id="screenwrap">
@@ -2678,15 +2678,19 @@
           const shown = MMSCHED.SLOTS.slice(0, 4);
           document.getElementById('c3claim').textContent =
             'She proposed ' + shown.length + ' times';
-          document.getElementById('c3sched').innerHTML =
+          const host = document.getElementById('c3sched');
+          /* Share MMSCHED's own row renderer rather than hand-duplicating its
+             markup — this list is a read-only "pick one" preview (single-select
+             via the global pick(), no MMSCHED.save()), so wire the click by
+             delegation instead of mounting the full interactive component. */
+          host.innerHTML =
             '<div class="sched"><div class="sched-list">'
-            + shown.map(s =>
-                '<div class="opt sched-slot" data-id="' + s.id + '" onclick="pick(this)">'
-              + '<span class="dot"></span><span class="sgrow"><b>' + s.day + '</b>'
-              + '<span class="tzline"><span>' + MMSCHED.fmtLine(s,'GMT','GMT') + '</span>'
-              + '<span>' + MMSCHED.fmtLine(s,'GMT','WAT') + '</span></span></span></div>'
-              ).join('')
+            + shown.map(s => MMSCHED.slotHTML(s, {tz:'GMT'}, {tz:'WAT'}, false)).join('')
             + '</div></div>';
+          host.addEventListener('click', function(e){
+            const row = e.target.closest && e.target.closest('.sched-slot');
+            if (row) pick(row);
+          });
         })();
         </script>
       </section>
