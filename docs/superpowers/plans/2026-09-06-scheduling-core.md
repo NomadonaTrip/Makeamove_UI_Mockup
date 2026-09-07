@@ -471,19 +471,28 @@ Navigate to `#S-B2` and evaluate:
 
 ```js
 () => {
-  const rows = [...document.querySelectorAll('#S-B2 [data-cand]')];
-  const txt = document.getElementById('S-B2').textContent;
+  /* NEVER test a screen's textContent for a fixture string here: S-B2's
+     inline <script> is a descendant of the section, so textContent includes
+     the raw CANDIDATES source and /Lagos/ matches whether or not a card ever
+     rendered. Read the rendered cards instead. */
+  const cards = [...document.querySelectorAll('#S-B2 .card, #S-B2 .row')];
+  const names = cards.map(c => (c.textContent.match(/[A-Z][a-z]+/) || [])[0]);
+  const cities = cards.map(c => c.textContent).join(' | ');
   const imgs = [...document.querySelectorAll('#S-B2 img')];
   const broken = imgs.filter(i => i.complete && i.naturalWidth === 0).length;
   return {
-    ok: /Lagos/.test(txt) && broken === 0,
-    hasLagos: /Lagos/.test(txt), cardCount: rows.length,
-    imgCount: imgs.length, broken
+    ok: /Lagos/.test(cities) && broken === 0,
+    hasLagos: /Lagos/.test(cities), cardCount: cards.length,
+    names, imgCount: imgs.length, broken
   };
 }
 ```
 
-If `[data-cand]` matches nothing, fall back to counting `#S-B2 .row` — the assertion's load-bearing checks are `hasLagos` and `broken`.
+**Chidi is on the bench, not live**, so he will not be among the first three
+cards. To see him rendered you must drain the bench — remove live candidates
+until the backfill reaches him. If `hasLagos` is false on a fresh load, that is
+expected; drive `remove()` on the gallery and re-check rather than concluding
+the entry is missing.
 
 - [ ] **Step 2: Run it to confirm it fails**
 
