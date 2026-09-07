@@ -2624,16 +2624,21 @@
             <div class="av g1 s52">D</div><div><div style="font-weight:700">A synchronous game show</div><div class="muted" style="font-size:12px">One-on-one · 10–15 questions · ≥70% each to pass</div></div>
           </div>
           <label class="muted" style="font-size:12px;font-weight:700">Propose up to 5 times that work for you</label>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <div class="opt sel" onclick="pick(this)"><span class="dot"></span>Sat 21 Jun · 8:00 pm</div>
-            <div class="opt sel" onclick="pick(this)"><span class="dot"></span>Sun 22 Jun · 7:30 pm</div>
-            <div class="opt sel" onclick="pick(this)"><span class="dot"></span>Tue 24 Jun · 9:00 pm</div>
-            <div class="opt sel" onclick="pick(this)"><span class="dot"></span>Thu 26 Jun · 8:30 pm</div>
-            <div class="opt" onclick="pick(this)"><span class="dot"></span><svg class="icon"><use href="#i-plus"/></svg> add a fifth slot</div>
-          </div>
+          <div id="c1sched"></div>
           <div class="note info">David has <b>24 hours</b> to accept and agree a time. He'll only see your photo and a few details until he does.</div>
         </div>
         <div class="foot"><a class="btn move block" href="#S-C2">Send invite</a></div>
+        <script>
+        (function(){
+          /* Propose mode (spec 4.1): the invitee has not engaged yet, so there
+             is nothing to overlap — you state your own times and S-C3 receives
+             them. Choose mode takes over from S-C4 onward. */
+          MMSCHED.mount(document.getElementById('c1sched'), {
+            mode:'propose', key:'session', max:5,
+            self:{ name:'Tolu', tz:'GMT' }, other:{ name:'David', tz:'GMT' }
+          });
+        })();
+        </script>
       </section>
 
       <section class="screen dark" id="S-C2" data-group="C · Invite & schedule" data-title="Invite sent · 24h consent">
@@ -2660,14 +2665,30 @@
             <div class="av g2 s72">T</div>
             <div><div style="font-weight:800;font-size:18px">Tolu, 37</div><div class="muted" style="font-size:13px">Project manager · 2 kids · London</div><div style="margin-top:6px"><span class="tag pass">Family fit</span> <span class="tag">AA</span></div></div>
           </div>
-          <h2 class="scrn" style="font-size:22px">She proposed 4 times</h2>
+          <h2 class="scrn" style="font-size:22px" id="c3claim">She proposed 4 times</h2>
           <p class="muted" style="font-size:12.5px;margin-top:-6px">Pick one, or offer your own — you'll see when you both overlap.</p>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <div class="opt" onclick="pick(this)"><span class="dot"></span>Sat 21 Jun · 8:00 pm</div>
-            <div class="opt" onclick="pick(this)"><span class="dot"></span>Sun 22 Jun · 7:30 pm</div>
-          </div>
+          <div id="c3sched"></div>
         </div>
         <div class="foot"><a class="btn move block" href="#S-C4">Choose a time</a><a class="link center" href="#S-C6">Decline politely</a></div>
+        <script>
+        (function(){
+          /* David's side. He picks from what Tolu proposed, so the count in the
+             heading is derived — a hardcoded "4" would drift the moment the
+             fixture changes. */
+          const shown = MMSCHED.SLOTS.slice(0, 4);
+          document.getElementById('c3claim').textContent =
+            'She proposed ' + shown.length + ' times';
+          document.getElementById('c3sched').innerHTML =
+            '<div class="sched"><div class="sched-list">'
+            + shown.map(s =>
+                '<div class="opt sched-slot" data-id="' + s.id + '" onclick="pick(this)">'
+              + '<span class="dot"></span><span class="sgrow"><b>' + s.day + '</b>'
+              + '<span class="tzline"><span>' + MMSCHED.fmtLine(s,'GMT','GMT') + '</span>'
+              + '<span>' + MMSCHED.fmtLine(s,'GMT','WAT') + '</span></span></span></div>'
+              ).join('')
+            + '</div></div>';
+        })();
+        </script>
       </section>
 
       <section class="screen paper" id="S-C4" data-group="C · Invite & schedule" data-title="Scheduling · mutual availability">
