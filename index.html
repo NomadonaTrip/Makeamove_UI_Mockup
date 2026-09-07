@@ -2257,6 +2257,16 @@
       pid:'1617244147299-5ef406921c35',
       bands:benchBands(38,'n','You live in the UK · he lives in Ireland — different country',
                        62,'You are 40 · he is 42 — inside your stated 38–48 range',
+                       B('y','You both hold a postgraduate qualification','profile')) },
+
+    { id:'chidi', name:'Chidi', age:44, city:'Lagos',
+      blurb:'Civil engineer · 1 kid · Lagos',
+      /* Placeholder portrait: this reuses bode's Unsplash id rather than
+         inventing one, because PHOTO() builds the URL directly and a wrong
+         id renders a broken image. Swap for a hand-picked photo. */
+      pid:'1617244147299-5ef406921c35',
+      bands:benchBands(34,'n','You live in London · he lives in Lagos — different country, and an hour ahead',
+                       56,'You are 40 · he is 44 — inside your stated 38–48 range',
                        B('y','You both hold a postgraduate qualification','profile')) }
   ];
 
@@ -2282,7 +2292,7 @@
   /* ---- state ---- */
   const KEY = 'mm_cand';
   const DEFAULT = { live:['david','samuel','marcus'],
-                    bench:['tunde','emeka','kwame','ifeanyi','bode'],
+                    bench:['tunde','emeka','kwame','ifeanyi','bode','chidi'],
                     removed:[] };
   let state;
   const byId = id => CANDIDATES.find(c => c.id === id);
