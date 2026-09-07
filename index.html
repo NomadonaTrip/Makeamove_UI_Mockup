@@ -1250,6 +1250,66 @@
   window.MMLADDER = { PTS, GATE_FRAC, model, mount };
 })();
 </script>
+    <script id="mmsched">
+/* ===== MMSCHED — one scheduler, reused everywhere
+   Spec: docs/superpowers/specs/2026-09-06-scheduling-core-design.md (Cluster 4).
+   Fixtures, not an availability engine: this is a frontend mockup and every
+   "system-computed" time here is a fixture presented as if computed. */
+(function(){
+  const TZ = { GMT: 0, WAT: 1 };
+
+  /* A week of candidate times. `mutual` marks the ones choose mode surfaces
+     as suggestions — the top three are the "best mutual times" of spec 4.1. */
+  const SLOTS = [
+    { id:'sat-2000', day:'Sat 21 Jun', time:'20:00', mutual:true  },
+    { id:'sun-1930', day:'Sun 22 Jun', time:'19:30', mutual:true  },
+    { id:'tue-2100', day:'Tue 24 Jun', time:'21:00', mutual:true  },
+    { id:'sun-1600', day:'Sun 22 Jun', time:'16:00', mutual:false },
+    { id:'thu-2030', day:'Thu 26 Jun', time:'20:30', mutual:false },
+    { id:'fri-1800', day:'Fri 27 Jun', time:'18:00', mutual:false },
+    { id:'sat-1300', day:'Sat 28 Jun', time:'13:00', mutual:false },
+    { id:'sat-2330', day:'Sat 28 Jun', time:'23:30', mutual:false }
+  ];
+
+  const pad = n => (n < 10 ? '0' : '') + n;
+
+  /* 24h -> 12h display. 00:00 reads "12:00 am", 12:00 reads "12:00 pm". */
+  function clock(h, m){
+    const ap = h < 12 ? 'am' : 'pm';
+    let hr = h % 12; if (hr === 0) hr = 12;
+    return hr + ':' + pad(m) + ' ' + ap;
+  }
+
+  /* A slot's `time` is stated in `fromTz`. Render it in `toTz`, flagging the
+     day roll — a 23:30 GMT slot is half past midnight the NEXT day in Lagos,
+     and hiding that is exactly the missed-session class of bug 4.4 exists
+     to prevent. */
+  function fmtLine(slot, fromTz, toTz){
+    const delta = (TZ[toTz] || 0) - (TZ[fromTz] || 0);
+    const parts = slot.time.split(':');
+    let h = +parts[0] + delta; const m = +parts[1];
+    let roll = 0;
+    if (h >= 24){ h -= 24; roll = 1; }
+    if (h < 0)  { h += 24; roll = -1; }
+    return clock(h, m) + ' ' + toTz
+         + (roll > 0 ? ' (+1d)' : roll < 0 ? ' (−1d)' : '');
+  }
+
+  const suggestions = n => SLOTS.filter(s => s.mutual).slice(0, n || 3);
+
+  /* One key per scheduling purpose. The session, the call and the date are
+     different facts; a shared key makes picking one silently rewrite another. */
+  const K = k => 'mm_slot_' + (k || 'session');
+  function save(key, slot){ sessionStorage.setItem(K(key), JSON.stringify(slot)); }
+  function chosen(key){
+    try { return JSON.parse(sessionStorage.getItem(K(key))); }
+    catch(e){ return null; }
+  }
+  function clear(key){ sessionStorage.removeItem(K(key)); }
+
+  window.MMSCHED = { TZ, SLOTS, fmtLine, suggestions, save, chosen, clear };
+})();
+</script>
     <div class="screenwrap" id="screenwrap">
       <!-- ============ GROUP A · ONBOARDING ============ -->
       <section class="screen dark" id="S-A1" data-group="A · Onboarding" data-title="Landing / referral">
