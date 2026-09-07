@@ -696,6 +696,38 @@
   .ladder[data-layout="compact"] .lgate.dim{border-left-color:var(--ink-faint)}
   .ladder[data-layout="compact"] .lhead{display:none}
   .ladder[data-layout="compact"] .lfoot{text-align:center; font-size:10px}
+
+  /* ===== scheduler — one component, two modes (spec 2026-09-06, Cluster 4)
+     Mounted by S-C1 (propose), S-C4 / S-E0 / S-E2A (choose). Paper surfaces
+     only: every consuming screen is `paper`. */
+  .sched{display:flex; flex-direction:column; gap:8px}
+  .sched .sched-slot{align-items:center}
+  .sched .sgrow{display:flex; flex-direction:column; gap:2px; flex:1; min-width:0}
+  .sched .sgrow b{font-size:13.5px; font-weight:700}
+  .sched .tzline{display:flex; flex-direction:column; gap:1px}
+  .sched .tzline span{font-size:11px; color:var(--t-dim); line-height:1.35}
+  .sched .tzline span + span{color:var(--t-faint)}
+  .sched .sched-more{align-self:flex-start; font-size:12.5px; font-weight:700;
+    color:var(--spotlight); cursor:pointer; text-decoration:underline; background:none;
+    border:0; padding:4px 0}
+  .sched .sched-cap{font-size:11.5px; color:var(--t-faint)}
+  .sched .sched-cap.hit{color:var(--warn); font-weight:700}
+  /* the full week grid, as an overlay within its screen — same pattern as
+     S-D2's .reveal, so it never pushes the screen's flex column. It anchors
+     to `.screen` (position:absolute; index.html:64) deliberately — no mount
+     div should ever get position:relative, or this gets trapped inside it
+     instead of covering the screen. */
+  .schedgrid{position:absolute; inset:0; z-index:70; display:none;
+    flex-direction:column; background:var(--paper); padding:18px 16px}
+  .schedgrid.on{display:flex; animation:scin .28s var(--ease-show)}
+  .schedgrid .sgh{display:flex; align-items:center; justify-content:space-between;
+    gap:10px; margin-bottom:10px}
+  .schedgrid .sgh h3{font-family:var(--display); font-size:17px; margin:0}
+  .schedgrid .sgclose{border:0; background:var(--paper-2); border-radius:9px;
+    width:32px; height:32px; font-size:16px; cursor:pointer; color:var(--t-dim)}
+  .schedgrid .sgbody{flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:8px}
+  .schedgrid .sgday{font-size:11px; font-weight:700; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--t-faint); margin-top:6px}
 </style>
 </head>
 <body>
@@ -1307,7 +1339,128 @@
   }
   function clear(key){ sessionStorage.removeItem(K(key)); }
 
-  window.MMSCHED = { TZ, SLOTS, fmtLine, suggestions, save, chosen, clear };
+  const esc = s => String(s).replace(/[&<>"]/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  function slotHTML(s, self, other, sel){
+    return '<div class="opt sched-slot' + (sel ? ' sel' : '') + '" data-id="' + s.id + '">'
+         + '<span class="dot"></span>'
+         + '<span class="sgrow"><b>' + esc(s.day) + '</b>'
+         + '<span class="tzline">'
+         + '<span>' + esc(fmtLine(s, self.tz, self.tz)) + '</span>'
+         + '<span>' + esc(fmtLine(s, self.tz, other.tz)) + '</span>'
+         + '</span></span>'
+         + (s.mutual ? '<span class="tag pass">both free</span>' : '')
+         + '</div>';
+  }
+
+  function mount(el, opts){
+    opts = opts || {};
+    const mode  = opts.mode === 'propose' ? 'propose' : 'choose';
+    const key   = opts.key || 'session';
+    const self  = opts.self  || { name:'You',  tz:'GMT' };
+    const other = opts.other || { name:'Them', tz:'GMT' };
+    const max   = opts.max || 5;
+    let picks = [];                       // slot ids
+
+    el.innerHTML =
+        '<div class="sched">'
+      + '<div class="sched-list"></div>'
+      + (mode === 'propose'
+          ? '<div class="sched-cap"></div>'
+          : '<button type="button" class="sched-more">see all times ›</button>')
+      + '</div>'
+      + '<div class="schedgrid"><div class="sgh"><h3>All times</h3>'
+      + '<button type="button" class="sgclose">✕</button></div>'
+      + '<div class="sgbody"></div></div>';
+
+    const listEl = el.querySelector('.sched-list');
+    const gridEl = el.querySelector('.schedgrid');
+    const gridBody = el.querySelector('.sgbody');
+    const capEl  = el.querySelector('.sched-cap');
+
+    function shown(){ return mode === 'propose' ? SLOTS : suggestions(3); }
+
+    function paintCap(){
+      if (!capEl) return;
+      capEl.textContent = picks.length + ' of ' + max + ' times chosen';
+      capEl.classList.toggle('hit', picks.length >= max);
+    }
+
+    /* Selection state is reflected by toggling `.sel` on whatever
+       `.sched-slot` rows already exist in the DOM (list and, once built,
+       grid) rather than re-rendering markup on every tap. A tap can arrive
+       in a fast burst (propose mode lets several rows be picked before the
+       DOM has to change shape at all) and rebuilding innerHTML on every one
+       would detach not-yet-tapped rows out from under their own listeners. */
+    function syncSelection(){
+      [...el.querySelectorAll('.sched-slot')].forEach(row => {
+        row.classList.toggle('sel', picks.indexOf(row.getAttribute('data-id')) > -1);
+      });
+      paintCap();
+    }
+
+    function renderList(){
+      listEl.innerHTML = shown()
+        .map(s => slotHTML(s, self, other, picks.indexOf(s.id) > -1)).join('');
+    }
+
+    let gridBuilt = false;
+    /* The grid shows every slot, grouped by day, and reflects the same
+       selection — it is the same list, not a second one. Built once, lazily,
+       the first time it's opened: building it eagerly at mount would put a
+       second copy of every mutual slot's `.sched-slot` in the DOM the moment
+       the component mounts, before the user ever asked to see it. */
+    function renderGrid(){
+      const byDay = [];
+      SLOTS.forEach(s => {
+        let g = byDay.filter(x => x.day === s.day)[0];
+        if (!g){ g = { day:s.day, rows:[] }; byDay.push(g); }
+        g.rows.push(s);
+      });
+      gridBody.innerHTML = byDay.map(g =>
+        '<div class="sgday">' + esc(g.day) + '</div>'
+        + g.rows.map(s => slotHTML(s, self, other, picks.indexOf(s.id) > -1)).join('')
+      ).join('');
+      gridBuilt = true;
+    }
+
+    function toggle(id){
+      const at = picks.indexOf(id);
+      if (mode === 'choose'){
+        picks = [id];
+        save(key, SLOTS.filter(s => s.id === id)[0]);
+      } else if (at > -1){
+        picks.splice(at, 1);
+      } else if (picks.length < max){
+        picks.push(id);
+      }
+      syncSelection();
+    }
+
+    el.addEventListener('click', e => {
+      const row = e.target.closest && e.target.closest('.sched-slot');
+      if (row){ toggle(row.getAttribute('data-id')); return; }
+      if (e.target.closest && e.target.closest('.sched-more')) api.openGrid();
+      if (e.target.closest && e.target.closest('.sgclose'))    api.closeGrid();
+    });
+
+    const api = {
+      selected(){
+        const got = picks.map(id => SLOTS.filter(s => s.id === id)[0]);
+        return mode === 'choose' ? (got[0] || null) : got;
+      },
+      reset(){ picks = []; clear(key); syncSelection(); },
+      openGrid(){ if (!gridBuilt) renderGrid(); gridEl.classList.add('on'); },
+      closeGrid(){ gridEl.classList.remove('on'); }
+    };
+
+    renderList();
+    paintCap();
+    return api;
+  }
+
+  window.MMSCHED = { TZ, SLOTS, fmtLine, suggestions, save, chosen, clear, mount };
 })();
 </script>
     <div class="screenwrap" id="screenwrap">
