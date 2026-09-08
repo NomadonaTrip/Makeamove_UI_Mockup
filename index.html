@@ -3630,6 +3630,7 @@
             if(exchanged){ reason = null;
               document.querySelectorAll('#numWhy .opt[data-why]')
                 .forEach(o => o.classList.remove('sel'));
+              document.getElementById('numNote').value = '';
             }
             sync();
           }
@@ -3764,6 +3765,9 @@
             paint();
           }
           window.MMCONF = { paint, paintDiv, reject };
+          window.addEventListener('hashchange', () => {
+            if(location.hash === '#S-E6') paint();
+          });
           paint();
         })();
         </script>
@@ -3798,8 +3802,21 @@
             const mine = {};
             ans.forEach(a => { mine[a.qid] = a; });
 
+            /* Divergence cards on S-E6 are computed over ALL answers, not just
+               the default set (spec 5.3 finding). Any answered question that
+               backs a divergence but sits outside the set still needs a row
+               here, or the trail goes silent on the exact claims it exists to
+               back up. */
+            const setIds = new Set(set.map(q => q.id));
+            const extra = ans.filter(a => !setIds.has(a.qid))
+                              .map(a => MMQ.qById(a.qid))
+                              .filter(Boolean);
+
             let answered = 0, verdicts = 0;
-            const html = set.map(q => {
+
+            /* One row-builder shared by the default set and the appended
+               extras — duplicating this would be its own bug. */
+            function row(q){
               const a = mine[q.id];
               const v = MMQ.DEMO.verdict[q.id] || null;
               if(a) answered++;
@@ -3839,11 +3856,18 @@
                            + a.why + '</span></div>' : '')
                 + '<span class="mr-flag' + (agrees ? ' soft' : '') + '">' + inference + '</span>'
                 + '</div>';
-            }).join('');
+            }
+
+            let html = set.map(row).join('');
+            if(extra.length){
+              html += '<div class="eyebrow" style="margin-top:14px">Answered in earlier sets</div>'
+                    + extra.map(row).join('');
+            }
 
             host.innerHTML = html;
+            const total = set.length + extra.length;
             document.getElementById('trailHead').textContent =
-              set.length + ' questions · ' + answered + ' answered · ' + verdicts + ' with a verdict';
+              total + ' questions · ' + answered + ' answered · ' + verdicts + ' with a verdict';
           }
           window.MMTRAIL = { paint };
           window.addEventListener('hashchange', () => {
@@ -3942,7 +3966,7 @@
           <h2 class="scrn" style="font-size:28px;max-width:16ch;margin:0 auto">Tolu isn't taking this one further.</h2>
           <p class="muted" style="max-width:32ch;margin:0 auto;line-height:1.55">She wrote you a reason. We haven't edited it or softened it — these are her words.</p>
           <div class="card" style="text-align:left">
-            <div class="eyebrow" style="color:var(--bulb)">In her words</div>
+            <div class="eyebrow" style="color:var(--bulb)" id="e9eyebrow">In her words</div>
             <div id="e9reason" class="e9quote"></div>
           </div>
           <div class="note">No penalty, nothing charged, and your karma is untouched. Being passed on after a good call is ordinary — it costs you nothing here.</div>
@@ -3970,8 +3994,11 @@
             let stored = null;
             try { stored = JSON.parse(sessionStorage.getItem('mm_decline_reason')); }
             catch(e){ stored = null; }
-            const text = (stored && stored.text) ? stored.text : FALLBACK;
+            const isReal = !!(stored && stored.text);
+            const text = isReal ? stored.text : FALLBACK;
             host.textContent = text;          // never innerHTML — see above
+            const eyebrow = document.getElementById('e9eyebrow');
+            if(eyebrow) eyebrow.textContent = isReal ? 'In her words' : 'Sample — in her words';
           }
           window.MMDECLINERECV = { paint };
           window.addEventListener('hashchange', () => {
