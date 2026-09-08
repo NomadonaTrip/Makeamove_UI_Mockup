@@ -2341,7 +2341,7 @@
           <div class="field"><label>What are your dislikes or turn-offs?</label><textarea class="textarea">Lateness. Checking your phone mid-conversation.</textarea></div>
           <div class="note">Seeds your <b>Lifestyle</b> and <b>Values</b> dimension weights — and gives the show sharper questions.</div>
         </div>
-        <div class="foot"><a class="btn primary block" href="#S-A9">Save · back to profile</a></div>
+        <div class="foot"><a class="btn primary block" href="#S-A9" onclick="MMKARMA.emit('ev-p3','complete',6,'Completed Personality &amp; lifestyle')">Save · back to profile</a></div>
       </section>
 
       <section class="screen paper" id="S-P4" data-group="A · Onboarding" data-title="Profile · Love &amp; intimacy">
@@ -2358,7 +2358,7 @@
             <div style="display:flex;flex-direction:column;gap:8px"><div class="opt" onclick="pick(this)"><span class="dot"></span>Sex while dating</div><div class="opt" onclick="pick(this)"><span class="dot"></span>Wait till after marriage</div><div class="opt sel" onclick="pick(this)"><span class="dot"></span>Either works</div></div>
           </div>
         </div>
-        <div class="foot"><a class="btn primary block" href="#S-A9">Save · back to profile</a></div>
+        <div class="foot"><a class="btn primary block" href="#S-A9" onclick="MMKARMA.emit('ev-p4','complete',6,'Completed Love &amp; intimacy')">Save · back to profile</a></div>
       </section>
 
       <section class="screen paper" id="S-P5" data-group="A · Onboarding" data-title="Profile · Marriage &amp; family">
@@ -2458,7 +2458,15 @@
           }
           /* Attempts are budgeted per submission (spec 1.3), so a new
              submission starts with a full three. */
-          function submit(){ sessionStorage.removeItem('mm_deck_used'); render(); }
+          function submit(){
+            sessionStorage.removeItem('mm_deck_used');
+            /* §6.2 completeness — authoring custom questions. Guarded on the
+               deck being non-empty: submit() also runs on an empty deck, where
+               it only clears the attempt budget, and crediting her for
+               submitting nothing would be a lie the ledger then displays. */
+            if(MMQ.deck().length) MMKARMA.emit('ev-deck','complete',5,'Submitted your question deck');
+            render();
+          }
 
           /* The index is the only thing that crosses the markup boundary, so
              quotes, backslashes and angle brackets in a question can never
@@ -3907,6 +3915,9 @@
               exchanged, reason,
               note: (document.getElementById('numNote') || {}).value || ''
             }));
+            /* §6.2 honest feedback. After the ready() gate, so an abandoned
+               half-filled review earns nothing. */
+            MMKARMA.emit('ev-review','feedback',5,'Answered the post-date review in full');
             return true;
           }
           window.MMNUM = { pick, why, submit };
@@ -4017,6 +4028,10 @@
             const out = rejected();
             if(out.indexOf(p) === -1) out.push(p);
             sessionStorage.setItem('mm_conf_rejected', JSON.stringify(out));
+            /* §6.2 names this one outright — "correcting wrong inferences on
+               S-E6". One row however many probes she corrects; the emit id is
+               fixed, so the second call is a no-op. */
+            MMKARMA.emit('ev-conf-reject','complete',3,'Corrected what we inferred about you');
             paint();
           }
           window.MMCONF = { paint, paintDiv, reject };
@@ -4206,6 +4221,11 @@
             warn().style.display = 'none';
             sessionStorage.setItem('mm_decline_reason',
               JSON.stringify({ text:t, at:Date.now() }));
+            /* §6.2 honest feedback. Below the reviewReason gate on purpose —
+               mush and cruelty return early above, so only a reason that
+               actually reaches David earns anything. The text she wrote is
+               NOT passed to emit(); the ledger stores only this fixed label. */
+            MMKARMA.emit('ev-decline','feedback',5,'Wrote a real reason when you passed on someone');
             return true;
           }
 
@@ -4554,6 +4574,9 @@
             const them = s.them, you = s.you;
             const pass = them>=70 && you>=70;
             MMASYNC.saveResult({ you, them, verdicts });
+            /* §6.2 responsiveness. Hers: this board is Tolu's side of the
+               async game — the partner here is Samuel. */
+            MMKARMA.emit('ev-board','responds',4,'Finished your async board inside the window');
             $('fboard').classList.add('done');
             $('fstage').innerHTML='<div class="qbar" style="text-align:center">Board complete.</div>'
               +'<div class="wnote">'+(pass
