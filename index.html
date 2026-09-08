@@ -3696,6 +3696,89 @@
         </script>
       </section>
 
+      <section class="screen dark" id="S-E6A" data-group="E · Post-show" data-title="Evidence trail">
+        <div class="pbar"><a class="back" href="#S-E6">‹</a><h1 style="font-size:18px">The evidence trail</h1></div>
+        <div class="body">
+          <div class="note gold">Every question you've answered, what you picked, how the other person reacted, and what we took from it. Summary on the last screen; receipts here.</div>
+          <div class="card">
+            <div class="eyebrow" style="color:var(--bulb)" id="trailHead"></div>
+            <div id="trailRows" style="margin-top:8px"></div>
+          </div>
+        </div>
+        <div class="foot"><a class="btn ghost block" href="#S-E6">‹ Back to your profile</a></div>
+        <script>
+        (function(){
+          /* §5.3 — "summary by default, receipts on demand". Rows reuse
+             .mirrorrow from the async reveal: already themed for dark and
+             paper, and already shaped as question-plus-labelled-sides.
+
+             Two states render honestly rather than falling back to a default,
+             exactly as S-F4 does: an answered question with no verdict, and a
+             question in the set that was never answered. Filling either with a
+             default would imply an answer nobody gave (§2.7).
+
+             Probe display names come from MMQ.probeName — S-E6 and this screen
+             both need them, and a local copy would drift. */
+          function paint(){
+            const host = document.getElementById('trailRows'); if(!host) return;
+            const set = MMQ.buildSet(), ans = MMQ.answers();
+            const mine = {};
+            ans.forEach(a => { mine[a.qid] = a; });
+
+            let answered = 0, verdicts = 0;
+            const html = set.map(q => {
+              const a = mine[q.id];
+              const v = MMQ.DEMO.verdict[q.id] || null;
+              if(a) answered++;
+              if(a && v) verdicts++;
+
+              if(!a){
+                return '<div class="mirrorrow" data-qid="' + q.id + '" data-answered="false">'
+                  + '<div class="mr-q">' + q.text + '</div>'
+                  + '<div class="mr-side mr-none"><span><span class="mr-who">You:</span> '
+                  + 'not answered yet</span><span class="mr-v">—</span></div>'
+                  + '</div>';
+              }
+
+              /* What we took from it: which probe it feeds, and whether it sits
+                 with your other answers on that probe or against them. */
+              const m = MMQ.majority(q.probe, ans);
+              const same = (ans.filter(x => {
+                const qq = MMQ.qById(x.qid); return qq && qq.probe === q.probe;
+              }).length) - 1;
+              const agrees = q.opts[a.opt].v === m.v;
+              const inference = MMQ.probeName(q.probe)
+                + (same === 0 ? ' · the only answer we have on this'
+                   : agrees ? ' · agrees with your other ' + same +
+                              (same === 1 ? ' answer' : ' answers')
+                            : ' · pulls against your other ' + same +
+                              (same === 1 ? ' answer' : ' answers'));
+
+              return '<div class="mirrorrow" data-qid="' + q.id + '" data-answered="true">'
+                + '<div class="mr-q">' + q.text + '</div>'
+                + '<div class="mr-side"><span><span class="mr-who">You:</span> '
+                + q.opts[a.opt].t + '</span>'
+                + (v ? '<span class="mr-v ' + v + '">he ' + v + 's</span>'
+                     : '<span class="mr-v">no verdict yet</span>') + '</div>'
+                + (a.why ? '<div class="mr-side"><span><span class="mr-who">In your words:</span> '
+                           + a.why + '</span></div>' : '')
+                + '<span class="mr-flag' + (agrees ? ' soft' : '') + '">' + inference + '</span>'
+                + '</div>';
+            }).join('');
+
+            host.innerHTML = html;
+            document.getElementById('trailHead').textContent =
+              set.length + ' questions · ' + answered + ' answered · ' + verdicts + ' with a verdict';
+          }
+          window.MMTRAIL = { paint };
+          window.addEventListener('hashchange', () => {
+            if(location.hash === '#S-E6A') paint();
+          });
+          paint();
+        })();
+        </script>
+      </section>
+
       <section class="screen dark" id="S-E7" data-group="E · Post-show" data-title="Referral">
         <div class="body" style="justify-content:center;text-align:center;gap:18px;padding:40px 26px">
           <div style="font-size:40px"><svg class="icon" style="width:40px;height:40px;color:var(--move)"><use href="#i-mailheart"/></svg></div>
@@ -4487,7 +4570,7 @@
   let _classified = false;
   function classify(){
     if(_classified) return;
-    const FEED = new Set(['S-B2','S-E3','S-E4','S-A8','S-H1','S-G3','S-H5','S-QD1']);
+    const FEED = new Set(['S-B2','S-E3','S-E4','S-E6A','S-A8','S-H1','S-G3','S-H5','S-QD1']);
     const IMMERSIVE = new Set(['S-D2','S-E1']);
     SCREENS.forEach(s=>{
       let lay;
@@ -4729,6 +4812,7 @@
     setDepth(d){
       MMQ.setProfileDepth(d); MMDEV.paint();
       if(window.MMCONF)  MMCONF.paint();
+      if(window.MMTRAIL) MMTRAIL.paint();
     }
   };
   MMDEV.paint();
