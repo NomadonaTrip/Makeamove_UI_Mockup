@@ -3584,10 +3584,79 @@
         <div class="pbar"><h1>How did it go?</h1></div>
         <div class="body">
           <div class="card center"><div style="font-size:30px;letter-spacing:6px">★★★★★</div><div class="muted" style="font-size:12px;margin-top:6px">Rate your date with David</div></div>
+          <div class="field">
+            <label>Did you exchange numbers? <span class="muted" style="font-weight:400">(required)</span></label>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div class="opt" data-num="yes" onclick="MMNUM.pick(this)"><span class="dot"></span>Yes — we swapped numbers</div>
+              <div class="opt" data-num="no" onclick="MMNUM.pick(this)"><span class="dot"></span>No, we didn't</div>
+            </div>
+          </div>
+          <div id="numWhy" style="display:none">
+            <div class="field">
+              <label>What stopped it?</label>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div class="opt" data-why="didnt-get-to-it" onclick="MMNUM.why(this)"><span class="dot"></span>We just didn't get to it</div>
+                <div class="opt" data-why="not-interested" onclick="MMNUM.why(this)"><span class="dot"></span>I wasn't interested</div>
+                <div class="opt" data-why="they-werent" onclick="MMNUM.why(this)"><span class="dot"></span>They didn't seem interested</div>
+                <div class="opt" data-why="keep-in-app" onclick="MMNUM.why(this)"><span class="dot"></span>I'd rather keep it in-app for now</div>
+                <div class="opt" data-why="uncomfortable" onclick="MMNUM.why(this)"><span class="dot"></span>I didn't feel comfortable</div>
+                <div class="opt" data-why="other" onclick="MMNUM.why(this)"><span class="dot"></span>Something else</div>
+              </div>
+            </div>
+            <div class="field"><label>Anything to add? (optional)</label><textarea class="textarea" id="numNote" placeholder="Only we see this."></textarea></div>
+          </div>
           <div class="field"><label>A line for us (private)</label><textarea class="textarea">Honestly the best first date in years. We're seeing each other again Friday.</textarea></div>
           <div class="row"><span><svg class="icon" style="width:20px;height:20px"><use href="#i-flag"/></svg></span><div class="grow"><div class="t1">Report a concern</div><div class="t2">Safety issue, misconduct, or a bad actor</div></div><a class="link" href="#S-I1">Report</a></div>
         </div>
-        <div class="foot"><a class="btn move block" href="#S-E6">Submit feedback</a></div>
+        <div class="foot"><a class="btn move block disabled" id="numGo" href="#S-E6" onclick="return MMNUM.submit()">Submit feedback</a></div>
+        <script>
+        (function(){
+          /* §5.4 — compulsory, and it blocks submission. A "no" reveals MECE
+             options plus an optional line, the same shape as S-F6's async
+             decline (MMDECLINE).
+
+             Note the deliberate asymmetry with S-E8: the date decline is free
+             text ONLY because the friction is its purpose, while this one is
+             structured because calibration actually consumes it. Do not make
+             them consistent. */
+          let exchanged = null, reason = null;
+
+          function pick(el){
+            document.querySelectorAll('#S-E5 .opt[data-num]')
+              .forEach(o => o.classList.remove('sel'));
+            el.classList.add('sel');
+            exchanged = el.getAttribute('data-num') === 'yes';
+            document.getElementById('numWhy').style.display = exchanged ? 'none' : '';
+            if(exchanged){ reason = null;
+              document.querySelectorAll('#numWhy .opt[data-why]')
+                .forEach(o => o.classList.remove('sel'));
+            }
+            sync();
+          }
+          function why(el){
+            document.querySelectorAll('#numWhy .opt[data-why]')
+              .forEach(o => o.classList.remove('sel'));
+            el.classList.add('sel');
+            reason = el.getAttribute('data-why');
+            sync();
+          }
+          /* Yes is complete on its own; No needs a reason before it is. */
+          function ready(){ return exchanged === true || (exchanged === false && !!reason); }
+          function sync(){
+            document.getElementById('numGo').classList.toggle('disabled', !ready());
+          }
+          function submit(){
+            if(!ready()) return false;
+            sessionStorage.setItem('mm_numbers', JSON.stringify({
+              exchanged, reason,
+              note: (document.getElementById('numNote') || {}).value || ''
+            }));
+            return true;
+          }
+          window.MMNUM = { pick, why, submit };
+          sync();
+        })();
+        </script>
       </section>
 
       <section class="screen dark" id="S-E6" data-group="E · Post-show" data-title="Self-correction loop">
