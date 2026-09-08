@@ -2558,6 +2558,7 @@
           <h2 class="scrn" style="font-size:24px">Your candidates</h2>
           <p class="muted" style="font-size:12.5px;margin-top:-6px">Photo and a few details now — full profiles unlock only after they accept your invite. No bios to doom-scroll.</p>
           <p class="muted" style="font-size:12px;margin-top:-10px">Ordered by fit and by how each of them treats people.</p>
+          <div id="b2pursued"></div>
           <div id="b2list" style="display:flex;flex-direction:column;gap:12px"></div>
           <div id="b2drawerwrap"></div>
           <div id="b2gap"></div>
@@ -2847,6 +2848,7 @@
       btn.addEventListener('click', () => remove(btn.dataset.id)));
     list.querySelectorAll('.seeall').forEach(a =>
       a.addEventListener('click', () => sessionStorage.setItem('mm_cand_open', a.dataset.id)));
+    renderPursued(); // spec 6.6
     renderDrawer();   // defined in Task 4
     renderGap();      // defined in Task 5
     renderProfile();  // defined in Task 6
@@ -2908,10 +2910,46 @@
              answered theirs would be scored on all 5 bands.`}</p>
       <div class="muted" style="font-size:11.5px;margin-top:6px">
         ~${totalQs} questions · about ${mins} minutes</div>
-      <a class="btn primary block" href="${first.screen}" style="margin-top:12px">Answer ${first.name} ›</a>
+      <a class="link center" href="${first.screen}" style="margin-top:12px;display:block">Answer ${first.name} ›</a>
       ${rest.map(g => `<a class="link center" href="${g.screen}" style="margin-top:8px;display:block">${g.name} ›</a>`).join('')}
       <div class="note" style="margin-top:12px">Optional, always. You're already
         matched — this only sharpens who we put in front of you next.</div>
+    </div>`;
+  }
+
+  /* ---- spec 6.6 · the enrichment invitation ----
+     Rewritten by the 2026-08-26 rollback: the original message ended "finish
+     your profile to see who", which was an access claim. Nobody is excluded
+     from async any more, so the ask is about match QUALITY instead. No
+     "unlock", no "eligible", no progress bar — those all describe a rule that
+     no longer exists. */
+  function renderPursued(){
+    const wrap = document.getElementById('b2pursued');
+    if (!wrap) return;
+    const people = MMKARMA.pursued();
+    /* If nobody tried to pursue her the message does not appear at all. A card
+       degrading to "0 people pursued you" would be worse than the gate the
+       rollback removed. */
+    if (!people.length){ wrap.innerHTML = ''; return; }
+    const n = people.length;
+    /* Each of them is asking about a section SHE has left blank — the band key
+       resolves through USER_GAPS, so the ask can never point at something she
+       has already answered. */
+    const gapOf = b => USER_GAPS.filter(g => g.band === b)[0];
+    const lines = people.map(p => {
+      const g = gapOf(p.band);
+      return `<li class="o"><span>${p.who} asked ${p.asked}
+        <span class="src">[${g ? g.name : 'profile'}]</span></span></li>`;
+    }).join('');
+    const first = USER_GAPS[0];
+    wrap.innerHTML = `<div class="card" style="margin-top:4px">
+      <div class="eyebrow">✦ ${n} ${n === 1 ? 'person' : 'people'} pursued you this month</div>
+      <ul class="why" style="margin-top:10px">${lines}</ul>
+      <p class="muted" style="font-size:12.5px;line-height:1.5;margin:10px 0 0">
+        We can't yet tell you which of them actually fits you — the things they were
+        asking about are the things you haven't answered. Answer them and we can.</p>
+      <a class="btn primary block" href="${first.screen}" style="margin-top:12px">Answer ${first.name} ›</a>
+      <a class="link center" href="#S-B4" style="margin-top:8px;display:block">See your standing ›</a>
     </div>`;
   }
 
