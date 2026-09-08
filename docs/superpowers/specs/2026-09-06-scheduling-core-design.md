@@ -61,7 +61,7 @@ undefined global. Same constraint recorded at `index.html:720`.
 MMSCHED.mount(el, {
   mode:  'propose' | 'choose',
   self:  { name:'Tolu',  tz:'GMT' },
-  other: { name:'David', tz:'WAT' },
+  other: { name:'David', tz:'GMT' },
   max:   5                       // propose mode only; ignored in choose mode
 }) → handle
 ```
@@ -113,6 +113,19 @@ Abuja appear only as *state-of-origin* options in onboarding
 currently unreachable and the feature would demo nothing. **A Lagos-resident
 candidate is added to the gallery fixture**, which matches §4.4's own rationale
 about a Nigerian-diaspora product.
+
+**Known gap, recorded honestly (added 2026-09-07).** The Lagos candidate makes a
+cross-timezone pair *exist*, but the scheduling flow's partner is hardcoded as
+David, who is `city:'London'`. Every scheduling screen therefore renders two
+identical `GMT` lines — correct per "always show both", and exactly the
+same-zone case this section describes, but it means **the `WAT` path and
+`fmtLine`'s day-roll branch are never exercised in a walkthrough.**
+
+During the build one task set the partner to `WAT` to make the feature visible.
+That was reverted: David lives in London, and a false fixture is worse than an
+undemonstrated one. Closing the gap properly means making the scheduling partner
+the Lagos persona — a product decision about who the demo narrative follows, not
+a rendering fix, and deliberately left to a later phase.
 
 ## Screens
 
