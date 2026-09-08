@@ -635,6 +635,22 @@
   .confrow .cf-wrong{margin-top:8px; font-size:11.5px; background:none; border:none;
     padding:0; cursor:pointer; color:var(--move); font-family:var(--body); text-decoration:underline}
 
+  /* ===== karma (spec 6.1–6.4) =====
+     The ledger reuses .confrow wholesale; these two states are the only
+     addition, and both take colours the block above already uses. A gain is
+     --pass, a loss is --move. No new colour enters the file. */
+  .confrow[data-state="gain"] .cf-label{color:var(--pass)}
+  .confrow[data-state="loss"] .cf-label{color:var(--move)}
+  /* Standing, on S-B4. Direction A draws dots, Direction B draws the number;
+     both sit in the same host so the toggle swaps one subtree. */
+  .kdots{font-size:20px; letter-spacing:4px; color:var(--move); line-height:1}
+  .kscore{font-family:var(--display); font-weight:900; font-size:44px;
+    line-height:1; color:var(--move)}
+  .kband{font-family:var(--display); font-size:11px; letter-spacing:.14em;
+    text-transform:uppercase; font-weight:700; margin-top:8px; color:var(--t-dim)}
+  .dark .kband{color:var(--ink-dim)}
+  .ktraits{display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-top:12px}
+
   /* ===== async result · the mirrored-pairs reveal (spec 1.5) =====
      Each attribute both parties were asked about, what each said, and how the
      other reacted. Divergences are the interesting part, so they are marked. */
@@ -1719,6 +1735,205 @@
 
   window.MMSCHED = { TZ, SLOTS, fmtLine, suggestions, save, chosen, clear, mount, slotHTML,
                      openOverlay, closeOverlay, closeAllOverlays };
+})();
+
+/* ===== KARMA · spec 6.1–6.4, 6.6 ==========================================
+   Standing is a DERIVATION over the four behaviours §6.2 rewards, never a
+   stored number. One data shape, two renderings: Direction A shows the
+   sub-scores clearing the trait gate as phrases, Direction B shows their
+   weighted mean as a number. Had Direction A's traits been their own fixture
+   copy, the A/B test would compare a real number against invented sentences
+   and could not settle anything.
+
+   Screens do not compute karma. They declare a host — data-karma-of,
+   -head, -ledger, -raise — and paint() fills it on navigation. That is why
+   the §6.4 toggle has exactly one repaint path. */
+(function(){
+  const BEHAVIOURS = [
+    { key:'responds', name:'Responsiveness',      w:30, trait:'Responds within a day' },
+    { key:'shows',    name:'Showing up',          w:30, trait:'Always shows up' },
+    { key:'complete', name:'Profile & questions', w:20, trait:'Profile fully answered' },
+    { key:'feedback', name:'Honest feedback',     w:20, trait:'Leaves honest reviews' }
+  ];
+  const TRAIT_GATE = 75, MAX_TAGS = 2;
+
+  /* These are the state AFTER the seeded ledger below — the seeded rows are
+     DISPLAYED, never applied. Applying both would double-count the month and
+     drift these away from the numbers the spec's table fixes. */
+  const PEOPLE = {
+    you:    { responds:82, shows:90, complete:55, feedback:78 },   // 78 · Reliable
+    samuel: { responds:88, shows:84, complete:62, feedback:80 },   // 80 · Reliable
+    marcus: { responds:70, shows:76, complete:58, feedback:68 },   // 69 · Steady
+    /* David is deliberately the strongest fit (76) and the weakest karma. The
+       sort has to visibly disagree with the fit column or §6.3 is unprovable.
+       rank()'s coefficient spans 0.7–1.0 — a 1.43x swing — and he leads Samuel
+       by 8 fit points, so he must sit below ~47 to be overtaken. RETUNING
+       EITHER THIS RECORD OR rank() MEANS RE-DERIVING THAT, or the sort quietly
+       stops demonstrating anything while still looking correct. */
+    david:  { responds:25, shows:35, complete:50, feedback:25 },   // 33 · Patchy
+    /* Bench candidates. The S-B2 drawer can restore any of them into the live
+       list, and an unranked candidate would sort to the bottom for the wrong
+       reason, so they carry real records rather than relying on the fallback. */
+    tunde:  { responds:64, shows:70, complete:44, feedback:58 },
+    emeka:  { responds:58, shows:62, complete:40, feedback:54 },
+    kwame:  { responds:72, shows:66, complete:48, feedback:60 },
+    ifeanyi:{ responds:50, shows:58, complete:38, feedback:46 },
+    bode:   { responds:66, shows:74, complete:42, feedback:62 },
+    chidi:  { responds:60, shows:56, complete:46, feedback:52 }
+  };
+  const NEUTRAL = { responds:50, shows:50, complete:50, feedback:50 };
+
+  const KEY = 'mm_karma';
+  function live(){
+    try { return JSON.parse(sessionStorage.getItem(KEY)) || []; }
+    catch(e){ return []; }
+  }
+  /* Live deltas are applied at READ time, not by mutating PEOPLE. A mutation
+     would be lost on reload while the ledger rows survive in sessionStorage,
+     and the screen would show rows that no longer explain the number. */
+  function of(id){
+    const base = PEOPLE[id] || NEUTRAL;
+    if (id !== 'you') return base;
+    const p = Object.assign({}, base);
+    live().forEach(r => { p[r.b] = Math.max(0, Math.min(100, (p[r.b] || 0) + r.d)); });
+    return p;
+  }
+
+  const score = id => { const p = of(id);
+    return Math.round(BEHAVIOURS.reduce((s,b) => s + b.w * (p[b.key] || 0), 0) / 100); };
+  const band = id => { const n = score(id);
+    return n >= 75 ? 'Reliable' : n >= 50 ? 'Steady' : 'Patchy'; };
+  const dots = id => Math.round(score(id) / 20);
+
+  /* POSITIVE TRAITS ONLY. A low-standing candidate carries fewer tags, or
+     none at all — §6.3's "without ever announcing to anyone that they have
+     been penalised", enforced here rather than trusted to the copy. */
+  const traits = id => { const p = of(id);
+    return BEHAVIOURS
+      .filter(b => (p[b.key] || 0) >= TRAIT_GATE)
+      .sort((a,b) => (p[b.key] || 0) - (p[a.key] || 0))
+      .slice(0, MAX_TAGS)
+      .map(b => b.trait); };
+
+  /* §6.3 — karma moves a candidate by up to ~30% and never swamps fit. */
+  const rank = (fitPct, id) => fitPct * (0.7 + 0.3 * score(id) / 100);
+
+  /* §6.4 — the undecided display direction. A is the default: it fits the
+     existing .tag styling and the decision log lists it first. */
+  const dir = () => sessionStorage.getItem('mm_karma_dir') === 'B' ? 'B' : 'A';
+  const setDir = d => sessionStorage.setItem('mm_karma_dir', d === 'B' ? 'B' : 'A');
+
+  function tagHTML(id){
+    if (dir() === 'B')
+      return '<span class="tag" style="margin-left:6px">Karma ' + score(id) + '</span>';
+    return traits(id).map(t =>
+      '<span class="tag pass" style="margin-left:6px">' + t + '</span>').join('');
+  }
+  function headHTML(id){
+    const lab = '<div class="kband">' + band(id) + '</div>';
+    if (dir() === 'B')
+      return '<div class="kscore">' + score(id) + '</div>' + lab;
+    const d = dots(id);
+    return '<div class="kdots">' + '●'.repeat(d) + '○'.repeat(Math.max(0, 5 - d)) + '</div>'
+         + lab
+         + '<div class="ktraits">' + traits(id).map(t =>
+             '<span class="tag pass">' + t + '</span>').join('') + '</div>';
+  }
+
+  /* Seeded history. Displayed, never applied. NOBODY IS NAMED: a named past
+     partner would be a fourth person the prototype never shows, and the
+     fixture world has no answer when a reader asks who they were. The cast is
+     Tolu, David and the gallery; the ledger stays inside it. */
+  const SEED = [
+    { id:'s-review',  b:'feedback', d: 5, when:'4 Sep',  t:'Left a substantive review after your last call' },
+    { id:'s-ghost',   b:'responds', d:-8, when:'29 Aug', t:'Left an async board unanswered for 72 hours' },
+    { id:'s-show',    b:'shows',    d: 6, when:'22 Aug', t:'Showed up · Friday’s show' },
+    { id:'s-profile', b:'complete', d: 6, when:'14 Aug', t:'Completed Marriage & family' },
+    { id:'s-invite',  b:'responds', d: 4, when:'11 Aug', t:'Answered an invite in 3 hours' }
+  ];
+  const ledger = () => live().slice().reverse().concat(SEED);
+
+  /* One row per event, ever. A revisited screen must not append a second. */
+  function emit(id, bkey, delta, text){
+    const out = live();
+    if (out.some(r => r.id === id)) return false;
+    out.push({ id:id, b:bkey, d:delta, when:'Today', t:text });
+    sessionStorage.setItem(KEY, JSON.stringify(out));
+    paint();
+    return true;
+  }
+
+  const behName = k => (BEHAVIOURS.filter(b => b.key === k)[0] || { name:k }).name;
+  /* Every string here is written by this file — no user-typed text reaches the
+     ledger, which is why concatenation is safe. S-E9's textContent rule exists
+     because the decline reason IS user-typed; do not read this as a licence
+     to relax it there. */
+  function ledgerHTML(){
+    return ledger().map(r =>
+      '<div class="confrow" data-state="' + (r.d < 0 ? 'loss' : 'gain') + '">'
+      + '<div class="cf-head"><div class="cf-name">' + r.t + '</div>'
+      + '<div class="cf-label">' + (r.d > 0 ? '+' : '') + r.d + '</div></div>'
+      + '<div class="cf-val">' + r.when + ' · ' + behName(r.b) + '</div>'
+      + '</div>').join('');
+  }
+
+  /* What would raise it — derived from the weakest behaviour, not written, so
+     it still points at the right thing after live events move the scores. */
+  const ACTIONS = {
+    responds: { t:'Answer invites and boards while they are still open.',
+                cta:'Open your async board ›', href:'#S-F1', alt:null },
+    shows:    { t:'Turn up to what you schedule. Every session you attend counts.',
+                cta:'See your scheduled show ›', href:'#S-C5', alt:null },
+    complete: { t:'Two profile sections are still blank, and they are the ones your candidates have already answered.',
+                cta:'Answer Personality &amp; lifestyle ›', href:'#S-P3',
+                alt:{ cta:'Love &amp; intimacy ›', href:'#S-P4' } },
+    feedback: { t:'Leave a real review after your next call, not a star and a shrug.',
+                cta:'See your last review ›', href:'#S-E5', alt:null }
+  };
+  function raiseHTML(id){
+    const p = of(id);
+    const weakest = BEHAVIOURS.slice()
+      .sort((a,b) => (p[a.key] || 0) - (p[b.key] || 0))[0];
+    const a = ACTIONS[weakest.key];
+    return '<div class="eyebrow">✦ What would raise it</div>'
+      + '<p class="muted" style="font-size:12.5px;line-height:1.5;margin:10px 0 0">'
+      + weakest.name + ' is your weakest of the four. ' + a.t + '</p>'
+      + '<a class="btn primary block" href="' + a.href + '" style="margin-top:12px">' + a.cta + '</a>'
+      + (a.alt ? '<a class="link center" href="' + a.alt.href
+                 + '" style="margin-top:8px;display:block">' + a.alt.cta + '</a>' : '');
+  }
+
+  /* §6.6 — the count is DERIVED from this list's length, never written. An
+     inflated or vague number is exactly the dark pattern the decision forbids.
+     `band` keys into the gallery's USER_GAPS so the ask can never point at a
+     section she has already filled in. */
+  const PURSUED = [
+    { who:'A teacher in Lewisham',  asked:'how you like to be close to someone', band:'love' },
+    { who:'An engineer in Croydon', asked:'what your weekends actually look like', band:'person' },
+    { who:'A GP in Reading',        asked:'what you do to unwind', band:'person' }
+  ];
+
+  /* Hosts are declarative, so a screen added by a later task needs no wiring
+     here. Guarded because the module is defined ABOVE the markup: at parse
+     time there is nothing to fill. */
+  function paint(){
+    document.querySelectorAll('[data-karma-of]').forEach(el => {
+      el.innerHTML = tagHTML(el.getAttribute('data-karma-of')); });
+    document.querySelectorAll('[data-karma-head]').forEach(el => {
+      el.innerHTML = headHTML(el.getAttribute('data-karma-head')); });
+    document.querySelectorAll('[data-karma-ledger]').forEach(el => {
+      el.innerHTML = ledgerHTML(); });
+    document.querySelectorAll('[data-karma-raise]').forEach(el => {
+      el.innerHTML = raiseHTML(el.getAttribute('data-karma-raise')); });
+  }
+  window.addEventListener('hashchange', paint);
+  document.addEventListener('DOMContentLoaded', paint);
+
+  window.MMKARMA = { BEHAVIOURS, TRAIT_GATE, MAX_TAGS,
+                     of, score, band, dots, traits, rank,
+                     dir, setDir, tagHTML, headHTML, ledgerHTML, raiseHTML,
+                     ledger, emit, paint,
+                     pursued: () => PURSUED.slice() };
 })();
 </script>
     <div class="screenwrap" id="screenwrap">
