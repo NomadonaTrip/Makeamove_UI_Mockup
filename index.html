@@ -651,6 +651,13 @@
   .mirrorrow .mr-flag.soft{color:var(--ink-faint)}
   .paper .mirrorrow .mr-flag.soft{color:var(--t-faint)}
 
+  /* ===== the decline reason, as the declined party reads it (spec 5.1) =====
+     Set with textContent, so white-space:pre-wrap is what preserves the line
+     breaks the writer actually typed. */
+  .e9quote{margin-top:8px; font-size:14px; line-height:1.6; white-space:pre-wrap;
+    border-left:2px solid var(--move); padding-left:12px; color:var(--ink)}
+  .paper .e9quote{color:var(--t)}
+
   /* ===== ladder — the Millionaire rail (spec 2026-08-25 / decision 3.1)
      Mounted by S-D2 (layout:rail) and S-F3 (layout:compact). Stage palette
      only: no paper screen mounts one. */
@@ -3725,6 +3732,52 @@
 
           window.MMDECLINEDATE = { check, submit };
           check();
+        })();
+        </script>
+      </section>
+
+      <section class="screen dark" id="S-E9" data-group="E · Post-show" data-title="⚠ You were passed on">
+        <div class="body" style="justify-content:center;text-align:center;gap:18px;padding:40px 26px">
+          <div class="av g5 s72" style="margin:0 auto"><svg class="icon" style="width:30px;height:30px"><use href="#i-mailheart"/></svg></div>
+          <h2 class="scrn" style="font-size:28px;max-width:16ch;margin:0 auto">Tolu isn't taking this one further.</h2>
+          <p class="muted" style="max-width:32ch;margin:0 auto;line-height:1.55">She wrote you a reason. We haven't edited it or softened it — these are her words.</p>
+          <div class="card" style="text-align:left">
+            <div class="eyebrow" style="color:var(--bulb)">In her words</div>
+            <div id="e9reason" class="e9quote"></div>
+          </div>
+          <div class="note">No penalty, nothing charged, and your karma is untouched. Being passed on after a good call is ordinary — it costs you nothing here.</div>
+          <div class="btnrow"><a class="btn ghost block" href="#S-G1">See your credits</a><a class="btn move block" href="#S-B2">Back to your matches</a></div>
+        </div>
+        <script>
+        (function(){
+          /* §5.1 — the reason reaches a real person, verbatim. That makes this
+             the ONE place in the prototype where a user-typed string is shown
+             to a different user, so it is set with textContent and never
+             concatenated into innerHTML. Every neighbouring render in this file
+             builds HTML by string concatenation; copying that idiom here would
+             be the bug.
+
+             Falls back to a fixture when storage is empty, the same way S-F4's
+             paint() does and for the same reason: this screen is reachable by
+             deep link, by Prev/Next and from the index, not only by having just
+             written a reason. */
+          const FALLBACK = "You were genuinely lovely and I nearly talked myself into it. "
+                         + "But I didn't feel the thing I'm holding out for, and you deserve "
+                         + "someone who does. I'd rather say that than go quiet on you.";
+          function paint(){
+            const host = document.getElementById('e9reason');
+            if(!host) return;
+            let stored = null;
+            try { stored = JSON.parse(sessionStorage.getItem('mm_decline_reason')); }
+            catch(e){ stored = null; }
+            const text = (stored && stored.text) ? stored.text : FALLBACK;
+            host.textContent = text;          // never innerHTML — see above
+          }
+          window.MMDECLINERECV = { paint };
+          window.addEventListener('hashchange', () => {
+            if(location.hash === '#S-E9') paint();
+          });
+          paint();
         })();
         </script>
       </section>
