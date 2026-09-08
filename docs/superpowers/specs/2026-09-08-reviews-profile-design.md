@@ -202,7 +202,29 @@ and the copy stays.
 - On success the text is written to `mm_decline_reason` and the user lands on
   `#S-B2`.
 - The foot carries a secondary `Demo: see what David receives ›` to `#S-E9`,
-  matching the existing demo affordance at `S-E4:3425`.
+  matching the existing demo affordance at `S-E4:3425`. Because that link is
+  reachable without having written anything, `S-E9`'s eyebrow reads
+  **"Sample — in her words"** when it falls back, so the demo path never
+  presents an invented message as one the user wrote.
+
+**The gate is in-screen only, and that is deliberate.** `#S-B2` remains
+reachable from `S-E8` via the ☰ screen index, Prev/Next stepping, the browser
+back button and a direct hash edit. This is **not an oversight** — a future
+reader finding the gate unenforced at the router should not "fix" it without
+reopening the decision:
+
+- `route()` sets `location.hash` unconditionally by design, and the ☰ index
+  exists precisely so any screen reaches any other. Gating it would break the
+  prototype's primary navigation affordance on every screen, not just this one.
+- `S-F6`'s async decline has the identical property today, so enforcing it here
+  alone would make the two decline flows inconsistent.
+- §5.1's "no return to matches until a reason is written" was written about the
+  screen's own controls, which *are* gated. The rejected alternatives it
+  records — "3 attempts then accept", "a ghost exit" — are all in-screen
+  hatches, which is the scope this decision covers.
+
+Router-level enforcement is a separate, cross-cutting decision and belongs to
+whichever phase decides it for every gated screen at once.
 
 **On `S-E9`:** the reason rendered verbatim, no reply control, no rating. Falls
 back to a fixture reason when storage is empty — the same
