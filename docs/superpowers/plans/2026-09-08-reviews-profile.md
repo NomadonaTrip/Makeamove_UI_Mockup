@@ -43,6 +43,38 @@ Assertions run at **1280×800** unless a step says otherwise, against `http://12
 - **Never assert against a screen's `textContent`.** The inline `<script>` fixtures sit inside the `<section>`, so `textContent` contains every fixture string and any substring assertion false-positives. Query rendered elements.
 - **Measuring overflow on these screens:** `.body` and the stage columns are centred flex columns, so content spills in *both* directions and `scrollHeight` counts only part of it. Compute overflow from child rects against the container's box, and let entry animations settle first. A Phase 3 review under-reported a spill by ~115px this way.
 
+### The overflow snippet — use this one
+
+**Corrected during Task 4.** The scroll container on a `lay-form` screen is the
+outer `<section>`, not `.body` — `.body` is `flex:0 0 auto`, so asking whether
+`.body` scrolls always answers `false` and tells you nothing. Measure the child
+rects against `.body` (that is where content spills from) but ask the
+**section** whether it scrolls. Substitute the screen id and use this verbatim
+wherever a step says "run the overflow measurement":
+
+```js
+(id) => {
+  const sec = document.getElementById(id);
+  const body = sec.querySelector('.body');
+  const box = body.getBoundingClientRect();
+  let top = Infinity, bottom = -Infinity;
+  [...body.children].forEach(c => { const r = c.getBoundingClientRect();
+    top = Math.min(top, r.top); bottom = Math.max(bottom, r.bottom); });
+  return {
+    spillTop: Math.max(0, box.top - top),
+    spillBottom: Math.max(0, bottom - box.bottom),
+    sectionScrolls: sec.scrollHeight > sec.clientHeight,
+    bodyScrolls: body.scrollHeight > body.clientHeight,
+    sec: [sec.scrollHeight, sec.clientHeight]
+  };
+}
+```
+
+A healthy result is `spillTop` and `spillBottom` both 0, with `sectionScrolls`
+true whenever the content is taller than the viewport. `bodyScrolls: false` is
+normal on a `lay-form` screen and is not a defect. Let entry animations settle
+before measuring.
+
 ## The depth toggle is the demo
 
 `MMDEV.setDepth()` (`index.html:4444`) already calls `MMCONF.paint()`. That means extending `MMCONF.paint()` in Task 4 — rather than adding a second inline script on `S-E6` — is what makes the Dev-settings **Thin / Complete** switch repaint the divergence card for free. Do not add a separate paint path.
@@ -1189,7 +1221,11 @@ Expected: `ok: true`, `feed: true`, and `fullAnswered` greater than `answered`.
 
 - [ ] **Step 7: Screenshot both viewports and measure overflow**
 
-Screenshot `#S-E6A` at **1280×800** (confirm the feed archetype renders as a list, not a narrow centred sheet) and **390×844**. Run the overflow measurement from Task 4 Step 9, substituting `#S-E6A`. Confirm the list scrolls rather than clipping.
+Screenshot `#S-E6A` at **1280×800** (confirm the feed archetype renders as a list, not a narrow centred sheet) and **390×844**.
+
+Then run the corrected overflow snippet from the plan's **"The overflow snippet — use this one"** section (in Verification setup, near the top of the plan), passing `'S-E6A'`. Expect `spillTop` and `spillBottom` of 0 and `sectionScrolls: true` on a list this long. `bodyScrolls: false` is normal and not a defect — do not use it to judge clipping.
+
+Note this screen is `lay-feed`, not `lay-form`, so confirm which element actually scrolls rather than assuming it matches `S-E6`; report what you find either way.
 
 - [ ] **Step 8: Commit**
 
@@ -1371,7 +1407,9 @@ Expected: `ok: true`.
 
 - [ ] **Step 5: Screenshot both viewports**
 
-Screenshot `#S-E5` at **1280×800** and **390×844**, once on arrival (submit dimmed, options hidden) and once after clicking **No** (options revealed, submit dimmed again). Run the Task 4 Step 9 overflow measurement against `#S-E5` in the revealed state — the screen is materially taller than it was.
+Screenshot `#S-E5` at **1280×800** and **390×844**, once on arrival (submit dimmed, options hidden) and once after clicking **No** (options revealed, submit dimmed again).
+
+Then run the corrected overflow snippet from the plan's **"The overflow snippet — use this one"** section (in Verification setup, near the top of the plan), passing `'S-E5'`, **in the revealed state** — the screen is materially taller with the six options open. Expect `spillTop` and `spillBottom` of 0 and `sectionScrolls: true`. `bodyScrolls: false` is normal on this `lay-form` screen and is not a defect.
 
 - [ ] **Step 6: Commit**
 
