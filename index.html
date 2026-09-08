@@ -549,6 +549,13 @@
        as the #deckList rule above. */
     #S-E6A > .body > .card{ grid-column:1 / -1 }
 
+    /* #b2pursued is a bare host div above #b2list — without a span rule it
+       claims column 1 like any other grid item, bumping #b2list to column 2
+       and #b2drawerwrap/#b2gap out to a second row. Same reason as the
+       #deckList and #S-E6A rules above: span the full row and sit above the
+       candidate list instead. */
+    #b2pursued{ grid-column:1 / -1 }
+
     /* ============ IMMERSIVE (full-bleed, capped measure) ============ */
     .lay-immersive .heads, .lay-immersive .turnflag, .lay-immersive .stage,
     .lay-immersive .base, .lay-immersive .act{ max-width:620px; margin-inline:auto; width:100% }
@@ -1862,6 +1869,10 @@
     paint();
     return true;
   }
+  /* Has this emit id already landed in the ledger? The read-time check that
+     lets any screen ask "is this specific thing done" without maintaining
+     its own copy of the answer. */
+  const done = id => live().some(r => r.id === id);
 
   const behName = k => (BEHAVIOURS.filter(b => b.key === k)[0] || { name:k }).name;
   /* Every string here is written by this file — no user-typed text reaches the
@@ -1884,17 +1895,36 @@
                 cta:'Open your async board ›', href:'#S-F1', alt:null },
     shows:    { t:'Turn up to what you schedule. Every session you attend counts.',
                 cta:'See your scheduled show ›', href:'#S-C5', alt:null },
-    complete: { t:'Two profile sections are still blank, and they are the ones your candidates have already answered.',
-                cta:'Answer Personality &amp; lifestyle ›', href:'#S-P3',
-                alt:{ cta:'Love &amp; intimacy ›', href:'#S-P4' } },
     feedback: { t:'Leave a real review after your next call, not a star and a shrug.',
                 cta:'See your last review ›', href:'#S-E5', alt:null }
   };
+  /* The profile-gap half of "what would raise it" is derived, same as the
+     rest of this module: it reads the gallery's USER_GAPS (exposed on
+     window once that screen's script has run — which it always has by the
+     time paint() first fires, since DOMContentLoaded only arrives after
+     every inline script has executed) and drops any section whose emit id
+     is already in the ledger via done(). Nothing here is hardcoded — not
+     the count, not which section leads, not the copy's "one"/"two". */
+  function completeAction(){
+    const esc = s => s.replace(/&/g, '&amp;');
+    const gaps = (window.USER_GAPS || []).filter(g => !done(g.ev));
+    if (!gaps.length)
+      return { t:'Every profile section is filled in — nothing left to add there.',
+               cta:'Review your profile ›', href:'#S-A9', alt:null };
+    const [first, ...rest] = gaps, n = gaps.length;
+    return {
+      t:(n === 1 ? 'One profile section is' : 'Two profile sections are')
+        + ' still blank, and ' + (n === 1 ? 'it is the one' : 'they are the ones')
+        + ' your candidates have already answered.',
+      cta:'Answer ' + esc(first.name) + ' ›', href:first.screen,
+      alt: rest.length ? { cta:esc(rest[0].name) + ' ›', href:rest[0].screen } : null
+    };
+  }
   function raiseHTML(id){
     const p = of(id);
     const weakest = BEHAVIOURS.slice()
       .sort((a,b) => (p[a.key] || 0) - (p[b.key] || 0))[0];
-    const a = ACTIONS[weakest.key];
+    const a = weakest.key === 'complete' ? completeAction() : ACTIONS[weakest.key];
     return '<div class="eyebrow">✦ What would raise it</div>'
       + '<p class="muted" style="font-size:12.5px;line-height:1.5;margin:10px 0 0">'
       + weakest.name + ' is your weakest of the four. ' + a.t + '</p>'
@@ -1932,7 +1962,7 @@
   window.MMKARMA = { BEHAVIOURS, TRAIT_GATE, MAX_TAGS,
                      of, score, band, dots, traits, rank,
                      dir, setDir, tagHTML, headHTML, ledgerHTML, raiseHTML,
-                     ledger, emit, paint,
+                     ledger, emit, done, paint,
                      pursued: () => PURSUED.slice() };
 })();
 </script>
@@ -2857,9 +2887,14 @@
   /* Sections the *user* has left blank. In the prototype these are fixtures;
      in production they would be read from the user's profile record. */
   const USER_GAPS = [
-    { band:'person', name:'Personality & lifestyle', screen:'#S-P3', qs:6 },
-    { band:'love',   name:'Love & intimacy',         screen:'#S-P4', qs:3 }
+    { band:'person', name:'Personality & lifestyle', screen:'#S-P3', qs:6, ev:'ev-p3' },
+    { band:'love',   name:'Love & intimacy',         screen:'#S-P4', qs:3, ev:'ev-p4' }
   ];
+  /* Which of USER_GAPS are still actually blank — read from the ledger via
+     MMKARMA.done(), never by mutating USER_GAPS itself. A mutation would be
+     lost on reload while the ledger row claiming completion survives, which
+     is exactly the mutate-vs-read-time bug MMKARMA.of() was built to avoid. */
+  const openGaps = () => USER_GAPS.filter(g => !MMKARMA.done(g.ev));
 
   /* A candidate only counts if HE answered and the user did not — otherwise
      completing your side changes nothing for him, and claiming otherwise
@@ -2876,16 +2911,17 @@
   function renderGap(){
     const wrap = document.getElementById('b2gap');
     if (!wrap) return;
-    const n = USER_GAPS.length, live = state.live.length;
+    const gaps = openGaps();
+    const n = gaps.length, live = state.live.length;
     if (!n){
       wrap.innerHTML = `<div class="note pass">All 5 bands scored on your side.
         Nothing else is needed from you.</div>`;
       return;
     }
-    const totalQs = USER_GAPS.reduce((s,g) => s + g.qs, 0);
+    const totalQs = gaps.reduce((s,g) => s + g.qs, 0);
     const mins = Math.max(1, Math.round(totalQs * 0.25));
-    const [first, ...rest] = USER_GAPS;
-    const lines = USER_GAPS.map(g => {
+    const [first, ...rest] = gaps;
+    const lines = gaps.map(g => {
       const k = blocking(g);
       return `<li class="${k ? 'n' : 'o'}"><span><b>${g.name}</b> — ${
         k ? `blocking ${k} of your ${live} candidate${live===1?'':'s'} from a full score`
@@ -2895,7 +2931,7 @@
     /* distinct candidates, not gap-hits: one candidate blocked on two gaps is
        still one candidate */
     const helped = new Set(
-      USER_GAPS.flatMap(g => state.live.filter(id => userBlocks(id, g.band)))
+      gaps.flatMap(g => state.live.filter(id => userBlocks(id, g.band)))
     ).size;
     wrap.innerHTML = `<div class="card" style="margin-top:4px">
       <div class="eyebrow">✦ ${n} band${n===1?'':'s'} ${n===1?'is':'are'} blank on your side</div>
@@ -2926,28 +2962,31 @@
   function renderPursued(){
     const wrap = document.getElementById('b2pursued');
     if (!wrap) return;
-    const people = MMKARMA.pursued();
-    /* If nobody tried to pursue her the message does not appear at all. A card
-       degrading to "0 people pursued you" would be worse than the gate the
-       rollback removed. */
+    /* Each of them is asking about a section SHE has left blank — the band key
+       resolves through the currently-OPEN gaps, so once she answers one, the
+       people who were asking about it drop out of the count and the list
+       rather than leaving a stale claim standing. */
+    const gaps = openGaps();
+    const gapOf = b => gaps.filter(g => g.band === b)[0];
+    const people = MMKARMA.pursued().filter(p => !!gapOf(p.band));
+    /* If nobody is still pursuing an unanswered section the card does not
+       appear at all — `hidden` rather than a style change, so it also stops
+       being a stretched, empty grid item (Fix 3). */
+    wrap.hidden = !people.length;
     if (!people.length){ wrap.innerHTML = ''; return; }
     const n = people.length;
-    /* Each of them is asking about a section SHE has left blank — the band key
-       resolves through USER_GAPS, so the ask can never point at something she
-       has already answered. */
-    const gapOf = b => USER_GAPS.filter(g => g.band === b)[0];
     const lines = people.map(p => {
       const g = gapOf(p.band);
       return `<li class="o"><span>${p.who} asked ${p.asked}
-        <span class="src">[${g ? g.name : 'profile'}]</span></span></li>`;
+        <span class="src">[${g.name}]</span></span></li>`;
     }).join('');
-    const first = USER_GAPS[0];
+    const first = gaps[0];
     wrap.innerHTML = `<div class="card" style="margin-top:4px">
       <div class="eyebrow">✦ ${n} ${n === 1 ? 'person' : 'people'} pursued you this month</div>
       <ul class="why" style="margin-top:10px">${lines}</ul>
       <p class="muted" style="font-size:12.5px;line-height:1.5;margin:10px 0 0">
-        We can't yet tell you which of them actually fits you — the things they were
-        asking about are the things you haven't answered. Answer them and we can.</p>
+        We can't yet tell you which of them actually fits you — the more you answer,
+        the better we can.</p>
       <a class="btn primary block" href="${first.screen}" style="margin-top:12px">Answer ${first.name} ›</a>
       <a class="link center" href="#S-B4" style="margin-top:8px;display:block">See your standing ›</a>
     </div>`;
@@ -3115,6 +3154,11 @@
   }
   window.addEventListener('hashchange', () => {
     if (location.hash === '#S-B3') renderProfile();
+    /* Same reason as S-B3 above: #b2gap and #b2pursued are only ever filled
+       by render(), so returning to S-B2 after an emit fires elsewhere (e.g.
+       completing S-P3) left both cards showing what was true on the LAST
+       render, not what the ledger says now. */
+    if (location.hash === '#S-B2') render();
   });
 
   load();
