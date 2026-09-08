@@ -5159,6 +5159,12 @@
         pt.classList.toggle('on', !full);
         pf.classList.toggle('on', full);
       }
+      const ka = document.getElementById('devka'), kb = document.getElementById('devkb');
+      if(ka && kb){
+        const d = MMKARMA.dir();
+        ka.classList.toggle('on', d === 'A');
+        kb.classList.toggle('on', d === 'B');
+      }
     },
     setModel(m){
       MMQ.setModel(m); MMDEV.paint();
@@ -5170,6 +5176,14 @@
       MMQ.setProfileDepth(d); MMDEV.paint();
       if(window.MMCONF)  MMCONF.paint();
       if(window.MMTRAIL) MMTRAIL.paint();
+    },
+    /* Spec 6.4 — A/B on how standing is DRAWN, never on how it is ordered.
+       The fan-out lives here rather than inside MMKARMA.setDir so it reads
+       like setDepth above, and so the gallery stays an optional consumer. */
+    setKarmaDir(d){
+      MMKARMA.setDir(d); MMDEV.paint();
+      MMKARMA.paint();
+      if(window.MMGAL) MMGAL.render();
     }
   };
   MMDEV.paint();
@@ -5261,6 +5275,14 @@
       <button id="devpf" onclick="MMDEV.setDepth('full')">Complete</button>
     </div>
     <div class="note2">Switches the demo answer set. Drives S-E6's confidence meters and how much of S-F4's mirrored-pairs reveal reads "not answered yet".</div>
+  </div>
+  <div class="devrow">
+    <div class="lbl2">Karma display</div>
+    <div class="seg">
+      <button id="devka" onclick="MMDEV.setKarmaDir('A')">A · traits</button>
+      <button id="devkb" onclick="MMDEV.setKarmaDir('B')">B · score</button>
+    </div>
+    <div class="note2">A shows what karma means — "Responds within a day". B shows the number. Changes how standing is drawn on S-B2, S-C3, S-F2A and S-B4; never changes the gallery's order. Note B necessarily reveals a low score where A cannot.</div>
   </div>
   <div style="text-align:right;margin-top:12px">
     <button class="tbtn" onclick="MMDEV.close()">Close</button>
