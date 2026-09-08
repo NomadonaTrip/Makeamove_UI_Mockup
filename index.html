@@ -967,6 +967,57 @@
 
   const probes = () => [...new Set(BANK.map(q => q.probe))];
 
+  /* Display names for the probe ids. Lives here because THREE screens need
+     it — S-E6's confidence rows, S-E6's stated-vs-played rows and S-E6A's
+     evidence trail — and three copies would drift the moment a probe is
+     renamed. S-E6 held the only copy until spec 5.3 added the other two. */
+  const PROBE_NAMES = {
+    'wants-children':'Wanting children', 'children-timing':'Timing for a first child',
+    'blending':'Blending two families',  'step-resilience':'Facing a stepchild’s rejection',
+    'core-value':'What you value most',  'non-negotiable':'Your non-negotiable',
+    'weekend':'How you spend a weekend', 'money-model':'How you handle money',
+    'five-year':'Where you are heading', 'closeness':'What closeness means'
+  };
+  const probeName = p => PROBE_NAMES[p] || p;
+
+  /* ---- stated vs. revealed (spec 5.3 / item 17) ----
+     What you claimed on S-P1–S-P5, set against what you actually played.
+
+     `majority` is deliberately separate from `confidence()` above: confidence
+     asks how much your answers AGREE WITH EACH OTHER, this asks WHICH ANSWER
+     you gave most. A probe can be perfectly consistent and still contradict
+     the claim, which is the whole point of the block. */
+  function majority(probe, ans){
+    const hits = (ans || answers()).filter(a => {
+      const q = qById(a.qid); return q && q.probe === probe;
+    });
+    if(!hits.length) return { v:null, t:null, n:0, tie:false };
+    const tally = {}, label = {};
+    hits.forEach(a => {
+      const opt = qById(a.qid).opts[a.opt];
+      tally[opt.v] = (tally[opt.v] || 0) + 1;
+      if(!label[opt.v]) label[opt.v] = opt.t;
+    });
+    const ranked = Object.keys(tally).sort((x,y) => tally[y] - tally[x]);
+    const top = ranked[0];
+    return { v:top, t:label[top], n:hits.length,
+             tie: ranked.length > 1 && tally[ranked[1]] === tally[top] };
+  }
+
+  /* Four states, and collapsing any two of them would lose the honesty the
+     block exists for: a tie is not a divergence, and an unplayed probe is
+     certainly not agreement. */
+  function divergences(ans){
+    ans = ans || answers();
+    return Object.keys(DEMO.stated).map(p => {
+      const said = DEMO.stated[p], played = majority(p, ans);
+      const state = played.n === 0 ? 'unplayed'
+                  : played.tie     ? 'unsettled'
+                  : played.v === said.v ? 'agrees' : 'diverges';
+      return { probe:p, state, said, played };
+    });
+  }
+
   /* Pairs of questions in a set that probe the same attribute (spec 1.5). */
   function mirrorPairs(set){
     const by = {};
@@ -976,6 +1027,50 @@
   }
 
   /* ---- the fake LLM (spec 1.3) — deterministic, so it is testable ---- */
+  const MIN_REASON = 40;   // characters, spec 5.2
+  const CRUEL = ['ugly','uglier','fat','disgusting','pathetic','loser','stupid',
+                 'idiot','worthless','gross','hideous','repulsive','desperate'];
+
+  /* Sibling to reviewQuestion, not a reuse of it: that one enforces question
+     shape (a trailing '?', >=12 chars), which is wrong for a reason, and this
+     one screens for cruelty, which questions never needed (spec 5.2).
+
+     The substance rule is DISTINCT CONTENT WORDS, not a phrase blocklist. A
+     blocklist of "nothing really" / "idk" would be dead code, because the
+     40-character floor rejects every one of those phrases before the check is
+     reached — padding is the only way mush arrives long enough to test, and
+     padding is exactly what a distinct-word count catches.
+
+     Known and accepted: this rejects thin-but-honest lines like "There was no
+     chemistry for me at all here." Per spec 5.1 the friction is the point, so
+     pushing a decliner past their first thin sentence is correct behaviour
+     here, not a false positive. */
+  function reviewReason(text){
+    const t = String(text || '').trim();
+    if (t.length < MIN_REASON)
+      return { ok:false, code:'short',
+               reason:'Say a little more — at least ' + MIN_REASON + ' characters.' };
+
+    const low = t.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+    const words = low ? low.split(' ') : [];
+    const letters = low.replace(/\s/g, '');
+    const vowels = (letters.match(/[aeiou]/g) || []).length;
+    const distinct = new Set(words.filter(w => w.length >= 4)).size;
+
+    const mush = { ok:false, code:'mush',
+                   reason:'That doesn’t say anything he can learn from. Try again.' };
+    if (!letters.length) return mush;
+    if (vowels / letters.length < 0.15) return mush;   // keyboard mash
+    if (/(.)\1{4,}/.test(low))          return mush;   // aaaaaaaa
+    if (distinct < 5)                   return mush;   // padded repetition
+
+    if (CRUEL.some(w => new RegExp('\\b' + w + '\\b').test(low)))
+      return { ok:false, code:'abuse',
+               reason:'He is going to read this. Say the true thing without the sting.' };
+
+    return { ok:true, code:'ok', reason:'Cleared' };
+  }
+
   const BLOCKED = ['salary','virgin','body count','how much do you earn','net worth'];
   function reviewQuestion(text){
     const t = String(text || '').trim();
@@ -1058,6 +1153,31 @@
       'q-fam-05':'move', 'q-fam-06':'move', 'q-val-01':'move', 'q-val-02':'move',
       'q-val-03':'stay', 'q-lif-01':'move', 'q-lif-02':'stay', 'q-fin-01':'move',
       'q-fin-02':'move', 'q-amb-01':'move', 'q-int-01':'move'
+    },
+
+    /* ---- what you SAID about yourself (spec 5.3) ----
+       The claimed side of stated-vs-revealed. Five of the six trace to a
+       field a user actually filled in on S-P1–S-P5, and `src` records which,
+       so a reader can check the fixture rather than trust it.
+
+       money-model is the exception and is marked INFERRED: no profile screen
+       asks how you would pool money. It is kept because it is one of only two
+       probes with three answered variations at both depths, which makes it the
+       steadiest divergence in the set. If a later phase adds a money-model
+       field to the profile, replace the inference with the real claim. */
+    stated: {
+      'wants-children': { v:'yes',       t:'You want children — two of them',
+                          src:'S-P5 · “How many kids do you wish to have?” → 2' },
+      'five-year':      { v:'family',    t:'Settled with a family, and soon',
+                          src:'S-P5 · “So eager — ready now”' },
+      'core-value':     { v:'ambition',  t:'Ambition — a partner who plans',
+                          src:'S-P3 · “Wit, ambition, a man who plans”' },
+      'weekend':        { v:'adventure', t:'Out and moving — classes, hikes',
+                          src:'S-P3 · “Salsa classes, weekend hikes”' },
+      'closeness':      { v:'talk',      t:'Talking it through, at length',
+                          src:'S-P4 · “Acts of service, long voice notes”' },
+      'money-model':    { v:'joint',     t:'Fully joint — one pot',
+                          src:'INFERRED from S-P1 income + S-P2 “Rich / Average”' }
     }
   };
 
@@ -1108,9 +1228,11 @@
     return all.length;
   }
 
-  window.MMQ = { DIMS, BANK, DEMO, CONF_GATE, MAX_DECK, ATTEMPTS,
+  window.MMQ = { DIMS, BANK, DEMO, CONF_GATE, MAX_DECK, ATTEMPTS, MIN_REASON,
+                 PROBE_NAMES, probeName,
                  qById, deck, saveDeck, model, setModel, answers,
                  buildSet, confidence, confLabel, probes, mirrorPairs,
+                 majority, divergences, reviewReason,
                  reviewQuestion, genOptions, answerCard, o,
                  setProfileDepth, recordAnswer };
 })();
@@ -3482,13 +3604,9 @@
            Confidence is derived from MMQ, never hardcoded — change a demo
            answer and these meters move. */
         (function(){
-          const NAMES = {
-            'wants-children':'Wanting children', 'children-timing':'Timing for a first child',
-            'blending':'Blending two families',  'step-resilience':'Facing a stepchild’s rejection',
-            'core-value':'What you value most',  'non-negotiable':'Your non-negotiable',
-            'weekend':'How you spend a weekend', 'money-model':'How you handle money',
-            'five-year':'Where you are heading', 'closeness':'What closeness means'
-          };
+          /* The map moved to MMQ (spec 5.3): three blocks across two screens
+             need it now, and three copies would drift on the first rename. */
+          const NAMES = MMQ.PROBE_NAMES;
           const rejected = () => { try { return JSON.parse(sessionStorage.getItem('mm_conf_rejected')) || []; }
                                    catch(e){ return []; } };
 
