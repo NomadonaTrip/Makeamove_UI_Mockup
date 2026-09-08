@@ -105,6 +105,8 @@ Run this first, before writing any code, so you see it fail. Navigate to `#S-E6`
         full['weekend']        === 'unplayed' &&
         full['five-year']      === 'unplayed' &&
         Q.divergences(Q.DEMO.answers).every(r => r.said && r.said.t && r.said.src) &&
+        Q.probeName('core-value') === 'What you value most' &&
+        Q.probeName('made-up-probe') === 'made-up-probe' &&
         good.ok === true   && good.code  === 'ok'    &&
         short.ok === false && short.code === 'short' &&
         mush.ok === false  && mush.code  === 'mush'  &&
@@ -194,6 +196,19 @@ Replace with:
                        : n >= CONF_GATE ? 'Confirmed' : 'Still forming';
 
   const probes = () => [...new Set(BANK.map(q => q.probe))];
+
+  /* Display names for the probe ids. Lives here because THREE screens need
+     it — S-E6's confidence rows, S-E6's stated-vs-played rows and S-E6A's
+     evidence trail — and three copies would drift the moment a probe is
+     renamed. S-E6 held the only copy until spec 5.3 added the other two. */
+  const PROBE_NAMES = {
+    'wants-children':'Wanting children', 'children-timing':'Timing for a first child',
+    'blending':'Blending two families',  'step-resilience':'Facing a stepchild’s rejection',
+    'core-value':'What you value most',  'non-negotiable':'Your non-negotiable',
+    'weekend':'How you spend a weekend', 'money-model':'How you handle money',
+    'five-year':'Where you are heading', 'closeness':'What closeness means'
+  };
+  const probeName = p => PROBE_NAMES[p] || p;
 
   /* ---- stated vs. revealed (spec 5.3 / item 17) ----
      What you claimed on S-P1–S-P5, set against what you actually played.
@@ -310,12 +325,38 @@ Replace with:
 
 ```js
   window.MMQ = { DIMS, BANK, DEMO, CONF_GATE, MAX_DECK, ATTEMPTS, MIN_REASON,
+                 PROBE_NAMES, probeName,
                  qById, deck, saveDeck, model, setModel, answers,
                  buildSet, confidence, confLabel, probes, mirrorPairs,
                  majority, divergences, reviewReason,
                  reviewQuestion, genOptions, answerCard, o,
                  setProfileDepth, recordAnswer };
 ```
+
+- [ ] **Step 6b: Point `S-E6`'s existing confidence rows at the shared map**
+
+`S-E6`'s inline script has its own copy of this map, which is now a duplicate.
+Find this exact text (`index.html:3485–3491`):
+
+```js
+          const NAMES = {
+            'wants-children':'Wanting children', 'children-timing':'Timing for a first child',
+            'blending':'Blending two families',  'step-resilience':'Facing a stepchild’s rejection',
+            'core-value':'What you value most',  'non-negotiable':'Your non-negotiable',
+            'weekend':'How you spend a weekend', 'money-model':'How you handle money',
+            'five-year':'Where you are heading', 'closeness':'What closeness means'
+          };
+```
+
+Replace with:
+
+```js
+          /* The map moved to MMQ (spec 5.3): three blocks across two screens
+             need it now, and three copies would drift on the first rename. */
+          const NAMES = MMQ.PROBE_NAMES;
+```
+
+`paint()` already reads `NAMES[r.p] || r.p`, so its call sites are unchanged.
 
 - [ ] **Step 7: Run the assertion to verify it passes**
 
@@ -861,7 +902,7 @@ Replace with:
                   + '<div class="cf-cite">' + meta.line + '</div>';
               return '<div class="confrow" data-probe="' + r.probe + '"'
                 + ' data-state="' + r.state + '">'
-                + '<div class="cf-head"><span class="cf-name">' + (NAMES[r.probe] || r.probe) + '</span>'
+                + '<div class="cf-head"><span class="cf-name">' + MMQ.probeName(r.probe) + '</span>'
                 + '<span class="cf-label">' + meta.label + '</span></div>'
                 + body
                 + '<div class="cf-cite">From ' + r.said.src + '</div>'
@@ -1037,14 +1078,10 @@ Replace with:
              Two states render honestly rather than falling back to a default,
              exactly as S-F4 does: an answered question with no verdict, and a
              question in the set that was never answered. Filling either with a
-             default would imply an answer nobody gave (§2.7). */
-          const NAMES = {
-            'wants-children':'Wanting children', 'children-timing':'Timing for a first child',
-            'blending':'Blending two families',  'step-resilience':'Facing a stepchild’s rejection',
-            'core-value':'What you value most',  'non-negotiable':'Your non-negotiable',
-            'weekend':'How you spend a weekend', 'money-model':'How you handle money',
-            'five-year':'Where you are heading', 'closeness':'What closeness means'
-          };
+             default would imply an answer nobody gave (§2.7).
+
+             Probe display names come from MMQ.probeName — S-E6 and this screen
+             both need them, and a local copy would drift. */
           function paint(){
             const host = document.getElementById('trailRows'); if(!host) return;
             const set = MMQ.buildSet(), ans = MMQ.answers();
@@ -1073,7 +1110,7 @@ Replace with:
                 const qq = MMQ.qById(x.qid); return qq && qq.probe === q.probe;
               }).length) - 1;
               const agrees = q.opts[a.opt].v === m.v;
-              const inference = (NAMES[q.probe] || q.probe)
+              const inference = MMQ.probeName(q.probe)
                 + (same === 0 ? ' · the only answer we have on this'
                    : agrees ? ' · agrees with your other ' + same +
                               (same === 1 ? ' answer' : ' answers')
