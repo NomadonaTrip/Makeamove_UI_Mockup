@@ -2247,6 +2247,7 @@
           <a class="row" href="#S-P3"><div class="av g3 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-sparkle"/></svg></div><div class="grow"><div class="t1">Personality &amp; lifestyle</div><div class="t2">Temperament, hobbies, likes &amp; turn-offs</div></div><span class="chev">›</span></a>
           <a class="row" href="#S-P4"><div class="av g4 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-mailheart"/></svg></div><div class="grow"><div class="t1">Love &amp; intimacy</div><div class="t2">Romance, affection and expectations</div></div><span class="chev">›</span></a>
           <a class="row" href="#S-P5"><div class="av g5 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-ring"/></svg></div><div class="grow"><div class="t1">Marriage &amp; family</div><div class="t2">Readiness, kids, wedding, family views</div></div><span class="chev">›</span></a>
+          <a class="row" href="#S-B4"><div class="av g1 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-sparkle"/></svg></div><div class="grow"><div class="t1">Your karma</div><div class="t2">Your standing, and everything that moved it</div></div><span class="chev">›</span></a>
         </div>
         <div class="foot"><a class="btn move block" href="#S-B2">Done · back to matches</a></div>
       </section>
@@ -3095,6 +3096,34 @@
         <div class="foot">
           <a class="btn move block" href="#S-C1">Invite him to the show</a>
           <a class="link center" href="#S-B2">Back to candidates</a>
+        </div>
+      </section>
+
+      <!-- S-B4 · spec 6.2/6.3/6.4. A leaf off the gallery, not a branch out of
+           a flow, so Prev/Next reaches it after S-B3 without wedging a dead end
+           into the middle of an arc — the same reasoning that kept S-E6A beside
+           S-E6 while the decline branch went to S-E8/S-E9.
+           Every block here is a host: MMKARMA.paint() fills them on navigation
+           and on the §6.4 toggle. Nothing on this screen is written. -->
+      <section class="screen paper" id="S-B4" data-group="B · Matching" data-title="Your karma">
+        <div class="pbar"><a class="back" href="#S-B2">‹</a><h1>Your karma</h1><a class="act" href="#S-A9">Profile ›</a></div>
+        <div class="body">
+          <div class="card" style="text-align:center">
+            <div class="eyebrow">Your standing</div>
+            <div data-karma-head="you" style="margin-top:12px"></div>
+          </div>
+          <!-- §6.3, stated once and not elaborated into a rank. The consequence
+               lands in other people's galleries, which this prototype can never
+               show her, so it is said plainly instead of mocked up. -->
+          <div class="note info">Your candidates are ordered by fit and by how they
+            treat people. The same ordering works on your side — your standing puts
+            you in front of more people than it did last month.</div>
+          <h2 class="scrn" style="font-size:20px">How you got here</h2>
+          <p class="muted" style="font-size:12.5px;margin-top:-6px">Everything that
+            moved your standing. Nobody else ever sees this list — what other people
+            see is on your card, and it never includes what you lost.</p>
+          <div class="card" data-karma-ledger="you"></div>
+          <div class="card" data-karma-raise="you"></div>
         </div>
       </section>
 
@@ -4898,7 +4927,7 @@
   let _classified = false;
   function classify(){
     if(_classified) return;
-    const FEED = new Set(['S-B2','S-E3','S-E4','S-E6A','S-A8','S-H1','S-G3','S-H5','S-QD1']);
+    const FEED = new Set(['S-B2','S-B4','S-E3','S-E4','S-E6A','S-A8','S-H1','S-G3','S-H5','S-QD1']);
     const IMMERSIVE = new Set(['S-D2','S-E1']);
     SCREENS.forEach(s=>{
       let lay;
