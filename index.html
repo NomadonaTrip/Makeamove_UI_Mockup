@@ -3500,7 +3500,7 @@
         </div>
         <div class="foot">
           <a class="btn move block" href="#S-E2A">We're a match — plan a date</a>
-          <a class="link center" href="#S-B2">Not quite — end politely (credit kept)</a>
+          <a class="link center" href="#S-E8">Not quite — end politely (credit kept)</a>
         </div>
       </section>
 
@@ -3655,6 +3655,78 @@
           <div class="card" style="display:flex;align-items:center;justify-content:space-between"><span class="muted" style="font-size:13px">makeamove.app/r/<b style="color:var(--ink)">tolu</b></span><span class="link">Copy</span></div>
           <div class="btnrow"><a class="btn ghost block" href="#S-B2">Done</a><a class="btn move block" href="#S-E7">Share invite</a></div>
         </div>
+      </section>
+
+      <section class="screen paper" id="S-E8" data-group="E · Post-show" data-title="⚠ Date declined · reason">
+        <div class="pbar"><a class="back" href="#S-E2">‹</a><h1>Before you go</h1></div>
+        <div class="body">
+          <div class="note">David will read this, in your words — we don't summarise it and we don't soften it. Your credit is kept either way. A real sentence is kinder than silence, and it's the only thing we ask for.</div>
+          <div id="declineWarn" class="note danger" style="display:none"></div>
+          <div class="field">
+            <label>Why isn't this one for you?
+              <span id="declineCount" style="float:right;font-weight:800;color:var(--t-faint)"></span>
+            </label>
+            <textarea class="textarea" id="declineText" rows="5"
+              placeholder="The honest version. He'd rather hear it than wonder."
+              oninput="MMDECLINEDATE.check()"></textarea>
+          </div>
+          <div class="note info">No options to pick from here — this one is meant to take a moment. The post-date review is where we ask the tick-box questions.</div>
+        </div>
+        <div class="foot">
+          <a class="btn move block disabled" id="declineGo" href="#S-B2"
+             onclick="return MMDECLINEDATE.submit()">Send &amp; go back to matches</a>
+          <a class="link center" href="#S-E9">Demo: see what David receives ›</a>
+        </div>
+        <script>
+        (function(){
+          /* §5.1 — a written reason, shared verbatim, with no options offered:
+             the friction is the point. §5.2 — 40 characters AND a substance
+             check, which does double duty as an abuse screen now that the text
+             reaches a real person.
+
+             Two stages on purpose. The counter gates length live, because that
+             is a rule the user can see themselves meeting. The substance and
+             cruelty checks run on SUBMIT, because flagging cruelty
+             keystroke-by-keystroke would be jumpy and would teach the writer to
+             game the check rather than to say the true thing.
+
+             There is no escape hatch. Unlimited rewrites, no attempt counter,
+             no ghost exit — spec 5.1/5.2, decided with the cost understood. */
+          const ta   = () => document.getElementById('declineText');
+          const btn  = () => document.getElementById('declineGo');
+          const warn = () => document.getElementById('declineWarn');
+
+          function check(){
+            const t = (ta().value || '').trim();
+            const n = t.length, min = MMQ.MIN_REASON;
+            document.getElementById('declineCount').textContent =
+              n >= min ? n + ' characters' : (min - n) + ' more to go';
+            btn().classList.toggle('disabled', n < min);
+            if(n < min) warn().style.display = 'none';   // clear a stale verdict
+            return n >= min;
+          }
+
+          function submit(){
+            const t = (ta().value || '').trim();
+            const verdict = MMQ.reviewReason(t);
+            if(!verdict.ok){
+              const w = warn();
+              w.className = 'note danger';
+              w.textContent = verdict.reason;
+              w.style.display = '';
+              ta().focus();
+              return false;                              // blocks the navigation
+            }
+            warn().style.display = 'none';
+            sessionStorage.setItem('mm_decline_reason',
+              JSON.stringify({ text:t, at:Date.now() }));
+            return true;
+          }
+
+          window.MMDECLINEDATE = { check, submit };
+          check();
+        })();
+        </script>
       </section>
 
       <!-- ============ GROUP F · ASYNC GAME (threshold-activated) ============ -->
