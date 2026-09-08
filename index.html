@@ -613,6 +613,10 @@
   .paper .confrow{border-top-color:var(--line)}
   .confrow:first-child{border-top:none}
   .confrow[data-rejected="true"]{opacity:.45}
+  /* stated-vs-played (spec 5.3): a divergence is the interesting row, an
+     unplayed probe is a quiet one. Both use existing tokens. */
+  .confrow[data-state="unplayed"]{opacity:.6}
+  .confrow[data-state="diverges"] .cf-label{color:var(--move)}
   .confrow .cf-head{display:flex; justify-content:space-between; align-items:baseline; gap:10px}
   .confrow .cf-name{font-weight:700; font-size:13.5px}
   .confrow .cf-label{font-size:10px; letter-spacing:.12em; text-transform:uppercase;
@@ -3600,6 +3604,12 @@
             </div>
           </div>
           <div class="card">
+            <div class="eyebrow" style="color:var(--bulb)">What you said vs. what you played</div>
+            <div class="muted" style="font-size:11.5px;margin-top:4px">Your profile answers, set against the choices you actually made in the games. Where they part company is usually the interesting bit.</div>
+            <div id="divBlock" style="margin-top:10px"></div>
+            <a class="link" href="#S-E6A" style="display:inline-block;margin-top:10px;font-size:12px">See the full evidence trail ›</a>
+          </div>
+          <div class="card">
             <div style="font-size:13px">We noticed you <b>Moved</b> on partners who were open about money struggles. Should we lower <b>Finances</b> further?</div>
             <div class="btnrow" style="margin-top:12px"><button class="btn ghost sm" onclick="pick(this.parentElement.children[1]);this.classList.add('sel')">Keep it</button><button class="btn gold sm">Yes, lower it</button></div>
           </div>
@@ -3641,14 +3651,46 @@
                          : '<button class="cf-wrong" onclick="MMCONF.reject(\''+r.p+'\')">That’s wrong about me</button>')
                 + '</div>';
             }).join('');
+            paintDiv();
           }
+
+          /* §5.3 — stated vs. revealed. Rendered from the SAME paint() as the
+             confidence rows rather than from a second script, so the two
+             derived blocks on this screen cannot drift apart when the dev depth
+             toggle changes. MMDEV.setDepth already calls MMCONF.paint(), so
+             this gets the toggle for free. */
+          const STATE = {
+            agrees:    { label:'Matches',      line:'You said it, and you played it.' },
+            diverges:  { label:'Doesn’t match', line:null },
+            unsettled: { label:'Unsettled',    line:'Your answers here don’t agree with each other yet.' },
+            unplayed:  { label:'Not played',   line:'No game has asked you this one yet.' }
+          };
+          function paintDiv(){
+            const host = document.getElementById('divBlock'); if(!host) return;
+            host.innerHTML = MMQ.divergences().map(r => {
+              const meta = STATE[r.state];
+              const body = r.state === 'diverges'
+                ? '<div class="cf-val">You played: <b>' + r.played.t + '</b></div>'
+                  + '<div class="cf-cite">You said: ' + r.said.t + '</div>'
+                : '<div class="cf-val">' + (r.state === 'agrees' ? r.played.t : r.said.t) + '</div>'
+                  + '<div class="cf-cite">' + meta.line + '</div>';
+              return '<div class="confrow" data-probe="' + r.probe + '"'
+                + ' data-state="' + r.state + '">'
+                + '<div class="cf-head"><span class="cf-name">' + MMQ.probeName(r.probe) + '</span>'
+                + '<span class="cf-label">' + meta.label + '</span></div>'
+                + body
+                + '<div class="cf-cite">From ' + r.said.src + '</div>'
+                + '</div>';
+            }).join('');
+          }
+
           function reject(p){
             const out = rejected();
             if(out.indexOf(p) === -1) out.push(p);
             sessionStorage.setItem('mm_conf_rejected', JSON.stringify(out));
             paint();
           }
-          window.MMCONF = { paint, reject };
+          window.MMCONF = { paint, paintDiv, reject };
           paint();
         })();
         </script>
