@@ -513,6 +513,15 @@
     .lay-form > .foot .btn.block{ max-width:360px; margin-inline:auto }
     /* the phone-sized date picker would balloon in a wide sheet — keep it tidy */
     .lay-form .cal{ max-width:430px; width:100%; margin-inline:auto }
+    /* The week-grid overlay anchors to `.screen`, which out here is the whole
+       page — so its rows stretched the full 1440px and stranded the "both
+       free" tag against the right edge, ignoring the centred sheet entirely.
+       Let the scrim stay full-bleed (it is a modal) but hold its CONTENT to
+       the same column as `.lay-form > .body`. No statusbar out here either,
+       so the 42px phone offset comes back off. */
+    .schedgrid{ padding-top:18px }
+    .schedgrid .sgh, .schedgrid .sgbody{
+      width:min(100% - 48px, var(--pagw)); margin-inline:auto }
 
     /* ============ FEED (responsive grid) ============ */
     .lay-feed{ overflow-y:auto; padding-bottom:64px }
@@ -696,6 +705,66 @@
   .ladder[data-layout="compact"] .lgate.dim{border-left-color:var(--ink-faint)}
   .ladder[data-layout="compact"] .lhead{display:none}
   .ladder[data-layout="compact"] .lfoot{text-align:center; font-size:10px}
+
+  /* ===== scheduler — one component, two modes (spec 2026-09-06, Cluster 4)
+     Mounted by S-C1 (propose), S-C4 / S-E0 / S-E2A (choose). Paper surfaces
+     only: every consuming screen is `paper`. */
+  .sched{display:flex; flex-direction:column; gap:8px}
+  /* .sched-slot / .sgrow / .tzline render inside BOTH the list (a `.sched`
+     descendant) and the grid overlay (a `.schedgrid` descendant, a SIBLING
+     of `.sched`, not nested under it) — `mount()`'s slotHTML() is shared by
+     both. Scope these on their own class, not under `.sched`, or the grid's
+     copies silently fall back to unstyled defaults (tzline collapses to
+     `display:inline`, running both zone lines onto one visual line). */
+  .sched-slot{align-items:center}
+  .sgrow{display:flex; flex-direction:column; gap:2px; flex:1; min-width:0}
+  .sgrow b{font-size:13.5px; font-weight:700}
+  .tzline{display:flex; flex-direction:column; gap:1px}
+  .tzline span{font-size:11px; color:var(--t-dim); line-height:1.35}
+  .tzline span + span{color:var(--t-faint)}
+  /* A selected row becomes a gold (or pink) ticket — `--t-dim`/`--t-faint` are
+     greys picked for the white row and wash out on it, so the partner's time
+     went nearly unreadable exactly when it mattered. Inherit the row's ink. */
+  .opt.sel .tzline span{color:inherit}
+  .opt.sel .tzline span + span{color:inherit; opacity:.72}
+  .sched .sched-more{align-self:flex-start; font-size:12.5px; font-weight:700;
+    color:var(--spotlight); cursor:pointer; text-decoration:underline; background:none;
+    border:0; padding:4px 0}
+  .sched .sched-cap{font-size:11.5px; color:var(--t-faint)}
+  .sched .sched-cap.hit{color:var(--warn); font-weight:700}
+  /* the full week grid, as an overlay within its screen — same pattern as
+     S-D2's .reveal, so it never pushes the screen's flex column. It anchors
+     to `.screen` (position:absolute; index.html:64) deliberately — no mount
+     div should ever get position:relative, or this gets trapped inside it
+     instead of covering the screen. Watch out: the mount div is itself a
+     direct child of `.body`, so the entrance stagger below also puts a
+     `transform` on it — even an identity matrix left behind by that
+     animation's `both` fill-mode establishes a containing block just like
+     position:relative would (confirmed: it never reverts to `none`, so the
+     trap is permanent, not just mid-animation). Neutralise the animation on
+     any `.body` child that hosts a `.schedgrid` so `.screen` stays the real
+     anchor. The `:has(>.schedgrid)` selector below only matches when the
+     mount div is a DIRECT child of `.body` AND `.schedgrid` is a DIRECT
+     child of the mount div — nest the mount div one level deeper (e.g.
+     inside a wrapper) and this rule silently stops matching, reintroducing
+     the trap with no visible error. Any future screen mounting MMSCHED must
+     keep that direct-child shape or update this selector to match. */
+  .screen.on .body>*:has(>.schedgrid){animation:none}
+  /* padding-top clears the 34px .statusbar (index.html:60), which sits at
+     z-index 90 — ABOVE this overlay. At 18px the "All times" heading and the
+     ✕ ran straight through the clock and the battery. Mirror `.pbar`'s 42px;
+     the ≥768px block drops it back to 18px, where the statusbar is hidden. */
+  .schedgrid{position:absolute; inset:0; z-index:70; display:none;
+    flex-direction:column; background:var(--paper); padding:42px 16px 18px}
+  .schedgrid.on{display:flex; animation:scin .28s var(--ease-show)}
+  .schedgrid .sgh{display:flex; align-items:center; justify-content:space-between;
+    gap:10px; margin-bottom:10px}
+  .schedgrid .sgh h3{font-family:var(--display); font-size:17px; margin:0}
+  .schedgrid .sgclose{border:0; background:var(--paper-2); border-radius:9px;
+    width:32px; height:32px; font-size:16px; cursor:pointer; color:var(--t-dim)}
+  .schedgrid .sgbody{flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:8px}
+  .schedgrid .sgday{font-size:11px; font-weight:700; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--t-faint); margin-top:6px}
 </style>
 </head>
 <body>
@@ -1248,6 +1317,271 @@
   }
 
   window.MMLADDER = { PTS, GATE_FRAC, model, mount };
+})();
+</script>
+    <script id="mmsched">
+/* ===== MMSCHED — one scheduler, reused everywhere
+   Spec: docs/superpowers/specs/2026-09-06-scheduling-core-design.md (Cluster 4).
+   Fixtures, not an availability engine: this is a frontend mockup and every
+   "system-computed" time here is a fixture presented as if computed. */
+(function(){
+  const TZ = { GMT: 0, WAT: 1 };
+
+  /* A week of candidate times. `mutual` marks the ones choose mode surfaces
+     as suggestions — the top three are the "best mutual times" of spec 4.1. */
+  const SLOTS = [
+    { id:'sat-2000', day:'Sat 21 Jun', time:'20:00', mutual:true  },
+    { id:'sun-1930', day:'Sun 22 Jun', time:'19:30', mutual:true  },
+    { id:'tue-2100', day:'Tue 24 Jun', time:'21:00', mutual:true  },
+    { id:'sun-1600', day:'Sun 22 Jun', time:'16:00', mutual:false },
+    { id:'thu-2030', day:'Thu 26 Jun', time:'20:30', mutual:false },
+    { id:'fri-1800', day:'Fri 27 Jun', time:'18:00', mutual:false },
+    { id:'sat-1300', day:'Sat 28 Jun', time:'13:00', mutual:false },
+    { id:'sat-2330', day:'Sat 28 Jun', time:'23:30', mutual:false }
+  ];
+
+  const pad = n => (n < 10 ? '0' : '') + n;
+
+  /* 24h -> 12h display. 00:00 reads "12:00 am", 12:00 reads "12:00 pm". */
+  function clock(h, m){
+    const ap = h < 12 ? 'am' : 'pm';
+    let hr = h % 12; if (hr === 0) hr = 12;
+    return hr + ':' + pad(m) + ' ' + ap;
+  }
+
+  /* A slot's `time` is stated in `fromTz`. Render it in `toTz`, flagging the
+     day roll — a 23:30 GMT slot is half past midnight the NEXT day in Lagos,
+     and hiding that is exactly the missed-session class of bug 4.4 exists
+     to prevent. */
+  function fmtLine(slot, fromTz, toTz){
+    const delta = (TZ[toTz] || 0) - (TZ[fromTz] || 0);
+    const parts = slot.time.split(':');
+    let h = +parts[0] + delta; const m = +parts[1];
+    let roll = 0;
+    if (h >= 24){ h -= 24; roll = 1; }
+    if (h < 0)  { h += 24; roll = -1; }
+    return clock(h, m) + ' ' + toTz
+         + (roll > 0 ? ' (+1d)' : roll < 0 ? ' (−1d)' : '');
+  }
+
+  const suggestions = n => SLOTS.filter(s => s.mutual).slice(0, n || 3);
+
+  /* One key per scheduling purpose. The session, the call and the date are
+     different facts; a shared key makes picking one silently rewrite another. */
+  const K = k => 'mm_slot_' + (k || 'session');
+  function save(key, slot){ sessionStorage.setItem(K(key), JSON.stringify(slot)); }
+  function chosen(key){
+    try { return JSON.parse(sessionStorage.getItem(K(key))); }
+    catch(e){ return null; }
+  }
+  function clear(key){ sessionStorage.removeItem(K(key)); }
+
+  const esc = s => String(s).replace(/[&<>"]/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  /* Full-screen overlays inside a screen (`.schedgrid`, S-E0's `.ringwrap`)
+     are `position:absolute; inset:0` on `.screen`. But `.screen` is ITSELF
+     the scroll container (index.html:64, overflow-y:auto), so `inset:0`
+     resolves against its unscrolled padding box and the overlay then scrolls
+     WITH the content: scroll a screen down 50px, open the overlay, and it
+     sits 50px too high — its header and close button are clipped off the top
+     (unreachable) while the screen shows through the 50px gap underneath.
+     Pin the overlay to the visible band instead, and freeze the screen's
+     scroll while it is up so it cannot drift back out of alignment. */
+  function openOverlay(node){
+    const sc = node.closest && node.closest('.screen');
+    if (sc){
+      node.style.top    = sc.scrollTop + 'px';
+      node.style.height = sc.clientHeight + 'px';
+      node.style.bottom = 'auto';
+      sc.style.overflowY = 'hidden';
+    }
+    node.classList.add('on');
+  }
+  function closeOverlay(node){
+    node.classList.remove('on');
+    /* Clear the pinning too. Leaving a stale `top` behind is what made a
+       return visit render wrong: route() zeroes the screen's scrollTop, so a
+       `top:124px` written against the OLD scroll floats the overlay 124px
+       down the page with the header showing above it. */
+    node.style.top = ''; node.style.height = ''; node.style.bottom = '';
+    const sc = node.closest && node.closest('.screen');
+    /* restoring overflow can drop the scroll position — put it back */
+    if (sc){ const t = sc.scrollTop; sc.style.overflowY = ''; sc.scrollTop = t; }
+  }
+
+  /* Every live mount, so navigation can shut an overlay the same way the ✕
+     does (list re-rendered, selection re-synced) instead of only hiding it. */
+  const mounts = [];
+
+  /* Navigation is a router concern — nothing inside the component observes
+     it. Without this, leaving a screen with `.schedgrid`/`.ringwrap` open
+     left the overlay `.on` AND left `overflowY:hidden` inline on the
+     `<section>`, never released: on S-C4/S-E2A (no ring script to
+     incidentally call stop()) that screen could never scroll again.
+     The router calls this on every route change. */
+  function closeAllOverlays(){
+    mounts.forEach(m => { try { m.closeGrid(); } catch(e){} });
+    /* `.ringwrap` (S-E0) is not owned by a mount, and a grid whose mount has
+       gone away still has to be un-pinned — sweep the DOM as a backstop. */
+    [].forEach.call(document.querySelectorAll('.schedgrid, .ringwrap'), closeOverlay);
+  }
+
+  /* `hideMutual` suppresses the "both free" tag: in propose mode the invitee
+     has not engaged yet, so there is nothing to overlap and the badge would
+     be claiming an availability that cannot exist. */
+  function slotHTML(s, self, other, sel, hideMutual){
+    return '<div class="opt sched-slot' + (sel ? ' sel' : '') + '" data-id="' + s.id + '">'
+         + '<span class="dot"></span>'
+         + '<span class="sgrow"><b>' + esc(s.day) + '</b>'
+         + '<span class="tzline">'
+         + '<span>' + esc(fmtLine(s, self.tz, self.tz)) + '</span>'
+         + '<span>' + esc(fmtLine(s, self.tz, other.tz)) + '</span>'
+         + '</span></span>'
+         + (s.mutual && !hideMutual ? '<span class="tag pass">both free</span>' : '')
+         + '</div>';
+  }
+
+  function mount(el, opts){
+    opts = opts || {};
+    const mode  = opts.mode === 'propose' ? 'propose' : 'choose';
+    const key   = opts.key || 'session';
+    const self  = opts.self  || { name:'You',  tz:'GMT' };
+    const other = opts.other || { name:'Them', tz:'GMT' };
+    const max   = opts.max || 5;
+    const onChange = typeof opts.onChange === 'function' ? opts.onChange : null;
+    let picks = [];                       // slot ids
+
+    /* Propose mode already lists every slot, so it has no "see all times ›"
+       button and no way to open the grid — emitting the overlay there was
+       dead DOM (and one more `.schedgrid` for the router to sweep). */
+    el.innerHTML =
+        '<div class="sched">'
+      + '<div class="sched-list"></div>'
+      + (mode === 'propose'
+          ? '<div class="sched-cap"></div>'
+          : '<button type="button" class="sched-more">see all times ›</button>')
+      + '</div>'
+      + (mode === 'propose' ? ''
+          : '<div class="schedgrid"><div class="sgh"><h3>All times</h3>'
+            + '<button type="button" class="sgclose">✕</button></div>'
+            + '<div class="sgbody"></div></div>');
+
+    const listEl = el.querySelector('.sched-list');
+    const gridEl = el.querySelector('.schedgrid');
+    const gridBody = el.querySelector('.sgbody');
+    const capEl  = el.querySelector('.sched-cap');
+
+    /* Choose mode lists the three mutual suggestions — plus whatever was
+       picked in the full-week overlay, if that slot is not already one of
+       them. Without the second half, choosing "Sat 28 Jun 11:30 pm" from the
+       overlay and closing it drops you back onto three UNSELECTED rows: the
+       choice is saved and S-C5 announces it, but on screen it looks lost. */
+    function shown(){
+      if (mode === 'propose') return SLOTS;
+      const list = suggestions(3);
+      picks.forEach(id => {
+        if (!list.filter(s => s.id === id).length){
+          const s = SLOTS.filter(x => x.id === id)[0];
+          if (s) list.push(s);
+        }
+      });
+      return list;
+    }
+
+    function paintCap(){
+      if (!capEl) return;
+      capEl.textContent = picks.length + ' of ' + max + ' times chosen';
+      capEl.classList.toggle('hit', picks.length >= max);
+    }
+
+    /* Selection state is reflected by toggling `.sel` on whatever
+       `.sched-slot` rows already exist in the DOM (list and, once built,
+       grid) rather than re-rendering markup on every tap. A tap can arrive
+       in a fast burst (propose mode lets several rows be picked before the
+       DOM has to change shape at all) and rebuilding innerHTML on every one
+       would detach not-yet-tapped rows out from under their own listeners. */
+    function syncSelection(){
+      [...el.querySelectorAll('.sched-slot')].forEach(row => {
+        row.classList.toggle('sel', picks.indexOf(row.getAttribute('data-id')) > -1);
+      });
+      paintCap();
+      if (onChange) onChange(api);
+    }
+
+    function renderList(){
+      listEl.innerHTML = shown()
+        .map(s => slotHTML(s, self, other, picks.indexOf(s.id) > -1, mode === 'propose')).join('');
+    }
+
+    let gridBuilt = false;
+    /* The grid shows every slot, grouped by day, and reflects the same
+       selection — it is the same list, not a second one. Built once, lazily,
+       the first time it's opened: building it eagerly at mount would put a
+       second copy of every mutual slot's `.sched-slot` in the DOM the moment
+       the component mounts, before the user ever asked to see it. */
+    function renderGrid(){
+      if (!gridBody) return;
+      const byDay = [];
+      SLOTS.forEach(s => {
+        let g = byDay.filter(x => x.day === s.day)[0];
+        if (!g){ g = { day:s.day, rows:[] }; byDay.push(g); }
+        g.rows.push(s);
+      });
+      gridBody.innerHTML = byDay.map(g =>
+        '<div class="sgday">' + esc(g.day) + '</div>'
+        + g.rows.map(s => slotHTML(s, self, other, picks.indexOf(s.id) > -1, mode === 'propose')).join('')
+      ).join('');
+      gridBuilt = true;
+    }
+
+    function toggle(id){
+      const at = picks.indexOf(id);
+      if (mode === 'choose'){
+        picks = [id];
+        save(key, SLOTS.filter(s => s.id === id)[0]);
+      } else if (at > -1){
+        picks.splice(at, 1);
+      } else if (picks.length < max){
+        picks.push(id);
+      }
+      syncSelection();
+    }
+
+    el.addEventListener('click', e => {
+      const row = e.target.closest && e.target.closest('.sched-slot');
+      if (row){ toggle(row.getAttribute('data-id')); return; }
+      if (e.target.closest && e.target.closest('.sched-more')) api.openGrid();
+      if (e.target.closest && e.target.closest('.sgclose'))    api.closeGrid();
+    });
+
+    const api = {
+      selected(){
+        const got = picks.map(id => SLOTS.filter(s => s.id === id)[0]);
+        return mode === 'choose' ? (got[0] || null) : got;
+      },
+      reset(){ picks = []; clear(key); renderList(); syncSelection(); },
+      openGrid(){ if (!gridEl) return; if (!gridBuilt) renderGrid(); openOverlay(gridEl); },
+      /* re-render so a pick made inside the overlay is visible in the list */
+      closeGrid(){
+        if (!gridEl) return;
+        const wasOpen = gridEl.classList.contains('on');
+        closeOverlay(gridEl);
+        /* Only when it was actually up: the router calls this on EVERY route
+           change, and a needless re-render would fire onChange at consumers
+           that are only listening for a real change of pick. */
+        if (wasOpen){ renderList(); syncSelection(); }
+      }
+    };
+
+    renderList();
+    paintCap();
+    mounts.push(api);
+    return api;
+  }
+
+  window.MMSCHED = { TZ, SLOTS, fmtLine, suggestions, save, chosen, clear, mount, slotHTML,
+                     openOverlay, closeOverlay, closeAllOverlays };
 })();
 </script>
     <div class="screenwrap" id="screenwrap">
@@ -2044,6 +2378,16 @@
       pid:'1617244147299-5ef406921c35',
       bands:benchBands(38,'n','You live in the UK · he lives in Ireland — different country',
                        62,'You are 40 · he is 42 — inside your stated 38–48 range',
+                       B('y','You both hold a postgraduate qualification','profile')) },
+
+    { id:'chidi', name:'Chidi', age:44, city:'Lagos',
+      blurb:'Civil engineer · 1 kid · Lagos',
+      /* Placeholder portrait: this reuses bode's Unsplash id rather than
+         inventing one, because PHOTO() builds the URL directly and a wrong
+         id renders a broken image. Swap for a hand-picked photo. */
+      pid:'1617244147299-5ef406921c35',
+      bands:benchBands(34,'n','You live in London · he lives in Lagos — different country, and an hour ahead',
+                       56,'You are 40 · he is 44 — inside your stated 38–48 range',
                        B('y','You both hold a postgraduate qualification','profile')) }
   ];
 
@@ -2069,7 +2413,7 @@
   /* ---- state ---- */
   const KEY = 'mm_cand';
   const DEFAULT = { live:['david','samuel','marcus'],
-                    bench:['tunde','emeka','kwame','ifeanyi','bode'],
+                    bench:['tunde','emeka','kwame','ifeanyi','bode','chidi'],
                     removed:[] };
   let state;
   const byId = id => CANDIDATES.find(c => c.id === id);
@@ -2401,16 +2745,21 @@
             <div class="av g1 s52">D</div><div><div style="font-weight:700">A synchronous game show</div><div class="muted" style="font-size:12px">One-on-one · 10–15 questions · ≥70% each to pass</div></div>
           </div>
           <label class="muted" style="font-size:12px;font-weight:700">Propose up to 5 times that work for you</label>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <div class="opt sel" onclick="pick(this)"><span class="dot"></span>Sat 21 Jun · 8:00 pm</div>
-            <div class="opt sel" onclick="pick(this)"><span class="dot"></span>Sun 22 Jun · 7:30 pm</div>
-            <div class="opt sel" onclick="pick(this)"><span class="dot"></span>Tue 24 Jun · 9:00 pm</div>
-            <div class="opt sel" onclick="pick(this)"><span class="dot"></span>Thu 26 Jun · 8:30 pm</div>
-            <div class="opt" onclick="pick(this)"><span class="dot"></span><svg class="icon"><use href="#i-plus"/></svg> add a fifth slot</div>
-          </div>
+          <div id="c1sched"></div>
           <div class="note info">David has <b>24 hours</b> to accept and agree a time. He'll only see your photo and a few details until he does.</div>
         </div>
         <div class="foot"><a class="btn move block" href="#S-C2">Send invite</a></div>
+        <script>
+        (function(){
+          /* Propose mode (spec 4.1): the invitee has not engaged yet, so there
+             is nothing to overlap — you state your own times and S-C3 receives
+             them. Choose mode takes over from S-C4 onward. */
+          MMSCHED.mount(document.getElementById('c1sched'), {
+            mode:'propose', key:'session', max:5,
+            self:{ name:'Tolu', tz:'GMT' }, other:{ name:'David', tz:'GMT' }
+          });
+        })();
+        </script>
       </section>
 
       <section class="screen dark" id="S-C2" data-group="C · Invite & schedule" data-title="Invite sent · 24h consent">
@@ -2437,41 +2786,62 @@
             <div class="av g2 s72">T</div>
             <div><div style="font-weight:800;font-size:18px">Tolu, 37</div><div class="muted" style="font-size:13px">Project manager · 2 kids · London</div><div style="margin-top:6px"><span class="tag pass">Family fit</span> <span class="tag">AA</span></div></div>
           </div>
-          <h2 class="scrn" style="font-size:22px">She proposed 4 times</h2>
+          <h2 class="scrn" style="font-size:22px" id="c3claim">She proposed 4 times</h2>
           <p class="muted" style="font-size:12.5px;margin-top:-6px">Pick one, or offer your own — you'll see when you both overlap.</p>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <div class="opt" onclick="pick(this)"><span class="dot"></span>Sat 21 Jun · 8:00 pm</div>
-            <div class="opt" onclick="pick(this)"><span class="dot"></span>Sun 22 Jun · 7:30 pm</div>
-          </div>
+          <div id="c3sched"></div>
         </div>
         <div class="foot"><a class="btn move block" href="#S-C4">Choose a time</a><a class="link center" href="#S-C6">Decline politely</a></div>
+        <script>
+        (function(){
+          /* David's side. He picks from what Tolu proposed, so the count in the
+             heading is derived — a hardcoded "4" would drift the moment the
+             fixture changes. */
+          const shown = MMSCHED.SLOTS.slice(0, 4);
+          document.getElementById('c3claim').textContent =
+            'She proposed ' + shown.length + ' times';
+          const host = document.getElementById('c3sched');
+          /* Share MMSCHED's own row renderer rather than hand-duplicating its
+             markup — this list is a read-only "pick one" preview (single-select
+             via the global pick(), no MMSCHED.save()), so wire the click by
+             delegation instead of mounting the full interactive component. */
+          host.innerHTML =
+            '<div class="sched"><div class="sched-list">'
+            + shown.map(s => MMSCHED.slotHTML(s, {tz:'GMT'}, {tz:'GMT'}, false)).join('')
+            + '</div></div>';
+          host.addEventListener('click', function(e){
+            const row = e.target.closest && e.target.closest('.sched-slot');
+            if (row) pick(row);
+          });
+        })();
+        </script>
       </section>
 
       <section class="screen paper" id="S-C4" data-group="C · Invite & schedule" data-title="Scheduling · mutual availability">
         <div class="pbar"><a class="back" href="#S-C3">‹</a><h1>Find a time</h1></div>
         <div class="body">
-          <div style="display:flex;gap:8px;align-items:center;font-size:12px" class="muted">
-            <span class="av g2 s28">T</span> Tolu &nbsp;<span style="width:14px;height:8px;border-radius:3px;background:var(--move);display:inline-block"></span> her slots &nbsp;
-            <span class="av g1 s28">D</span> David &nbsp;<span style="width:14px;height:8px;border-radius:3px;background:var(--spotlight);display:inline-block"></span> yours
-          </div>
-          <div class="card">
-            <div class="muted" style="font-size:12px;font-weight:700;margin-bottom:8px">SATURDAY 21 JUN</div>
-            <div class="opt sel" onclick="pick(this)" style="justify-content:space-between"><span><b>8:00 pm</b></span><span class="tag pass">✓ Mutual overlap</span></div>
-          </div>
-          <div class="card">
-            <div class="muted" style="font-size:12px;font-weight:700;margin-bottom:8px">SUNDAY 22 JUN</div>
-            <div class="opt" onclick="pick(this)" style="justify-content:space-between"><span>7:30 pm</span><span class="tag move">Tolu only</span></div>
-            <div class="opt" onclick="pick(this)" style="justify-content:space-between;margin-top:8px"><span>4:00 pm</span><span class="tag" style="background:rgba(47,107,255,.14);color:var(--spotlight)">David only</span></div>
-          </div>
-          <div class="note">A session is scheduled when one of you confirms a stated slot, or you both pick a computed overlap. The 8pm Saturday slot works for both.</div>
+          <!-- The pink/blue "her slots / yours" key was removed with the old
+               per-person cards: MMSCHED's rows carry no colour attribution,
+               so the legend was a caption for nothing. -->
+          <div id="c4sched"></div>
+          <div class="note">A session is scheduled when you both land on the same time. The suggestions are the times you are both free; <b>see all times</b> opens the full week.</div>
         </div>
-        <div class="foot"><a class="btn move block" href="#S-C5">Confirm Sat · 8:00 pm</a></div>
+        <div class="foot"><a class="btn move block" href="#S-C5">Confirm & continue</a></div>
+        <script>
+        (function(){
+          /* Choose mode (spec 4.1): three best mutual times, one tap, with the
+             full week behind "see all times". */
+          MMSCHED.mount(document.getElementById('c4sched'), {
+            mode:'choose', key:'session',
+            self:{ name:'Tolu', tz:'GMT' }, other:{ name:'David', tz:'GMT' }
+          });
+        })();
+        </script>
       </section>
 
       <section class="screen paper" id="S-C5" data-group="C · Invite & schedule" data-title="Scheduled · soft-hold + CRA waiver">
         <div class="pbar"><h1>Confirm & commit</h1></div>
         <div class="body">
-          <div class="note pass">✓ Saturday 21 Jun · 8:00 pm agreed by both. This is the moment commitment bites.</div>
+          <div class="note pass" id="c5slot">✓ Agreed by both. This is the moment commitment bites.</div>
           <div class="card">
             <div style="display:flex;justify-content:space-between;align-items:center"><div style="font-weight:700">Session soft-hold</div><div class="big-num" style="font-size:22px">£0.00</div></div>
             <div class="muted" style="font-size:12px;margin-top:4px">Free during launch — your 1 free credit covers this. After the moratorium a hold is placed here and <b>captured only when you play</b>.</div>
@@ -2487,6 +2857,22 @@
           <label class="opt" style="cursor:pointer;align-items:flex-start"><input type="checkbox" checked style="width:18px;height:18px;accent-color:var(--move);margin-top:2px"> <span style="font-size:12.5px;font-weight:500">I agree to start now and <b>waive my 14-day cooling-off</b> for this scheduled session (Consumer Rights Act 2015).</span></label>
         </div>
         <div class="foot"><a class="btn move block" href="#S-D1">Lock it in</a></div>
+        <script>
+        (function(){
+          function paint(){
+            if (location.hash !== '#S-C5') return;
+            const s = MMSCHED.chosen('session');
+            const el = document.getElementById('c5slot');
+            if (!el) return;
+            el.innerHTML = s
+              ? '✓ <b>' + s.day + ' · ' + MMSCHED.fmtLine(s,'GMT','GMT') + '</b> ('
+                + MMSCHED.fmtLine(s,'GMT','GMT') + ') agreed by both. This is the moment commitment bites.'
+              : '✓ Agreed by both. This is the moment commitment bites.';
+          }
+          window.addEventListener('hashchange', paint);
+          paint();
+        })();
+        </script>
       </section>
 
       <section class="screen dark" id="S-C6" data-group="C · Invite & schedule" data-title="⚠ Invite declined">
@@ -2804,7 +3190,7 @@
           </div>
           <p class="muted" style="max-width:30ch;margin:0 auto;line-height:1.5">Both halves cleared 70%. It's a match. Next: a 30-minute video call to feel the chemistry, then a real date.</p>
           <div class="note pass">We celebrate the <b>exit</b>, not the streak. The goal was always to get you off the app — together.</div>
-          <a class="btn pass block" href="#S-E1">Start the video call</a>
+          <a class="btn pass block" href="#S-E0">Set up the video call</a>
         </div>
       </section>
 
@@ -2852,6 +3238,118 @@
       </section>
 
       <!-- ============ GROUP E · POST-SHOW ============ -->
+      <section class="screen paper" id="S-E0" data-group="E · Post-show" data-title="Set up the video call">
+        <style>
+          #S-E0 .ringwrap{position:absolute; inset:0; z-index:80; display:none;
+            flex-direction:column; align-items:center; justify-content:center; gap:16px;
+            background:radial-gradient(70% 50% at 50% 40%, #1b2440, #0d1226); color:var(--ink); text-align:center; padding:30px}
+          #S-E0 .ringwrap.on{display:flex; animation:scin .3s ease}
+          #S-E0 .ringwrap .rnum{font-family:var(--display); font-weight:900; font-size:54px; color:var(--bulb)}
+          #S-E0 .ringwrap .rsub{font-size:13px; color:var(--ink-dim); max-width:28ch}
+          #S-E0 .ringwrap .pulse{width:96px; height:96px; border-radius:50%;
+            background:rgba(255,45,111,.18); display:flex; align-items:center; justify-content:center;
+            animation:ringpulse 1.1s ease-in-out infinite}
+          @keyframes ringpulse{50%{transform:scale(1.12); background:rgba(255,45,111,.32)}}
+          /* S-E0 is a paper screen, so plain .btn.ghost resolves to var(--t)
+             (dark navy) — invisible against this overlay's own dark gradient.
+             .dark .btn.ghost would fix it but never applies here (the SCREEN
+             is paper, not dark); mirror that rule scoped to the overlay only. */
+          #S-E0 .ringwrap .btn.ghost{border-color:rgba(255,255,255,.22); color:var(--ink)}
+        </style>
+        <div class="pbar"><h1>Set up the call</h1></div>
+        <div class="body">
+          <div class="note pass">You both cleared 70%. Next: a 30-minute video call.</div>
+          <div class="card" style="display:flex;gap:12px;align-items:center">
+            <div class="av g1 s52">D</div>
+            <div><div style="font-weight:800">Call David now</div>
+              <div class="muted" style="font-size:12px">Rings for 60 seconds. No answer, and you'll pick a time instead.</div></div>
+          </div>
+          <a class="btn move block" data-call-now onclick="MMCALL.ring()">Call now</a>
+          <div class="muted" style="font-size:12px;font-weight:700">Or agree a time</div>
+          <div id="e0sched"></div>
+          <div class="note">Nothing is charged for the call. <a class="link" onclick="MMCALL.ring()">demo · ring ›</a></div>
+        </div>
+        <!-- Agreeing a time here had no forward step at all: the only exit was
+             the ring overlay's "he answers". Every sibling scheduling screen
+             (S-C4, S-E2A) confirms from a `.foot`; this one now matches. It
+             also restores the desktop sheet's bottom edge — `.lay-form >
+             .body:last-child` never matched, because `.ringwrap` follows the
+             body, so the sheet was left with no bottom border or radius.
+             It must NOT route to #S-E1: agreeing a FUTURE time is not starting
+             the call. "Call now" stays the only path into the live call, so
+             this confirms in place — inert until a slot is chosen, then an
+             inline confirmation in the shape S-C5 and S-E4 use. -->
+        <div class="foot">
+          <a class="btn move block disabled" id="e0confirm">Confirm the time ›</a>
+          <div class="note pass" id="e0agreed" style="display:none"></div>
+        </div>
+        <div class="ringwrap">
+          <div class="pulse"><svg class="icon" style="width:38px;height:38px;color:var(--move)"><use href="#i-heart"/></svg></div>
+          <div class="rnum" data-ring-count>60</div>
+          <div class="rsub">Ringing David… we'll drop you back to scheduling if he doesn't pick up.</div>
+          <div class="btnrow">
+            <a class="btn ghost sm" onclick="MMCALL.noAnswer()">Cancel</a>
+            <a class="btn move sm" onclick="MMCALL.answer()">Demo: he answers ›</a>
+          </div>
+        </div>
+        <script>
+        (function(){
+          /* The 60s ring is an OVERLAY, not a screen (spec 4.2). Unanswered,
+             it closes and the caller is already standing in the scheduler —
+             which is exactly the "no awkward dead end" the decision asks for. */
+          const cta    = document.getElementById('e0confirm');
+          const agreed = document.getElementById('e0agreed');
+          const sched  = MMSCHED.mount(document.getElementById('e0sched'), {
+            mode:'choose', key:'call',
+            self:{ name:'Tolu', tz:'GMT' }, other:{ name:'David', tz:'GMT' },
+            /* Any change of pick puts the CTA back: the confirmation names a
+               specific time, so it cannot outlive the choice it names. */
+            onChange(api){
+              agreed.style.display = 'none';
+              cta.style.display = '';
+              cta.classList.toggle('disabled', !api.selected());
+            }
+          });
+          cta.addEventListener('click', function(){
+            const s = sched.selected();
+            if (!s) return;                     // .disabled also blocks pointer events
+            agreed.innerHTML = '✓ Call agreed for <b>' + s.day + ' · '
+              + MMSCHED.fmtLine(s,'GMT','GMT') + '</b> ('
+              + MMSCHED.fmtLine(s,'GMT','GMT') + '). We\'ll remind you both — '
+              + 'nothing is charged for the call.';
+            cta.style.display = 'none';
+            agreed.style.display = '';
+          });
+          const wrap = document.querySelector('#S-E0 .ringwrap');
+          const num  = document.querySelector('#S-E0 [data-ring-count]');
+          let t = null, left = 60;
+          /* openOverlay/closeOverlay, not classList alone: this overlay is
+             absolute-on-`.screen` and `.screen` scrolls, so at 390×667 (where
+             this screen does overflow) a raw `inset:0` overlay opens offset by
+             the scroll and leaves the screen showing through beneath it. */
+          function stop(){ if(t){ clearInterval(t); t = null; } MMSCHED.closeOverlay(wrap); }
+          window.MMCALL = {
+            ring(){
+              left = 60; num.textContent = left;
+              MMSCHED.openOverlay(wrap);
+              if (t) clearInterval(t);
+              t = setInterval(() => {
+                left--; num.textContent = left;
+                if (left <= 0) MMCALL.noAnswer();
+              }, 1000);
+            },
+            answer(){ stop(); location.hash = 'S-E1'; },
+            noAnswer(){ stop(); }
+          };
+          /* Leaving the screen must kill the timer, or it keeps counting and
+             yanks the user back here from wherever they navigated to. */
+          window.addEventListener('hashchange', () => {
+            if (location.hash !== '#S-E0') stop();
+          });
+        })();
+        </script>
+      </section>
+
       <section class="screen dark" id="S-E1" data-group="E · Post-show" data-title="Whereby video call">
         <div style="position:absolute;inset:0;display:flex;flex-direction:column">
           <div style="flex:1;background:linear-gradient(160deg,#1c2a52,#0e1630);display:flex;align-items:center;justify-content:center;position:relative">
@@ -2879,15 +3377,34 @@
           <div class="field"><label>Anything the game show missed?</label><textarea class="textarea" placeholder="e.g. denominational specifics, tone, energy…"></textarea></div>
         </div>
         <div class="foot">
-          <a class="btn move block" href="#S-E3">We're a match — plan a date</a>
+          <a class="btn move block" href="#S-E2A">We're a match — plan a date</a>
           <a class="link center" href="#S-B2">Not quite — end politely (credit kept)</a>
         </div>
+      </section>
+
+      <section class="screen paper" id="S-E2A" data-group="E · Post-show" data-title="Date scheduling · time">
+        <div class="pbar"><a class="back" href="#S-E2">‹</a><h1>When suits you both?</h1></div>
+        <div class="body">
+          <div class="note info">Pick a time first — the venue list is filtered to places open then.</div>
+          <div id="e2asched"></div>
+        </div>
+        <div class="foot"><a class="btn move block" href="#S-E3">Choose a venue ›</a></div>
+        <script>
+        (function(){
+          /* The physical date's time. Its own key: overwriting the session
+             slot here would make S-C5 announce the date instead. */
+          MMSCHED.mount(document.getElementById('e2asched'), {
+            mode:'choose', key:'date',
+            self:{ name:'Tolu', tz:'GMT' }, other:{ name:'David', tz:'GMT' }
+          });
+        })();
+        </script>
       </section>
 
       <section class="screen paper" id="S-E3" data-group="E · Post-show" data-title="Date scheduling · venue">
         <div class="pbar"><a class="back" href="#S-E2">‹</a><h1>Pick a venue</h1></div>
         <div class="body">
-          <div class="note info"><svg class="icon"><use href="#i-pin"/></svg> Google Places · near Canary Wharf · 2-week window to meet.</div>
+          <div class="note info"><svg class="icon"><use href="#i-pin"/></svg> <b>Midpoint of you both — near Stratford.</b> Computed from your two areas; neither of you sees where the other lives or works. 2-week window to meet.</div>
           <div class="input" style="display:flex;align-items:center;gap:8px;color:var(--t-faint)"><svg class="icon"><use href="#i-search"/></svg> Search restaurants, bars…</div>
           <a class="row" href="#S-E4"><div class="av g4 s52" style="border-radius:10px"><svg class="icon" style="width:22px;height:22px"><use href="#i-utensils"/></svg></div><div class="grow"><div class="t1">Boisdale of Canary Wharf</div><div class="t2">Scottish · ££ · 0.4 mi · ★4.6</div></div><span class="chev">›</span></a>
           <a class="row" href="#S-E4"><div class="av g3 s52" style="border-radius:10px"><svg class="icon" style="width:22px;height:22px"><use href="#i-wine"/></svg></div><div class="grow"><div class="t1">The Gun</div><div class="t2">Gastropub · ££ · 0.6 mi · ★4.5</div></div><span class="chev">›</span></a>
@@ -2901,13 +3418,29 @@
           <div class="card pad-lg center" style="display:flex;flex-direction:column;gap:8px;align-items:center">
             <div style="font-size:36px"><svg class="icon" style="width:36px;height:36px"><use href="#i-utensils"/></svg></div>
             <h2 class="scrn" style="font-size:22px">Boisdale of Canary Wharf</h2>
-            <div class="muted">Saturday 28 Jun · 7:30 pm · with David</div>
+            <div class="muted" id="e4when">with David</div>
           </div>
           <div class="row"><span><svg class="icon" style="width:20px;height:20px"><use href="#i-calendar"/></svg></span><div class="grow"><div class="t1">Reminder set</div><div class="t2">Email + push, 24h and 2h before</div></div></div>
           <div class="row"><span><svg class="icon" style="width:20px;height:20px"><use href="#i-hourglass"/></svg></span><div class="grow"><div class="t1">Need more time?</div><div class="t2">One lifeline extension (needs David's OK)</div></div><span class="link">Extend</span></div>
           <div class="note">Demo: skip ahead to after the date.</div>
         </div>
         <div class="foot"><a class="btn primary block" href="#S-E5">▶ After the date</a></div>
+        <script>
+        (function(){
+          function paint(){
+            if (location.hash !== '#S-E4') return;
+            const s = MMSCHED.chosen('date');
+            const el = document.getElementById('e4when');
+            if (!el) return;
+            el.innerHTML = s
+              ? s.day + ' · ' + MMSCHED.fmtLine(s,'GMT','GMT')
+                + ' <span style="color:var(--t-faint)">(' + MMSCHED.fmtLine(s,'GMT','GMT') + ')</span> · with David'
+              : 'with David';
+          }
+          window.addEventListener('hashchange', paint);
+          paint();
+        })();
+        </script>
       </section>
 
       <section class="screen paper" id="S-E5" data-group="E · Post-show" data-title="Post-date feedback">
@@ -3392,7 +3925,7 @@
               + '</div>').join('');
 
             document.getElementById('f4cta').innerHTML = pass
-              ? '<a class="btn pass block" href="#S-E1">Schedule the video call</a>'
+              ? '<a class="btn pass block" href="#S-E0">Schedule the video call</a>'
               : '<a class="btn primary block" href="#S-B2">Back to your matches</a>';
           }
           window.MMRESULT = { paint };
@@ -3711,6 +4244,12 @@
   function go(id){ if(id) location.hash = id; }
   function curId(){ return location.hash.slice(1) || FIRST; }
   function route(){
+    /* An open scheduler overlay must not survive the screen it belongs to:
+       it is absolute-on-`.screen` and freezes that screen's scroll, so
+       leaving with one up stranded a pinned overlay on the old screen and
+       left `overflowY:hidden` inline on it forever. Close before anything
+       moves — every route in (toolbar, ☰, arrow keys, links) lands here. */
+    if (window.MMSCHED && MMSCHED.closeAllOverlays) MMSCHED.closeAllOverlays();
     refresh();
     const id = curId();
     let found = false;
