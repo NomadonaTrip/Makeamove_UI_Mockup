@@ -549,6 +549,13 @@
        as the #deckList rule above. */
     #S-E6A > .body > .card{ grid-column:1 / -1 }
 
+    /* #b2pursued is a bare host div above #b2list — without a span rule it
+       claims column 1 like any other grid item, bumping #b2list to column 2
+       and #b2drawerwrap/#b2gap out to a second row. Same reason as the
+       #deckList and #S-E6A rules above: span the full row and sit above the
+       candidate list instead. */
+    #b2pursued{ grid-column:1 / -1 }
+
     /* ============ IMMERSIVE (full-bleed, capped measure) ============ */
     .lay-immersive .heads, .lay-immersive .turnflag, .lay-immersive .stage,
     .lay-immersive .base, .lay-immersive .act{ max-width:620px; margin-inline:auto; width:100% }
@@ -634,6 +641,22 @@
   .paper .confrow .cf-cite{color:var(--t-faint)}
   .confrow .cf-wrong{margin-top:8px; font-size:11.5px; background:none; border:none;
     padding:0; cursor:pointer; color:var(--move); font-family:var(--body); text-decoration:underline}
+
+  /* ===== karma (spec 6.1–6.4) =====
+     The ledger reuses .confrow wholesale; these two states are the only
+     addition, and both take colours the block above already uses. A gain is
+     --pass, a loss is --move. No new colour enters the file. */
+  .confrow[data-state="gain"] .cf-label{color:var(--pass)}
+  .confrow[data-state="loss"] .cf-label{color:var(--move)}
+  /* Standing, on S-B4. Direction A draws dots, Direction B draws the number;
+     both sit in the same host so the toggle swaps one subtree. */
+  .kdots{font-size:20px; letter-spacing:4px; color:var(--move); line-height:1}
+  .kscore{font-family:var(--display); font-weight:900; font-size:44px;
+    line-height:1; color:var(--move)}
+  .kband{font-family:var(--display); font-size:11px; letter-spacing:.14em;
+    text-transform:uppercase; font-weight:700; margin-top:8px; color:var(--t-dim)}
+  .dark .kband{color:var(--ink-dim)}
+  .ktraits{display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-top:12px}
 
   /* ===== async result · the mirrored-pairs reveal (spec 1.5) =====
      Each attribute both parties were asked about, what each said, and how the
@@ -1720,6 +1743,228 @@
   window.MMSCHED = { TZ, SLOTS, fmtLine, suggestions, save, chosen, clear, mount, slotHTML,
                      openOverlay, closeOverlay, closeAllOverlays };
 })();
+
+/* ===== KARMA · spec 6.1–6.4, 6.6 ==========================================
+   Standing is a DERIVATION over the four behaviours §6.2 rewards, never a
+   stored number. One data shape, two renderings: Direction A shows the
+   sub-scores clearing the trait gate as phrases, Direction B shows their
+   weighted mean as a number. Had Direction A's traits been their own fixture
+   copy, the A/B test would compare a real number against invented sentences
+   and could not settle anything.
+
+   Screens do not compute karma. They declare a host — data-karma-of,
+   -head, -ledger, -raise — and paint() fills it on navigation. That is why
+   the §6.4 toggle has exactly one repaint path. */
+(function(){
+  const BEHAVIOURS = [
+    { key:'responds', name:'Responsiveness',      w:30, trait:'Responds within a day' },
+    { key:'shows',    name:'Showing up',          w:30, trait:'Always shows up' },
+    { key:'complete', name:'Profile & questions', w:20, trait:'Profile fully answered' },
+    { key:'feedback', name:'Honest feedback',     w:20, trait:'Leaves honest reviews' }
+  ];
+  const TRAIT_GATE = 75, MAX_TAGS = 2;
+
+  /* These are the state AFTER the seeded ledger below — the seeded rows are
+     DISPLAYED, never applied. Applying both would double-count the month and
+     drift these away from the numbers the spec's table fixes. */
+  const PEOPLE = {
+    you:    { responds:82, shows:90, complete:55, feedback:78 },   // 78 · Reliable
+    samuel: { responds:88, shows:84, complete:62, feedback:80 },   // 80 · Reliable
+    marcus: { responds:70, shows:76, complete:58, feedback:68 },   // 69 · Steady
+    /* David is deliberately the strongest fit (76) and the weakest karma. The
+       sort has to visibly disagree with the fit column or §6.3 is unprovable.
+       rank()'s coefficient spans 0.7–1.0 — a 1.43x swing — and he leads Samuel
+       by 8 fit points, so he must sit below ~47 to be overtaken. RETUNING
+       EITHER THIS RECORD OR rank() MEANS RE-DERIVING THAT, or the sort quietly
+       stops demonstrating anything while still looking correct. */
+    david:  { responds:25, shows:35, complete:50, feedback:25 },   // 33 · Patchy
+    /* Bench candidates. The S-B2 drawer can restore any of them into the live
+       list, and an unranked candidate would sort to the bottom for the wrong
+       reason, so they carry real records rather than relying on the fallback. */
+    tunde:  { responds:64, shows:70, complete:44, feedback:58 },
+    emeka:  { responds:58, shows:62, complete:40, feedback:54 },
+    kwame:  { responds:72, shows:66, complete:48, feedback:60 },
+    ifeanyi:{ responds:50, shows:58, complete:38, feedback:46 },
+    bode:   { responds:66, shows:74, complete:42, feedback:62 },
+    chidi:  { responds:60, shows:56, complete:46, feedback:52 }
+  };
+  const NEUTRAL = { responds:50, shows:50, complete:50, feedback:50 };
+
+  const KEY = 'mm_karma';
+  function live(){
+    try { return JSON.parse(sessionStorage.getItem(KEY)) || []; }
+    catch(e){ return []; }
+  }
+  /* Live deltas are applied at READ time, not by mutating PEOPLE. A mutation
+     would be lost on reload while the ledger rows survive in sessionStorage,
+     and the screen would show rows that no longer explain the number. */
+  function of(id){
+    const base = PEOPLE[id] || NEUTRAL;
+    if (id !== 'you') return base;
+    const p = Object.assign({}, base);
+    live().forEach(r => { p[r.b] = Math.max(0, Math.min(100, (p[r.b] || 0) + r.d)); });
+    return p;
+  }
+
+  const score = id => { const p = of(id);
+    return Math.round(BEHAVIOURS.reduce((s,b) => s + b.w * (p[b.key] || 0), 0) / 100); };
+  const band = id => { const n = score(id);
+    return n >= 75 ? 'Reliable' : n >= 50 ? 'Steady' : 'Patchy'; };
+  const dots = id => Math.round(score(id) / 20);
+
+  /* POSITIVE TRAITS ONLY. A low-standing candidate carries fewer tags, or
+     none at all — §6.3's "without ever announcing to anyone that they have
+     been penalised", enforced here rather than trusted to the copy. */
+  const traits = id => { const p = of(id);
+    return BEHAVIOURS
+      .filter(b => (p[b.key] || 0) >= TRAIT_GATE)
+      .sort((a,b) => (p[b.key] || 0) - (p[a.key] || 0))
+      .slice(0, MAX_TAGS)
+      .map(b => b.trait); };
+
+  /* §6.3 — karma moves a candidate by up to ~30% and never swamps fit. */
+  const rank = (fitPct, id) => fitPct * (0.7 + 0.3 * score(id) / 100);
+
+  /* §6.4 — the undecided display direction. A is the default: it fits the
+     existing .tag styling and the decision log lists it first. */
+  const dir = () => sessionStorage.getItem('mm_karma_dir') === 'B' ? 'B' : 'A';
+  const setDir = d => sessionStorage.setItem('mm_karma_dir', d === 'B' ? 'B' : 'A');
+
+  function tagHTML(id){
+    if (dir() === 'B')
+      return '<span class="tag" style="margin-left:6px">Karma ' + score(id) + '</span>';
+    return traits(id).map(t =>
+      '<span class="tag pass" style="margin-left:6px">' + t + '</span>').join('');
+  }
+  function headHTML(id){
+    const lab = '<div class="kband">' + band(id) + '</div>';
+    if (dir() === 'B')
+      return '<div class="kscore">' + score(id) + '</div>' + lab;
+    const d = dots(id);
+    return '<div class="kdots">' + '●'.repeat(d) + '○'.repeat(Math.max(0, 5 - d)) + '</div>'
+         + lab
+         + '<div class="ktraits">' + traits(id).map(t =>
+             '<span class="tag pass">' + t + '</span>').join('') + '</div>';
+  }
+
+  /* Seeded history. Displayed, never applied. NOBODY IS NAMED: a named past
+     partner would be a fourth person the prototype never shows, and the
+     fixture world has no answer when a reader asks who they were. The cast is
+     Tolu, David and the gallery; the ledger stays inside it. */
+  const SEED = [
+    { id:'s-review',  b:'feedback', d: 5, when:'4 Sep',  t:'Left a substantive review after your last call' },
+    { id:'s-ghost',   b:'responds', d:-8, when:'29 Aug', t:'Left an async board unanswered for 72 hours' },
+    { id:'s-show',    b:'shows',    d: 6, when:'22 Aug', t:'Showed up · Friday’s show' },
+    { id:'s-profile', b:'complete', d: 6, when:'14 Aug', t:'Completed Marriage & family' },
+    { id:'s-invite',  b:'responds', d: 4, when:'11 Aug', t:'Answered an invite in 3 hours' }
+  ];
+  const ledger = () => live().slice().reverse().concat(SEED);
+
+  /* One row per event, ever. A revisited screen must not append a second. */
+  function emit(id, bkey, delta, text){
+    const out = live();
+    if (out.some(r => r.id === id)) return false;
+    out.push({ id:id, b:bkey, d:delta, when:'Today', t:text });
+    sessionStorage.setItem(KEY, JSON.stringify(out));
+    paint();
+    return true;
+  }
+  /* Has this emit id already landed in the ledger? The read-time check that
+     lets any screen ask "is this specific thing done" without maintaining
+     its own copy of the answer. */
+  const done = id => live().some(r => r.id === id);
+
+  const behName = k => (BEHAVIOURS.filter(b => b.key === k)[0] || { name:k }).name;
+  /* Every string here is written by this file — no user-typed text reaches the
+     ledger, which is why concatenation is safe. S-E9's textContent rule exists
+     because the decline reason IS user-typed; do not read this as a licence
+     to relax it there. */
+  function ledgerHTML(){
+    return ledger().map(r =>
+      '<div class="confrow" data-state="' + (r.d < 0 ? 'loss' : 'gain') + '">'
+      + '<div class="cf-head"><div class="cf-name">' + r.t + '</div>'
+      + '<div class="cf-label">' + (r.d > 0 ? '+' : '') + r.d + '</div></div>'
+      + '<div class="cf-val">' + r.when + ' · ' + behName(r.b) + '</div>'
+      + '</div>').join('');
+  }
+
+  /* What would raise it — derived from the weakest behaviour, not written, so
+     it still points at the right thing after live events move the scores. */
+  const ACTIONS = {
+    responds: { t:'Answer invites and boards while they are still open.',
+                cta:'Open your async board ›', href:'#S-F1', alt:null },
+    shows:    { t:'Turn up to what you schedule. Every session you attend counts.',
+                cta:'See your scheduled show ›', href:'#S-C5', alt:null },
+    feedback: { t:'Leave a real review after your next call, not a star and a shrug.',
+                cta:'See your last review ›', href:'#S-E5', alt:null }
+  };
+  /* The profile-gap half of "what would raise it" is derived, same as the
+     rest of this module: it reads the gallery's USER_GAPS (exposed on
+     window once that screen's script has run — which it always has by the
+     time paint() first fires, since DOMContentLoaded only arrives after
+     every inline script has executed) and drops any section whose emit id
+     is already in the ledger via done(). Nothing here is hardcoded — not
+     the count, not which section leads, not the copy's "one"/"two". */
+  function completeAction(){
+    const esc = s => s.replace(/&/g, '&amp;');
+    const gaps = (window.USER_GAPS || []).filter(g => !done(g.ev));
+    if (!gaps.length)
+      return { t:'Every profile section is filled in — nothing left to add there.',
+               cta:'Review your profile ›', href:'#S-A9', alt:null };
+    const [first, ...rest] = gaps, n = gaps.length;
+    return {
+      t:(n === 1 ? 'One profile section is' : 'Two profile sections are')
+        + ' still blank, and ' + (n === 1 ? 'it is the one' : 'they are the ones')
+        + ' your candidates have already answered.',
+      cta:'Answer ' + esc(first.name) + ' ›', href:first.screen,
+      alt: rest.length ? { cta:esc(rest[0].name) + ' ›', href:rest[0].screen } : null
+    };
+  }
+  function raiseHTML(id){
+    const p = of(id);
+    const weakest = BEHAVIOURS.slice()
+      .sort((a,b) => (p[a.key] || 0) - (p[b.key] || 0))[0];
+    const a = weakest.key === 'complete' ? completeAction() : ACTIONS[weakest.key];
+    return '<div class="eyebrow">✦ What would raise it</div>'
+      + '<p class="muted" style="font-size:12.5px;line-height:1.5;margin:10px 0 0">'
+      + weakest.name + ' is your weakest of the four. ' + a.t + '</p>'
+      + '<a class="btn primary block" href="' + a.href + '" style="margin-top:12px">' + a.cta + '</a>'
+      + (a.alt ? '<a class="link center" href="' + a.alt.href
+                 + '" style="margin-top:8px;display:block">' + a.alt.cta + '</a>' : '');
+  }
+
+  /* §6.6 — the count is DERIVED from this list's length, never written. An
+     inflated or vague number is exactly the dark pattern the decision forbids.
+     `band` keys into the gallery's USER_GAPS so the ask can never point at a
+     section she has already filled in. */
+  const PURSUED = [
+    { who:'A teacher in Lewisham',  asked:'how you like to be close to someone', band:'love' },
+    { who:'An engineer in Croydon', asked:'what your weekends actually look like', band:'person' },
+    { who:'A GP in Reading',        asked:'what you do to unwind', band:'person' }
+  ];
+
+  /* Hosts are declarative, so a screen added by a later task needs no wiring
+     here. Guarded because the module is defined ABOVE the markup: at parse
+     time there is nothing to fill. */
+  function paint(){
+    document.querySelectorAll('[data-karma-of]').forEach(el => {
+      el.innerHTML = tagHTML(el.getAttribute('data-karma-of')); });
+    document.querySelectorAll('[data-karma-head]').forEach(el => {
+      el.innerHTML = headHTML(el.getAttribute('data-karma-head')); });
+    document.querySelectorAll('[data-karma-ledger]').forEach(el => {
+      el.innerHTML = ledgerHTML(); });
+    document.querySelectorAll('[data-karma-raise]').forEach(el => {
+      el.innerHTML = raiseHTML(el.getAttribute('data-karma-raise')); });
+  }
+  window.addEventListener('hashchange', paint);
+  document.addEventListener('DOMContentLoaded', paint);
+
+  window.MMKARMA = { BEHAVIOURS, TRAIT_GATE, MAX_TAGS,
+                     of, score, band, dots, traits, rank,
+                     dir, setDir, tagHTML, headHTML, ledgerHTML, raiseHTML,
+                     ledger, emit, done, paint,
+                     pursued: () => PURSUED.slice() };
+})();
 </script>
     <div class="screenwrap" id="screenwrap">
       <!-- ============ GROUP A · ONBOARDING ============ -->
@@ -2032,6 +2277,7 @@
           <a class="row" href="#S-P3"><div class="av g3 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-sparkle"/></svg></div><div class="grow"><div class="t1">Personality &amp; lifestyle</div><div class="t2">Temperament, hobbies, likes &amp; turn-offs</div></div><span class="chev">›</span></a>
           <a class="row" href="#S-P4"><div class="av g4 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-mailheart"/></svg></div><div class="grow"><div class="t1">Love &amp; intimacy</div><div class="t2">Romance, affection and expectations</div></div><span class="chev">›</span></a>
           <a class="row" href="#S-P5"><div class="av g5 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-ring"/></svg></div><div class="grow"><div class="t1">Marriage &amp; family</div><div class="t2">Readiness, kids, wedding, family views</div></div><span class="chev">›</span></a>
+          <a class="row" href="#S-B4"><div class="av g1 s40"><svg class="icon" style="width:20px;height:20px"><use href="#i-sparkle"/></svg></div><div class="grow"><div class="t1">Your karma</div><div class="t2">Your standing, and everything that moved it</div></div><span class="chev">›</span></a>
         </div>
         <div class="foot"><a class="btn move block" href="#S-B2">Done · back to matches</a></div>
       </section>
@@ -2125,7 +2371,7 @@
           <div class="field"><label>What are your dislikes or turn-offs?</label><textarea class="textarea">Lateness. Checking your phone mid-conversation.</textarea></div>
           <div class="note">Seeds your <b>Lifestyle</b> and <b>Values</b> dimension weights — and gives the show sharper questions.</div>
         </div>
-        <div class="foot"><a class="btn primary block" href="#S-A9">Save · back to profile</a></div>
+        <div class="foot"><a class="btn primary block" href="#S-A9" onclick="MMKARMA.emit('ev-p3','complete',6,'Completed Personality &amp; lifestyle')">Save · back to profile</a></div>
       </section>
 
       <section class="screen paper" id="S-P4" data-group="A · Onboarding" data-title="Profile · Love &amp; intimacy">
@@ -2142,7 +2388,7 @@
             <div style="display:flex;flex-direction:column;gap:8px"><div class="opt" onclick="pick(this)"><span class="dot"></span>Sex while dating</div><div class="opt" onclick="pick(this)"><span class="dot"></span>Wait till after marriage</div><div class="opt sel" onclick="pick(this)"><span class="dot"></span>Either works</div></div>
           </div>
         </div>
-        <div class="foot"><a class="btn primary block" href="#S-A9">Save · back to profile</a></div>
+        <div class="foot"><a class="btn primary block" href="#S-A9" onclick="MMKARMA.emit('ev-p4','complete',6,'Completed Love &amp; intimacy')">Save · back to profile</a></div>
       </section>
 
       <section class="screen paper" id="S-P5" data-group="A · Onboarding" data-title="Profile · Marriage &amp; family">
@@ -2242,7 +2488,15 @@
           }
           /* Attempts are budgeted per submission (spec 1.3), so a new
              submission starts with a full three. */
-          function submit(){ sessionStorage.removeItem('mm_deck_used'); render(); }
+          function submit(){
+            sessionStorage.removeItem('mm_deck_used');
+            /* §6.2 completeness — authoring custom questions. Guarded on the
+               deck being non-empty: submit() also runs on an empty deck, where
+               it only clears the attempt budget, and crediting her for
+               submitting nothing would be a lie the ledger then displays. */
+            if(MMQ.deck().length) MMKARMA.emit('ev-deck','complete',5,'Submitted your question deck');
+            render();
+          }
 
           /* The index is the only thing that crosses the markup boundary, so
              quotes, backslashes and angle brackets in a question can never
@@ -2333,6 +2587,8 @@
           <div class="note pass" style="display:flex;align-items:center;gap:10px"><svg class="icon" style="width:22px;height:22px"><use href="#i-party"/></svg><div><b id="b2count">You have 3 pre-matches.</b><br><span style="font-size:12px">Each one cleared every dealbreaker you set.</span></div></div>
           <h2 class="scrn" style="font-size:24px">Your candidates</h2>
           <p class="muted" style="font-size:12.5px;margin-top:-6px">Photo and a few details now — full profiles unlock only after they accept your invite. No bios to doom-scroll.</p>
+          <p class="muted" style="font-size:12px;margin-top:-10px">Ordered by fit and by how each of them treats people.</p>
+          <div id="b2pursued"></div>
           <div id="b2list" style="display:flex;flex-direction:column;gap:12px"></div>
           <div id="b2drawerwrap"></div>
           <div id="b2gap"></div>
@@ -2594,7 +2850,7 @@
     return `<div class="row cand" data-id="${c.id}" style="padding:0;overflow:hidden;align-items:stretch">
       <div class="av ${GRAD(c)}" style="width:96px;height:auto;min-height:120px;border-radius:0;background-image:url('${cardPhoto(c)}')"></div>
       <div class="grow" style="padding:12px">
-        <div class="t1">${c.name}, ${c.age}${lowTag}</div>
+        <div class="t1">${c.name}, ${c.age}${lowTag}<span data-karma-of="${c.id}"></span></div>
         <div class="t2">${c.blurb}</div>
         <div class="fit"><span class="n">${f}%</span><span class="muted">${lab}</span>
           <span class="prog"><i style="width:${f}%"></i></span></div>
@@ -2609,7 +2865,12 @@
   function render(){
     const list = document.getElementById('b2list');
     if (!list) return;
-    list.innerHTML = state.live.map(id => cardHTML(byId(id))).join('');
+    /* §6.3 — low karma surfaces less often. Ordering only: `state.live` keeps
+       its stored order so remove/undo/restore are untouched, and the §6.4
+       toggle must NOT change this sequence, only how each card draws it. */
+    const ordered = state.live.slice().sort((a,b) =>
+      MMKARMA.rank(fit(byId(b)), b) - MMKARMA.rank(fit(byId(a)), a));
+    list.innerHTML = ordered.map(id => cardHTML(byId(id))).join('');
     const n = state.live.length;
     const count = document.getElementById('b2count');
     if (count) count.textContent = `You have ${n} pre-match${n === 1 ? '' : 'es'}.`;
@@ -2617,16 +2878,23 @@
       btn.addEventListener('click', () => remove(btn.dataset.id)));
     list.querySelectorAll('.seeall').forEach(a =>
       a.addEventListener('click', () => sessionStorage.setItem('mm_cand_open', a.dataset.id)));
+    renderPursued(); // spec 6.6
     renderDrawer();   // defined in Task 4
     renderGap();      // defined in Task 5
     renderProfile();  // defined in Task 6
+    MMKARMA.paint();  // fills the [data-karma-of] slots the cards just declared
   }
   /* Sections the *user* has left blank. In the prototype these are fixtures;
      in production they would be read from the user's profile record. */
   const USER_GAPS = [
-    { band:'person', name:'Personality & lifestyle', screen:'#S-P3', qs:6 },
-    { band:'love',   name:'Love & intimacy',         screen:'#S-P4', qs:3 }
+    { band:'person', name:'Personality & lifestyle', screen:'#S-P3', qs:6, ev:'ev-p3' },
+    { band:'love',   name:'Love & intimacy',         screen:'#S-P4', qs:3, ev:'ev-p4' }
   ];
+  /* Which of USER_GAPS are still actually blank — read from the ledger via
+     MMKARMA.done(), never by mutating USER_GAPS itself. A mutation would be
+     lost on reload while the ledger row claiming completion survives, which
+     is exactly the mutate-vs-read-time bug MMKARMA.of() was built to avoid. */
+  const openGaps = () => USER_GAPS.filter(g => !MMKARMA.done(g.ev));
 
   /* A candidate only counts if HE answered and the user did not — otherwise
      completing your side changes nothing for him, and claiming otherwise
@@ -2643,16 +2911,17 @@
   function renderGap(){
     const wrap = document.getElementById('b2gap');
     if (!wrap) return;
-    const n = USER_GAPS.length, live = state.live.length;
+    const gaps = openGaps();
+    const n = gaps.length, live = state.live.length;
     if (!n){
       wrap.innerHTML = `<div class="note pass">All 5 bands scored on your side.
         Nothing else is needed from you.</div>`;
       return;
     }
-    const totalQs = USER_GAPS.reduce((s,g) => s + g.qs, 0);
+    const totalQs = gaps.reduce((s,g) => s + g.qs, 0);
     const mins = Math.max(1, Math.round(totalQs * 0.25));
-    const [first, ...rest] = USER_GAPS;
-    const lines = USER_GAPS.map(g => {
+    const [first, ...rest] = gaps;
+    const lines = gaps.map(g => {
       const k = blocking(g);
       return `<li class="${k ? 'n' : 'o'}"><span><b>${g.name}</b> — ${
         k ? `blocking ${k} of your ${live} candidate${live===1?'':'s'} from a full score`
@@ -2662,7 +2931,7 @@
     /* distinct candidates, not gap-hits: one candidate blocked on two gaps is
        still one candidate */
     const helped = new Set(
-      USER_GAPS.flatMap(g => state.live.filter(id => userBlocks(id, g.band)))
+      gaps.flatMap(g => state.live.filter(id => userBlocks(id, g.band)))
     ).size;
     wrap.innerHTML = `<div class="card" style="margin-top:4px">
       <div class="eyebrow">✦ ${n} band${n===1?'':'s'} ${n===1?'is':'are'} blank on your side</div>
@@ -2677,10 +2946,49 @@
              answered theirs would be scored on all 5 bands.`}</p>
       <div class="muted" style="font-size:11.5px;margin-top:6px">
         ~${totalQs} questions · about ${mins} minutes</div>
-      <a class="btn primary block" href="${first.screen}" style="margin-top:12px">Answer ${first.name} ›</a>
+      <a class="link center" href="${first.screen}" style="margin-top:12px;display:block">Answer ${first.name} ›</a>
       ${rest.map(g => `<a class="link center" href="${g.screen}" style="margin-top:8px;display:block">${g.name} ›</a>`).join('')}
       <div class="note" style="margin-top:12px">Optional, always. You're already
         matched — this only sharpens who we put in front of you next.</div>
+    </div>`;
+  }
+
+  /* ---- spec 6.6 · the enrichment invitation ----
+     Rewritten by the 2026-08-26 rollback: the original message ended "finish
+     your profile to see who", which was an access claim. Nobody is excluded
+     from async any more, so the ask is about match QUALITY instead. No
+     "unlock", no "eligible", no progress bar — those all describe a rule that
+     no longer exists. */
+  function renderPursued(){
+    const wrap = document.getElementById('b2pursued');
+    if (!wrap) return;
+    /* Each of them is asking about a section SHE has left blank — the band key
+       resolves through the currently-OPEN gaps, so once she answers one, the
+       people who were asking about it drop out of the count and the list
+       rather than leaving a stale claim standing. */
+    const gaps = openGaps();
+    const gapOf = b => gaps.filter(g => g.band === b)[0];
+    const people = MMKARMA.pursued().filter(p => !!gapOf(p.band));
+    /* If nobody is still pursuing an unanswered section the card does not
+       appear at all — `hidden` rather than a style change, so it also stops
+       being a stretched, empty grid item (Fix 3). */
+    wrap.hidden = !people.length;
+    if (!people.length){ wrap.innerHTML = ''; return; }
+    const n = people.length;
+    const lines = people.map(p => {
+      const g = gapOf(p.band);
+      return `<li class="o"><span>${p.who} asked ${p.asked}
+        <span class="src">[${g.name}]</span></span></li>`;
+    }).join('');
+    const first = gaps[0];
+    wrap.innerHTML = `<div class="card" style="margin-top:4px">
+      <div class="eyebrow">✦ ${n} ${n === 1 ? 'person' : 'people'} pursued you this month</div>
+      <ul class="why" style="margin-top:10px">${lines}</ul>
+      <p class="muted" style="font-size:12.5px;line-height:1.5;margin:10px 0 0">
+        We can't yet tell you which of them actually fits you — the more you answer,
+        the better we can.</p>
+      <a class="btn primary block" href="${first.screen}" style="margin-top:12px">Answer ${first.name} ›</a>
+      <a class="link center" href="#S-B4" style="margin-top:8px;display:block">See your standing ›</a>
     </div>`;
   }
 
@@ -2846,6 +3154,11 @@
   }
   window.addEventListener('hashchange', () => {
     if (location.hash === '#S-B3') renderProfile();
+    /* Same reason as S-B3 above: #b2gap and #b2pursued are only ever filled
+       by render(), so returning to S-B2 after an emit fires elsewhere (e.g.
+       completing S-P3) left both cards showing what was true on the LAST
+       render, not what the ledger says now. */
+    if (location.hash === '#S-B2') render();
   });
 
   load();
@@ -2854,7 +3167,11 @@
 
   Object.assign(window, { CANDIDATES, BANDS, RESTORE_PRICE, UNDO_MS, USER_GAPS,
     fit, conf, scoreLabel, confLabel, bulletCount, PHOTO, cardPhoto, facePhoto, heroPhoto,
-    render, state, byId, save, load, remove, restore, confirmRestore, renderProfile });
+    render, state, byId, save, load, remove, restore, confirmRestore, renderProfile,
+    /* Task 5's §6.4 toggle repaints the cards through this. `render` is
+       already global, but a bare `window.render` is too generic a name for
+       another module to reach for. */
+    MMGAL: { render } });
 })();
 </script>
       </section>
@@ -2869,6 +3186,34 @@
         <div class="foot">
           <a class="btn move block" href="#S-C1">Invite him to the show</a>
           <a class="link center" href="#S-B2">Back to candidates</a>
+        </div>
+      </section>
+
+      <!-- S-B4 · spec 6.2/6.3/6.4. A leaf off the gallery, not a branch out of
+           a flow, so Prev/Next reaches it after S-B3 without wedging a dead end
+           into the middle of an arc — the same reasoning that kept S-E6A beside
+           S-E6 while the decline branch went to S-E8/S-E9.
+           Every block here is a host: MMKARMA.paint() fills them on navigation
+           and on the §6.4 toggle. Nothing on this screen is written. -->
+      <section class="screen paper" id="S-B4" data-group="B · Matching" data-title="Your karma">
+        <div class="pbar"><a class="back" href="#S-B2">‹</a><h1>Your karma</h1><a class="act" href="#S-A9">Profile ›</a></div>
+        <div class="body">
+          <div class="card" style="text-align:center">
+            <div class="eyebrow">Your standing</div>
+            <div data-karma-head="you" style="margin-top:12px"></div>
+          </div>
+          <!-- §6.3, stated once and not elaborated into a rank. The consequence
+               lands in other people's galleries, which this prototype can never
+               show her, so it is said plainly instead of mocked up. -->
+          <div class="note info">Your candidates are ordered by fit and by how they
+            treat people. The same ordering works on your side — your standing puts
+            you in front of more people than it did last month.</div>
+          <h2 class="scrn" style="font-size:20px">How you got here</h2>
+          <p class="muted" style="font-size:12.5px;margin-top:-6px">Everything that
+            moved your standing. Nobody else ever sees this list — what other people
+            see is on your card, and it never includes what you lost.</p>
+          <div class="card" data-karma-ledger="you"></div>
+          <div class="card" data-karma-raise="you"></div>
         </div>
       </section>
 
@@ -2921,7 +3266,7 @@
           <div class="note info"><svg class="icon"><use href="#i-hourglass"/></svg> Tolu invited you — <b>23h left</b> to respond.</div>
           <div class="card" style="display:flex;gap:14px;align-items:center">
             <div class="av g2 s72">T</div>
-            <div><div style="font-weight:800;font-size:18px">Tolu, 37</div><div class="muted" style="font-size:13px">Project manager · 2 kids · London</div><div style="margin-top:6px"><span class="tag pass">Family fit</span> <span class="tag">AA</span></div></div>
+            <div><div style="font-weight:800;font-size:18px">Tolu, 37</div><div class="muted" style="font-size:13px">Project manager · 2 kids · London</div><div style="margin-top:6px"><span class="tag pass">Family fit</span> <span class="tag">AA</span><span data-karma-of="you"></span></div></div>
           </div>
           <h2 class="scrn" style="font-size:22px" id="c3claim">She proposed 4 times</h2>
           <p class="muted" style="font-size:12.5px;margin-top:-6px">Pick one, or offer your own — you'll see when you both overlap.</p>
@@ -3652,6 +3997,9 @@
               exchanged, reason,
               note: (document.getElementById('numNote') || {}).value || ''
             }));
+            /* §6.2 honest feedback. After the ready() gate, so an abandoned
+               half-filled review earns nothing. */
+            MMKARMA.emit('ev-review','feedback',5,'Answered the post-date review in full');
             return true;
           }
           window.MMNUM = { pick, why, submit };
@@ -3762,6 +4110,10 @@
             const out = rejected();
             if(out.indexOf(p) === -1) out.push(p);
             sessionStorage.setItem('mm_conf_rejected', JSON.stringify(out));
+            /* §6.2 names this one outright — "correcting wrong inferences on
+               S-E6". One row however many probes she corrects; the emit id is
+               fixed, so the second call is a no-op. */
+            MMKARMA.emit('ev-conf-reject','complete',3,'Corrected what we inferred about you');
             paint();
           }
           window.MMCONF = { paint, paintDiv, reject };
@@ -3951,6 +4303,11 @@
             warn().style.display = 'none';
             sessionStorage.setItem('mm_decline_reason',
               JSON.stringify({ text:t, at:Date.now() }));
+            /* §6.2 honest feedback. Below the reviewReason gate on purpose —
+               mush and cruelty return early above, so only a reason that
+               actually reaches David earns anything. The text she wrote is
+               NOT passed to emit(); the ledger stores only this fixed label. */
+            MMKARMA.emit('ev-decline','feedback',5,'Wrote a real reason when you passed on someone');
             return true;
           }
 
@@ -4052,7 +4409,7 @@
 
           <div class="card" style="display:flex;gap:14px;align-items:center">
             <div class="av g2 s72">T</div>
-            <div><div style="font-weight:800;font-size:18px">Tolu, 37</div><div class="muted" style="font-size:13px">Project manager · 2 kids · London</div><div style="margin-top:6px"><span class="tag pass">Family fit</span> <span class="tag">AA</span></div></div>
+            <div><div style="font-weight:800;font-size:18px">Tolu, 37</div><div class="muted" style="font-size:13px">Project manager · 2 kids · London</div><div style="margin-top:6px"><span class="tag pass">Family fit</span> <span class="tag">AA</span><span data-karma-of="you"></span></div></div>
           </div>
 
           <div class="card">
@@ -4299,6 +4656,9 @@
             const them = s.them, you = s.you;
             const pass = them>=70 && you>=70;
             MMASYNC.saveResult({ you, them, verdicts });
+            /* §6.2 responsiveness. Hers: this board is Tolu's side of the
+               async game — the partner here is Samuel. */
+            MMKARMA.emit('ev-board','responds',4,'Finished your async board inside the window');
             $('fboard').classList.add('done');
             $('fstage').innerHTML='<div class="qbar" style="text-align:center">Board complete.</div>'
               +'<div class="wnote">'+(pass
@@ -4672,7 +5032,7 @@
   let _classified = false;
   function classify(){
     if(_classified) return;
-    const FEED = new Set(['S-B2','S-E3','S-E4','S-E6A','S-A8','S-H1','S-G3','S-H5','S-QD1']);
+    const FEED = new Set(['S-B2','S-B4','S-E3','S-E4','S-E6A','S-A8','S-H1','S-G3','S-H5','S-QD1']);
     const IMMERSIVE = new Set(['S-D2','S-E1']);
     SCREENS.forEach(s=>{
       let lay;
@@ -4904,6 +5264,12 @@
         pt.classList.toggle('on', !full);
         pf.classList.toggle('on', full);
       }
+      const ka = document.getElementById('devka'), kb = document.getElementById('devkb');
+      if(ka && kb){
+        const d = MMKARMA.dir();
+        ka.classList.toggle('on', d === 'A');
+        kb.classList.toggle('on', d === 'B');
+      }
     },
     setModel(m){
       MMQ.setModel(m); MMDEV.paint();
@@ -4915,6 +5281,14 @@
       MMQ.setProfileDepth(d); MMDEV.paint();
       if(window.MMCONF)  MMCONF.paint();
       if(window.MMTRAIL) MMTRAIL.paint();
+    },
+    /* Spec 6.4 — A/B on how standing is DRAWN, never on how it is ordered.
+       The fan-out lives here rather than inside MMKARMA.setDir so it reads
+       like setDepth above, and so the gallery stays an optional consumer. */
+    setKarmaDir(d){
+      MMKARMA.setDir(d); MMDEV.paint();
+      MMKARMA.paint();
+      if(window.MMGAL) MMGAL.render();
     }
   };
   MMDEV.paint();
@@ -5006,6 +5380,14 @@
       <button id="devpf" onclick="MMDEV.setDepth('full')">Complete</button>
     </div>
     <div class="note2">Switches the demo answer set. Drives S-E6's confidence meters and how much of S-F4's mirrored-pairs reveal reads "not answered yet".</div>
+  </div>
+  <div class="devrow">
+    <div class="lbl2">Karma display</div>
+    <div class="seg">
+      <button id="devka" onclick="MMDEV.setKarmaDir('A')">A · traits</button>
+      <button id="devkb" onclick="MMDEV.setKarmaDir('B')">B · score</button>
+    </div>
+    <div class="note2">A shows what karma means — "Responds within a day". B shows the number. Changes how standing is drawn on S-B2, S-C3, S-F2A and S-B4; never changes the gallery's order. Note B necessarily reveals a low score where A cannot.</div>
   </div>
   <div style="text-align:right;margin-top:12px">
     <button class="tbtn" onclick="MMDEV.close()">Close</button>
