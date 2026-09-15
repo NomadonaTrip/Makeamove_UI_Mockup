@@ -2,8 +2,8 @@
 
 **Date:** 2026-08-24
 **Source:** `prompt_2.md` (20 feature requests)
-**Status:** Phases 1–5 merged (PR #3, #4, #5, #7, #8). Phases 6 and 7 remain:
-karma points (badges deferred) and safety & two-sided fairness. 33 decisions
+**Status:** Phases 1–6 merged (PR #3, #4, #5, #7, #8, #9); badges deferred
+from Phase 6. Phase 7 remains: safety & two-sided fairness. 33 decisions
 resolved —
 the original 29 from Phase 0, plus §2.7 and §6.6 added 2026-08-24 from a design
 conversation about why the pursued party ghosts, and two the cluster map had

@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>MakeaMove — the live matchmaking game show</title>
+<meta name="description" content="A live matchmaking game show that connects you with the one you've been waiting for. Answer honestly, react Move or Stay, and meet the people who pass.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Tokens mirror :root in index.html (PRIMETIME, docs/design-language.md §3). */
+  :root{
+    --stage-900:#080B16; --stage-850:#0D1326; --stage-800:#121B38; --stage-700:#1A2547;
+    --spotlight:#2F6BFF; --spotlight-soft:#6E9BFF;
+    --bulb:#FFB627; --bulb-soft:#FFD37A;
+    --move:#FF2D6F; --move-soft:#FF7AA6;
+    --stay:#5B6685; --stay-soft:#8A93B0;
+    --pass:#2BD18B;
+    --ink:#F5F7FF; --ink-dim:#AEB6D6; --ink-faint:#6B739A;
+    --display:"Big Shoulders Display", "Arial Narrow", system-ui, sans-serif;
+    --body:"Hanken Grotesk", system-ui, sans-serif;
+    --glow-move:0 0 24px rgba(255,45,111,.45), 0 0 64px rgba(255,45,111,.18);
+    --glow-bulb:0 0 18px rgba(255,182,39,.50), 0 0 48px rgba(255,182,39,.20);
+    --beat:600ms; --flip:420ms; --ease-show:cubic-bezier(.16,1,.3,1);
+    --gutter:clamp(16px, 5vw, 56px);
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  html{scroll-behavior:smooth; background:var(--stage-900)}
+  body{font-family:var(--body); font-size:16px; line-height:1.55; color:var(--ink);
+    background-color:var(--stage-900); -webkit-font-smoothing:antialiased; overflow-x:hidden;
+    /* §2.1 — the stage is lit: spotlight wash over an LED dot-matrix wall */
+    background-image:
+      radial-gradient(70% 50% at 50% -6%, rgba(47,107,255,.20), transparent 64%),
+      radial-gradient(circle at 1.5px 1.5px, rgba(110,155,255,.10) 1.2px, transparent 1.9px);
+    background-size:auto, 16px 16px; background-attachment:scroll}
+  a{color:inherit}
+  img{max-width:100%}
+  .wrap{max-width:1180px; margin-inline:auto; padding-inline:var(--gutter)}
+  :focus-visible{outline:2px solid var(--spotlight-soft); outline-offset:3px; border-radius:4px}
+  .sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
+
+  /* ---------- voices (§2.7): the announcer shouts, the host explains ---------- */
+  .announce{font-family:var(--display); font-weight:900; text-transform:uppercase; letter-spacing:.02em; line-height:.9}
+  h2.announce{font-size:clamp(2.3rem, 5.2vw, 3.9rem); max-width:18ch}
+  .host{color:var(--ink-dim); font-size:1.0625rem; line-height:1.6; max-width:56ch}
+
+  /* ---------- the marquee wordmark ---------- */
+  .brand{font-family:var(--display); font-weight:900; text-transform:uppercase; letter-spacing:.04em; line-height:1; text-decoration:none}
+  .brand .a{color:var(--move)}
+  .marquee{position:relative; display:inline-block; padding:12px 18px; border-radius:12px;
+    background:linear-gradient(180deg,var(--stage-800),var(--stage-850));
+    box-shadow:0 0 0 2px rgba(255,45,111,.65), var(--glow-move)}
+  .marquee::before{content:""; position:absolute; inset:5px; border:2.5px dotted var(--bulb); border-radius:8px;
+    filter:drop-shadow(0 0 4px rgba(255,182,39,.85)); animation:marq 2.2s steps(2) infinite; pointer-events:none}
+  @keyframes marq{50%{border-color:var(--bulb-soft); opacity:.75}}
+
+  /* ---------- buttons ---------- */
+  .cta{position:relative; overflow:hidden; display:inline-flex; align-items:center; justify-content:center;
+    font-family:var(--display); font-weight:800; text-transform:uppercase; letter-spacing:.06em; font-size:1.25rem; line-height:1;
+    padding:20px 34px; border-radius:999px; background:var(--move); color:#fff; text-decoration:none;
+    box-shadow:var(--glow-move); transition:transform .15s var(--ease-show);
+    animation:breathe 3s 2s ease-in-out infinite}
+  .cta:hover{transform:translateY(-2px)}
+  .cta:active{transform:translateY(1px)}
+  .cta::after{content:""; position:absolute; top:0; bottom:0; left:-70%; width:45%; transform:skewX(-20deg); pointer-events:none;
+    background:linear-gradient(105deg, transparent, rgba(255,255,255,.4), transparent)}
+  .cta:hover::after{animation:shine .65s ease}
+  .cta:focus-visible{outline:3px solid #fff; outline-offset:4px; border-radius:999px}
+  @keyframes breathe{50%{filter:brightness(1.16) saturate(1.1)}}
+  @keyframes shine{to{left:125%}}
+  .quiet{color:var(--spotlight-soft); font-weight:600; text-decoration:underline; text-underline-offset:3px;
+    text-decoration-color:rgba(110,155,255,.45); background:none; border:0; font:inherit; cursor:pointer}
+  .quiet:hover{color:var(--ink)}
+
+  /* ---------- nav ---------- */
+  .nav{display:flex; align-items:center; justify-content:space-between; gap:20px; padding-block:22px}
+  .nav .brand{font-size:1.4rem}
+  .nav ul{display:flex; gap:28px; list-style:none; align-items:center; font-size:.9375rem; font-weight:600}
+  .nav ul a{text-decoration:none; color:var(--ink-dim)}
+  .nav ul a:hover{color:var(--ink)}
+  .nav .signin{color:var(--ink); border:1px solid rgba(255,255,255,.2); padding:9px 16px; border-radius:999px}
+  .nav .signin:hover{border-color:var(--spotlight-soft)}
+  @media (max-width:760px){ .nav ul li:not(:last-child){display:none} }
+
+  /* ============ HERO ============ */
+  .hero{position:relative; padding-block:clamp(24px, 5vw, 64px) clamp(56px, 8vw, 110px)}
+  .hero .grid{display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr); gap:clamp(32px, 5vw, 72px); align-items:center}
+  .hero h1{font-size:min(6.1vw, 6.25rem); line-height:.86; letter-spacing:.005em}
+  .hero h1 span{display:block; white-space:nowrap}
+  .hero .host{margin-top:26px; font-size:clamp(1.0625rem, 1.5vw, 1.25rem); max-width:40ch}
+  .hero .go{margin-top:34px; display:flex; flex-direction:column; align-items:flex-start; gap:14px}
+  .hero .go small{font-size:.9375rem; color:var(--ink-dim)}
+  .hero .go small b{color:var(--ink); font-weight:600}
+  /* searchlight beams crossing the set */
+  .beams{position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:-1}
+  .beams::before{content:""; position:absolute; inset:-10% -30%;
+    background:
+      linear-gradient(112deg, transparent 44%, rgba(110,155,255,.08) 50%, transparent 56%),
+      linear-gradient(66deg,  transparent 44%, rgba(255,45,111,.08) 50%, transparent 56%);
+    background-size:200% 100%, 220% 100%; animation:beamdrift 13s ease-in-out infinite alternate}
+  @keyframes beamdrift{0%{background-position:0% 0, 100% 0} 100%{background-position:100% 0, 0% 0}}
+  /* the cold open: the sign flashes on, then the show introduces itself */
+  .hero h1 span{animation:rise .7s var(--ease-show) both}
+  .hero h1 span:nth-child(2){animation-delay:.12s}
+  .hero .host{animation:rise .7s .3s var(--ease-show) both}
+  .hero .go{animation:rise .7s .45s var(--ease-show) both}
+  .hero .stagebox{animation:boardon 1s .55s var(--ease-show) both}
+  @keyframes rise{from{opacity:0; transform:translateY(18px)}}
+  @keyframes boardon{0%{opacity:0; transform:translateY(24px) scale(.97); filter:brightness(2.6)} 60%{filter:brightness(1.4)} 100%{opacity:1; transform:none; filter:none}}
+  @media (max-width:900px){
+    .hero .grid{grid-template-columns:1fr}
+    .hero h1{font-size:min(13vw, 6rem)}
+    .hero .stagebox{max-width:560px}
+  }
+
+  /* ============ THE BOARD — one playable turn ============ */
+  .stagebox .lead{font-size:.9375rem; color:var(--ink-dim); margin:0 0 14px 6px}
+  .stagebox .lead b{color:var(--ink); font-weight:600}
+  .board{position:relative; border-radius:24px; padding:30px clamp(18px, 3vw, 30px) 26px;
+    background:
+      radial-gradient(80% 60% at 50% 0%, rgba(47,107,255,.22), transparent 70%),
+      linear-gradient(180deg, var(--stage-800), var(--stage-850));
+    box-shadow:0 0 0 2px rgba(255,45,111,.6), var(--glow-move), 0 40px 90px rgba(0,0,0,.55);
+    min-height:470px; display:flex; flex-direction:column; gap:18px; overflow:hidden; isolation:isolate}
+  /* bulb run: the board is stakes furniture (§3) */
+  .board::before{content:""; position:absolute; inset:9px; border:3px dotted var(--bulb); border-radius:17px;
+    filter:drop-shadow(0 0 5px rgba(255,182,39,.8)); pointer-events:none; animation:marq 2.2s steps(2) infinite; z-index:-1}
+  .board.fast::before{animation-duration:.55s}
+
+  .bhead{display:flex; align-items:center; gap:14px}
+  .face{flex:0 0 auto; width:56px; height:56px; border-radius:26%; overflow:hidden; position:relative;
+    background:linear-gradient(150deg,#3A6CFF,#7A3AFF); box-shadow:0 0 0 2px var(--spotlight), 0 0 22px rgba(47,107,255,.45);
+    display:grid; place-items:center; font-family:var(--display); font-weight:900; font-size:22px}
+  .face img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
+  .who{flex:1; min-width:0}
+  .who .nm{font-weight:700; font-size:1rem; line-height:1.2}
+  .who .meta{font-size:.8125rem; color:var(--ink-dim)}
+  .score{text-align:right}
+  .score .pct{font-family:var(--display); font-weight:900; font-size:2.5rem; line-height:.9; color:var(--bulb);
+    text-shadow:0 0 18px rgba(255,182,39,.45); font-variant-numeric:tabular-nums}
+  .score .of{font-size:.75rem; color:var(--ink-dim)}
+  .climb{position:relative; height:8px; border-radius:6px; background:rgba(255,255,255,.1)}
+  .climb i{position:absolute; left:0; top:0; bottom:0; width:0; border-radius:6px;
+    background:linear-gradient(90deg, var(--bulb-soft), var(--bulb)); box-shadow:0 0 12px rgba(255,182,39,.6)}
+  .climb .gate{position:absolute; left:70%; top:-5px; bottom:-5px; width:2px; background:var(--pass); box-shadow:0 0 8px var(--pass)}
+  .climb .gate::after{content:"70% to pass"; position:absolute; top:14px; left:50%; transform:translateX(-50%);
+    white-space:nowrap; font-size:.6875rem; font-weight:700; color:var(--pass)}
+
+  .turnflag{margin-top:14px; font-family:var(--display); font-weight:700; font-size:.8125rem; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--ink-dim); text-align:center}
+  .turnflag b{color:var(--ink)}
+
+  /* the Ticket — our signature shape (§4). Two layers: rim + fill, both clipped. */
+  .tk{--cut:16px; --rim:rgba(255,255,255,.16); --fill:linear-gradient(180deg,var(--stage-700),var(--stage-800));
+    display:block; width:100%; padding:1px; background:var(--rim); border:0; color:inherit; font:inherit; text-align:center;
+    clip-path:polygon(var(--cut) 0, calc(100% - var(--cut)) 0, 100% 50%, calc(100% - var(--cut)) 100%, var(--cut) 100%, 0 50%)}
+  .tk > .in{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; background:var(--fill);
+    padding:14px calc(var(--cut) + 14px); min-height:100%;
+    clip-path:polygon(var(--cut) 0, calc(100% - var(--cut)) 0, 100% 50%, calc(100% - var(--cut)) 100%, var(--cut) 100%, 0 50%)}
+  .qtk{--cut:22px; --rim:var(--bulb)}
+  .qtk .in{padding-block:18px; min-height:112px}
+  .qtk .dim{font-family:var(--display); font-weight:800; font-size:.75rem; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--bulb-soft)}
+  .qtk .q{font-size:clamp(1.0625rem, 1.6vw, 1.1875rem); font-weight:500; line-height:1.4; max-width:32ch}
+
+  .ans{border-radius:16px; padding:16px 18px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.12);
+    text-align:center; transition:background .45s var(--ease-show), border-color .45s, opacity .45s}
+  .ans .by{font-size:.8125rem; color:var(--ink-dim)}
+  .ans .a{font-family:var(--display); font-weight:800; font-size:clamp(1.5rem, 2.6vw, 1.875rem); text-transform:uppercase;
+    letter-spacing:.02em; line-height:1.05; margin-top:4px}
+  .ans.move{background:linear-gradient(180deg,#FF5A8E,var(--move)); border-color:transparent; box-shadow:var(--glow-move)}
+  .ans.move .by{color:rgba(255,255,255,.85)}
+  .ans.stay{opacity:.5; filter:saturate(.3)}
+  .flipin{animation:flipin var(--flip) var(--ease-show) both}
+  .flipin.late{animation-delay:.14s}
+  @keyframes flipin{0%{transform:perspective(600px) rotateX(90deg); opacity:0; filter:brightness(2)} 100%{transform:none; opacity:1; filter:none}}
+
+  .ctl{margin-top:auto; display:grid; grid-template-columns:1fr 1fr; gap:12px}
+  .tkw{transition:filter .3s, opacity .3s}
+  .tkw.move{filter:drop-shadow(0 0 10px rgba(255,45,111,.55))}
+  .ctl .tk{--cut:18px; cursor:pointer; font-family:var(--display); font-weight:900; font-size:1.625rem;
+    letter-spacing:.08em; text-transform:uppercase}
+  .ctl .tk .in{padding-block:14px}
+  .ctl .tk small{font-family:var(--body); font-weight:600; font-size:.75rem; letter-spacing:0; text-transform:none; opacity:.8}
+  .tk.stay{--rim:rgba(138,147,176,.55); --fill:linear-gradient(180deg,#39425E,#2B3350); color:#DDE2F2}
+  .tk.move{--rim:var(--move-soft); --fill:linear-gradient(180deg,#FF4F86,var(--move)); color:#fff}
+  .ctl .tk:hover{filter:brightness(1.12)}
+  .ctl .tk:focus-visible{outline:none; --rim:#fff; padding:2px}
+  .ctl .tk:disabled{cursor:default}
+  /* §4 state machine: armed → LOCKED (solid amber) → beat → reveal */
+  .tk.locked{--rim:var(--bulb-soft); --fill:var(--bulb); color:#1a1200; animation:lockpulse .5s ease 2}
+  .tkw:has(.locked){filter:drop-shadow(0 0 14px rgba(255,182,39,.7))}
+  .tkw.dimmed{opacity:.4; filter:none}
+  @keyframes lockpulse{50%{filter:brightness(1.35)}}
+  .board.beat .qtk, .board.beat .ans{opacity:.55; transition:opacity .3s}
+
+  /* the verdict slams over the board */
+  .verdict{position:absolute; inset:0; display:grid; place-items:center; pointer-events:none; z-index:5; opacity:0}
+  .verdict.on{opacity:1}
+  .verdict::before{content:""; position:absolute; inset:0; background:radial-gradient(85% 42% at 50% 50%, rgba(8,11,22,.94), rgba(8,11,22,.55) 70%, rgba(8,11,22,.2))}
+  .verdict .word{font-family:var(--display); font-weight:900; font-size:clamp(4.5rem, 12vw, 7.5rem); letter-spacing:.06em;
+    line-height:1; text-transform:uppercase}
+  .verdict.move .word{color:#fff; text-shadow:0 0 28px var(--move), 0 0 70px rgba(255,45,111,.7)}
+  .verdict.stay .word{color:#CDD3E6; text-shadow:0 0 22px rgba(138,147,176,.55)}
+  .verdict.on .word{animation:slam .55s var(--ease-show) both}
+  @keyframes slam{0%{transform:scale(2.6); opacity:0; filter:blur(8px) brightness(2.4)} 60%{filter:blur(0) brightness(1.5)} 100%{transform:none; opacity:1; filter:none}}
+  .verdict .ring{position:absolute; left:50%; top:50%; width:140px; height:140px; margin:-70px 0 0 -70px; border-radius:50%;
+    border:2.5px solid var(--stay-soft); opacity:0}
+  .verdict.move .ring{border-color:var(--move)}
+  .verdict.on .ring{animation:ringout 1.15s var(--ease-show) both}
+  .verdict.on .ring:nth-of-type(2){animation-delay:.38s}
+  @keyframes ringout{0%{transform:scale(.25); opacity:.85} 100%{transform:scale(3.4); opacity:0}}
+  .burst{position:absolute; left:50%; top:50%}
+  .burst i{position:absolute; font-style:normal; opacity:0; font-size:22px; color:var(--move); text-shadow:0 0 12px rgba(255,45,111,.8)}
+  .burst i::before{content:"♥"}
+  .verdict.on.move .burst i{animation:heartfly 1s var(--ease-show) .2s both}
+  .burst i:nth-child(1){--fx:-150px; --fy:-110px} .burst i:nth-child(2){--fx:140px; --fy:-130px}
+  .burst i:nth-child(3){--fx:-190px; --fy:10px}   .burst i:nth-child(4){--fx:180px; --fy:30px}
+  .burst i:nth-child(5){--fx:-100px; --fy:140px}  .burst i:nth-child(6){--fx:110px; --fy:130px}
+  .burst i:nth-child(7){--fx:-30px; --fy:-170px}  .burst i:nth-child(8){--fx:40px; --fy:170px}
+  @keyframes heartfly{0%{transform:translate(0,0) scale(.3); opacity:1} 100%{transform:translate(var(--fx),var(--fy)) scale(1.35) rotate(18deg); opacity:0}}
+  .board.shake{animation:roomshake .5s}
+  @keyframes roomshake{0%,100%{transform:none} 20%{transform:translate(-6px,3px)} 40%{transform:translate(5px,-3px)} 60%{transform:translate(-3px,2px)} 80%{transform:translate(2px,-1px)}}
+
+  /* end of the turn set: a small ceremony (§2.5) */
+  .end{display:none; flex:1; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:14px; padding-block:10px}
+  .board.done .play{display:none}
+  .board.done .end{display:flex; animation:rise .6s var(--ease-show) both}
+  .end .title{font-family:var(--display); font-weight:900; text-transform:uppercase; font-size:clamp(2rem, 4vw, 2.6rem); line-height:.95; letter-spacing:.03em}
+  .end.pass .title{color:var(--bulb); text-shadow:0 0 24px rgba(255,182,39,.45)}
+  .end p{color:var(--ink-dim); max-width:36ch}
+  .play{display:contents}
+
+  /* ============ STATEMENT ============ */
+  .statement{padding-block:clamp(64px, 9vw, 120px); border-block:1px solid rgba(110,155,255,.12);
+    background:linear-gradient(180deg, rgba(13,19,38,.0), rgba(13,19,38,.85) 30%, rgba(13,19,38,.85) 70%, rgba(13,19,38,0))}
+  .statement .announce{font-size:clamp(2.4rem, 6vw, 4.6rem); max-width:20ch}
+  .statement .host{margin-top:24px; font-size:1.1875rem}
+
+  /* ============ RUNNING ORDER (a true sequence, so it is numbered) ============ */
+  section.block{padding-block:clamp(72px, 9vw, 120px)}
+  .block > .wrap > .host{margin-top:18px}
+  .order{list-style:none; margin-top:clamp(40px, 5vw, 64px); display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:clamp(20px, 2.6vw, 36px); position:relative}
+  /* the neon tube the running order hangs from */
+  .order::before{content:""; position:absolute; left:28px; right:28px; top:27px; height:2px; background:var(--move);
+    box-shadow:0 0 10px rgba(255,45,111,.8), 0 0 26px rgba(255,45,111,.35)}
+  .order li{position:relative}
+  .order .n{--cut:12px; width:68px; position:relative}
+  .order .n .in{font-family:var(--display); font-weight:900; font-size:1.625rem; line-height:1; padding:13px 0; min-height:56px;
+    background:var(--stage-850)}
+  .order .n{--rim:var(--move-soft)}
+  .order h3{font-family:var(--display); font-weight:800; text-transform:uppercase; letter-spacing:.03em; font-size:1.625rem; line-height:1; margin-top:22px}
+  .order p{margin-top:10px; color:var(--ink-dim); font-size:.9688rem}
+  .order p b{color:var(--ink); font-weight:600}
+  .order .hot .n{--rim:var(--move); --fill:var(--move)}
+  .order .hot .n .in{background:var(--move); color:#fff}
+  @media (max-width:900px){
+    .order{grid-template-columns:1fr 1fr; row-gap:48px}
+    .order::before{display:none}
+  }
+  @media (max-width:560px){
+    .order{grid-template-columns:1fr; row-gap:34px; padding-left:0}
+    .order li{display:grid; grid-template-columns:auto 1fr; column-gap:18px}
+    .order li .n{grid-row:1 / span 2; align-self:start}
+    .order h3{margin-top:10px}
+  }
+
+  /* ============ THE QUESTIONS ============ */
+  .questions{background:linear-gradient(180deg, transparent, rgba(18,27,56,.55) 20%, rgba(18,27,56,.55) 80%, transparent)}
+  .qwall{list-style:none; margin-top:clamp(36px, 5vw, 56px); display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px 22px}
+  .qwall .tk{--cut:20px; height:100%}
+  .qwall .tk .in{align-items:flex-start; text-align:left; padding:18px 36px; gap:4px}
+  .qwall .dim{font-family:var(--display); font-weight:800; font-size:.8125rem; letter-spacing:.1em; text-transform:uppercase; color:var(--move-soft)}
+  .qwall .q{font-size:1.0625rem; font-weight:500; line-height:1.4}
+  .qwall li:nth-child(even){transform:translateX(clamp(0px, 3vw, 40px))}
+  .qnote{margin-top:34px; color:var(--ink-dim); max-width:60ch}
+  .qnote b{color:var(--ink); font-weight:600}
+  @media (max-width:760px){
+    .qwall{grid-template-columns:1fr}
+    .qwall li:nth-child(even){transform:none}
+  }
+
+  /* ============ TRUST ============ */
+  .trust .grid{display:grid; grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr); gap:clamp(32px, 6vw, 88px); align-items:start}
+  .trust ul{list-style:none; display:flex; flex-direction:column}
+  .trust li{display:grid; grid-template-columns:44px 1fr; gap:18px; padding-block:20px; border-top:1px solid rgba(255,255,255,.09)}
+  .trust li:last-child{border-bottom:1px solid rgba(255,255,255,.09)}
+  .trust .ic{width:44px; height:44px; border-radius:50%; display:grid; place-items:center; background:var(--stage-800);
+    box-shadow:inset 0 0 0 1px rgba(174,182,214,.35); color:var(--spotlight-soft)}
+  .trust .ic svg{width:21px; height:21px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round}
+  .trust h3{font-size:1.0625rem; font-weight:700; line-height:1.35}
+  .trust li p{color:var(--ink-dim); font-size:.9688rem; margin-top:4px}
+  .trust .kind{margin-top:30px; padding:22px 24px; border-radius:18px; background:var(--stage-800); border:1px solid rgba(110,155,255,.18)}
+  .trust .kind .announce{font-size:1.75rem; line-height:1}
+  .trust .kind p{margin-top:10px; color:var(--ink-dim)}
+  @media (max-width:900px){ .trust .grid{grid-template-columns:1fr} }
+
+  /* ============ PRICE — gold, because it's money (§2.2) ============ */
+  .price .grid{display:grid; grid-template-columns:minmax(0,1fr) auto; gap:clamp(28px, 5vw, 72px); align-items:center}
+  .goldtk{--cut:30px; --rim:var(--bulb-soft); --fill:linear-gradient(180deg,var(--bulb-soft),var(--bulb)); color:#2A1A05; width:min(100%, 380px)}
+  .goldtk .in{padding:28px 58px; gap:2px}
+  .goldtk .big{font-family:var(--display); font-weight:900; font-size:clamp(4rem, 8vw, 5.5rem); line-height:.85}
+  .goldtk .lbl{font-family:var(--display); font-weight:800; font-size:1.25rem; text-transform:uppercase; letter-spacing:.06em}
+  .goldtk .fine{font-size:.8125rem; font-weight:600; opacity:.8}
+  .goldwrap{filter:drop-shadow(0 0 22px rgba(255,182,39,.45))}
+  .price .host + .host{margin-top:14px}
+  @media (max-width:760px){ .price .grid{grid-template-columns:1fr} }
+
+  /* ============ FINAL — the ceremony ============ */
+  .final{position:relative; overflow:hidden; text-align:center; padding-block:clamp(90px, 12vw, 160px)}
+  .final .rays{position:absolute; left:50%; top:50%; width:220vmax; height:220vmax; border-radius:50%; transform:translate(-50%,-50%);
+    background:repeating-conic-gradient(rgba(255,45,111,.06) 0 5deg, transparent 5deg 13deg); animation:raysspin 40s linear infinite;
+    pointer-events:none; z-index:-1; -webkit-mask:radial-gradient(closest-side, #000 20%, transparent 70%); mask:radial-gradient(closest-side, #000 20%, transparent 70%)}
+  @keyframes raysspin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+  .final .wrap{position:relative; z-index:0; display:flex; flex-direction:column; align-items:center}
+  .final .marquee .brand{font-size:clamp(1.8rem, 4vw, 2.6rem)}
+  .final .marquee{padding:20px 30px}
+  .final .marquee::before{inset:7px; border-width:3px}
+  .final h2{margin-top:40px; font-size:clamp(2.6rem, 6.4vw, 5rem); max-width:16ch}
+  .final .host{margin-top:20px}
+  .final .cta{margin-top:36px}
+  .final small{margin-top:14px; color:var(--ink-dim); font-size:.9375rem}
+
+  footer{border-top:1px solid rgba(255,255,255,.08); padding-block:28px 40px; font-size:.875rem; color:var(--ink-faint)}
+  footer .wrap{display:flex; flex-wrap:wrap; gap:14px 28px; justify-content:space-between; align-items:center}
+  footer .brand{font-size:1.1rem; color:var(--ink)}
+  footer ul{list-style:none; display:flex; flex-wrap:wrap; gap:8px 22px}
+  footer a{color:var(--ink-dim); text-decoration:none} footer a:hover{color:var(--ink)}
+
+  @media (max-width:560px){
+    .hero .go, .hero .go .cta{width:100%}
+    .cta{padding:19px 22px; font-size:1.125rem}
+    .board{min-height:450px}
+    .ctl .tk{font-size:1.375rem}
+  }
+
+  /* §7 — reduced motion: flips become fades, ticks become swaps, bulbs freeze lit; the beat stays */
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important}
+    .final .rays, .beams::before{animation:none !important}
+  }
+</style>
+</head>
+<body>
+
+<header class="wrap nav">
+  <a class="marquee" href="#top" aria-label="MakeaMove home"><span class="brand">Make<span class="a">a</span>Move</span></a>
+  <nav aria-label="Page">
+    <ul>
+      <li><a href="#how">How it works</a></li>
+      <li><a href="#questions">The questions</a></li>
+      <li><a href="#safety">Safety</a></li>
+      <li><a class="signin" href="index.html#S-A7">Sign in</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main id="top">
+  <!-- ============ HERO ============ -->
+  <section class="hero" aria-labelledby="h-hero">
+    <div class="beams" aria-hidden="true"></div>
+    <div class="wrap grid">
+      <div>
+        <h1 class="announce" id="h-hero"><span>Stop swiping.</span><span>Start matching.</span></h1>
+        <p class="host">A live matchmaking game show that connects you with the one you've been waiting for. Answer honestly, react to each other's answers, and meet the people who pass.</p>
+        <div class="go">
+          <a class="cta" href="index.html#S-A2">Find your forever person</a>
+          <small><b>Free during launch.</b> Ten questions to get in.</small>
+        </div>
+      </div>
+
+      <div class="stagebox">
+        <p class="lead"><b>Try a turn.</b> David answered these in his show. Move or Stay?</p>
+        <div class="board" id="board">
+          <div class="bhead">
+            <div class="face" aria-hidden="true">D<img src="https://images.unsplash.com/photo-1531901599143-df5010ab9438?w=120&amp;h=120&amp;fit=crop&amp;crop=faces&amp;q=70&amp;fm=jpg" alt="" onerror="this.remove()"></div>
+            <div class="who"><div class="nm">David, 41</div><div class="meta">Deputy head. Two kids. London.</div></div>
+            <div class="score"><div class="pct" id="pct">0%</div><div class="of">from your Moves</div></div>
+          </div>
+          <div class="climb" aria-hidden="true"><i id="fill"></i><span class="gate"></span></div>
+
+          <div class="play">
+            <div class="turnflag" id="turnflag">Turn <b>1</b> of 4</div>
+            <div class="tk qtk" id="qtk"><div class="in"><span class="dim" id="dim"></span><span class="q" id="q"></span></div></div>
+            <div class="ans" id="ans"><div class="by">David answered</div><div class="a" id="a"></div></div>
+            <div class="ctl">
+              <div class="tkw stay"><button class="tk stay" id="bStay" type="button"><span class="in">Stay<small>Not for me</small></span></button></div>
+              <div class="tkw move"><button class="tk move" id="bMove" type="button"><span class="in">Move<small>I like that</small></span></button></div>
+            </div>
+          </div>
+
+          <div class="end" id="end" aria-live="polite">
+            <div class="title" id="endTitle"></div>
+            <p id="endText"></p>
+            <button class="quiet" type="button" id="again">Play again</button>
+          </div>
+
+          <div class="verdict" id="verdict" aria-hidden="true"><span class="ring"></span><span class="ring"></span><div class="burst"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="word" id="vword"></div></div>
+          <p class="sr" id="status" aria-live="polite"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STATEMENT ============ -->
+  <section class="statement" aria-labelledby="h-why">
+    <div class="wrap">
+      <h2 class="announce" id="h-why">A photo takes a second to judge. A person takes a little longer.</h2>
+      <p class="host">Swiping sorts people by their pictures. The Show lets someone hear what you really think about children, money and faith, and react to it, before anyone crosses town for a date.</p>
+    </div>
+  </section>
+
+  <!-- ============ HOW IT WORKS ============ -->
+  <section class="block" id="how" aria-labelledby="h-how">
+    <div class="wrap">
+      <h2 class="announce" id="h-how">How the show runs</h2>
+      <p class="host">From your first question to your first date, in four steps.</p>
+      <ol class="order">
+        <li>
+          <div class="tk n" aria-hidden="true"><span class="in">1</span></div>
+          <h3>Get in</h3>
+          <p>Answer ten questions about who you are and where you're rooted, then verify your ID with a quick selfie. <b>Single and 18 or over only.</b></p>
+        </li>
+        <li>
+          <div class="tk n" aria-hidden="true"><span class="in">2</span></div>
+          <h3>Meet your matches</h3>
+          <p><b>Up to three a day,</b> shown one at a time. They're ordered by how well you fit, and by how well each person treats others.</p>
+        </li>
+        <li class="hot">
+          <div class="tk n" aria-hidden="true"><span class="in">3</span></div>
+          <h3>Play the Show</h3>
+          <p>Book a live show with a match. You take turns: one answers, the other reacts Move or Stay. <b>You both need 70% to pass.</b> Can't find a time? Play the board over 72 hours instead.</p>
+        </li>
+        <li>
+          <div class="tk n" aria-hidden="true"><span class="in">4</span></div>
+          <h3>Call, then date</h3>
+          <p>Pass together and you set up a video call. If it goes well, we'll help you both pick a day, a time, and a venue that's fair to both of you.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============ THE QUESTIONS ============ -->
+  <section class="block questions" id="questions" aria-labelledby="h-q">
+    <div class="wrap">
+      <h2 class="announce" id="h-q">The questions your aunty would ask</h2>
+      <p class="host">Built for Nigerians and Africans at home and abroad. We ask about genotype, state of origin, faith and family up front, so neither of you has to bring it up over starters.</p>
+      <ul class="qwall">
+        <li><div class="tk"><div class="in"><span class="dim">Family</span><span class="q">Do you want children of your own someday?</span></div></div></li>
+        <li><div class="tk"><div class="in"><span class="dim">Finances</span><span class="q">One of you out-earns the other three to one. How do the bills work?</span></div></div></li>
+        <li><div class="tk"><div class="in"><span class="dim">Values</span><span class="q">What would you never compromise on?</span></div></div></li>
+        <li><div class="tk"><div class="in"><span class="dim">Family</span><span class="q">A partner's teenager rejects you outright. What happens?</span></div></div></li>
+        <li><div class="tk"><div class="in"><span class="dim">Intimacy</span><span class="q">After a hard day, what do you actually want from a partner?</span></div></div></li>
+        <li><div class="tk"><div class="in"><span class="dim">Ambition</span><span class="q">Where do you want to be in five years?</span></div></div></li>
+      </ul>
+      <p class="qnote">Every question has set answers to choose from, so nobody can dodge. <b>You can add five questions of your own</b>, and we'll write the answer choices for them.</p>
+    </div>
+  </section>
+
+  <!-- ============ SAFETY ============ -->
+  <section class="block trust" id="safety" aria-labelledby="h-safe">
+    <div class="wrap grid">
+      <div>
+        <h2 class="announce" id="h-safe">Everyone on stage is who they say they are</h2>
+        <p class="host" style="margin-top:18px">A show only works if the contestants are real. So we check, before anyone meets you.</p>
+        <div class="kind">
+          <div class="announce">A Stay is not a rejection</div>
+          <p>It means you want different things, and it's better to find out now. Nobody is told off, and nobody sees a red cross next to their name.</p>
+        </div>
+      </div>
+      <ul>
+        <li>
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="9" cy="11" r="2.2"/><path d="M5.8 16.2c.6-1.6 1.8-2.4 3.2-2.4s2.6.8 3.2 2.4M14.5 10h4M14.5 13.5h3"/></svg></span>
+          <div><h3>ID checked with a live selfie</h3><p>Every member verifies a government ID before they see a single match.</p></div>
+        </li>
+        <li>
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5.5c0 4.3-3 7.8-7 9.5-4-1.7-7-5.2-7-9.5V6z"/><path d="M9 12l2 2 4-4"/></svg></span>
+          <div><h3>Single and 18 or over, checked at the door</h3><p>Under-18s can't sign up, married people can't join, and members can report anyone who slips through.</p></div>
+        </li>
+        <li>
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></span>
+          <div><h3>How you treat people counts</h3><p>Answering on time and turning up raises your standing. Ghosting lowers it and moves you down the list. Only you ever see your own penalties.</p></div>
+        </li>
+        <li>
+          <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21s-6-5.3-6-11a6 6 0 0 1 12 0c0 5.7-6 11-6 11z"/><circle cx="12" cy="10" r="2.2"/></svg></span>
+          <div><h3>An alarm on every date</h3><p>One button shares your exact location if a meeting ever feels wrong.</p></div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ PRICE ============ -->
+  <section class="block price" aria-labelledby="h-price">
+    <div class="wrap grid">
+      <div>
+        <h2 class="announce" id="h-price">Your first show is on us</h2>
+        <p class="host" style="margin-top:18px">Every new member gets one free show, and nobody pays anything while we launch.</p>
+        <p class="host">After launch, a show costs £19, or less when you buy a bundle. Pay in pounds, dollars or naira.</p>
+      </div>
+      <div class="goldwrap">
+        <div class="tk goldtk"><div class="in"><span class="big">1</span><span class="lbl">Free show</span><span class="fine">For every new member</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FINAL ============ -->
+  <section class="final" aria-labelledby="h-final">
+    <div class="rays" aria-hidden="true"></div>
+    <div class="wrap">
+      <div class="marquee" aria-hidden="true"><span class="brand">Make<span class="a">a</span>Move</span></div>
+      <h2 class="announce" id="h-final">Your forever person could be one show away</h2>
+      <p class="host">Ten questions today. Up to three matches a day after that.</p>
+      <a class="cta" href="index.html#S-A2">Find your forever person</a>
+      <small>Free during launch.</small>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span class="brand">Make<span style="color:var(--move)">a</span>Move</span>
+    <ul>
+      <li><a href="index.html#S-A7">Sign in</a></li>
+      <li><a href="#safety">Safety</a></li>
+      <li><a href="index.html#S-I1">Report a member</a></li>
+    </ul>
+    <span>For singles 18 and over.</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  /* One turn set from the real question bank (index.html BANK). David is the
+     prototype's fixture candidate; his answers fit his S-B2 fixture (deputy head, two kids, London). */
+  const TURNS = [
+    { dim:'Lifestyle', q:'A free Sunday appears with nothing planned. What happens to it?', a:'It fills up with people I love' },
+    { dim:'Finances',  q:'One of you out-earns the other three to one. How do the bills work?', a:'Proportional, separate accounts' },
+    { dim:'Family',    q:'How would you blend two families together?', a:'Slowly. The kids set the pace' },
+    { dim:'Values',    q:'What would you never compromise on?', a:'My faith' }
+  ];
+  const PTS = 5, TOTAL = TURNS.length * PTS, GATE = 70;
+  const BEAT = 600, HOLD = 1350;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const $ = id => document.getElementById(id);
+  const board = $('board'), qtk = $('qtk'), ans = $('ans'), verdict = $('verdict');
+  const bStay = $('bStay'), bMove = $('bMove');
+  let i = 0, earned = 0, shown = 0, busy = false;
+
+  function restart(el, cls){ el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
+
+  function paintScore(p){
+    $('pct').textContent = p + '%';
+    $('fill').style.width = p + '%';
+  }
+  /* §5 — a score change ticks through intermediate values, never snaps */
+  function tick(to){
+    const from = shown; shown = to;
+    if (reduce){ paintScore(to); return; }
+    const t0 = performance.now(), dur = 450;
+    (function step(t){
+      const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      paintScore(Math.round(from + (to - from) * e));
+      if (k < 1) requestAnimationFrame(step);
+    })(t0);
+  }
+
+  function render(){
+    const t = TURNS[i];
+    $('turnflag').innerHTML = 'Turn <b>' + (i + 1) + '</b> of ' + TURNS.length;
+    $('dim').textContent = t.dim;
+    $('q').textContent = t.q;
+    $('a').textContent = t.a;
+    ans.className = 'ans';
+    restart(qtk, 'flipin'); restart(ans, 'flipin'); ans.classList.add('late');
+    [bStay, bMove].forEach(b => { b.disabled = false; b.classList.remove('locked'); b.parentNode.classList.remove('dimmed'); });
+    busy = false;
+  }
+
+  /* §4 — armed → LOCKED (amber) → beat → reveal */
+  function react(kind){
+    if (busy) return; busy = true;
+    const mine = kind === 'move' ? bMove : bStay, other = kind === 'move' ? bStay : bMove;
+    mine.classList.add('locked'); other.parentNode.classList.add('dimmed');
+    bStay.disabled = bMove.disabled = true;
+    board.classList.add('beat');
+    setTimeout(() => reveal(kind), BEAT);
+  }
+
+  function reveal(kind){
+    board.classList.remove('beat');
+    ans.classList.add(kind);
+    $('vword').textContent = kind === 'move' ? 'Move' : 'Stay';
+    verdict.className = 'verdict ' + kind; void verdict.offsetWidth; verdict.classList.add('on');
+    if (kind === 'move'){
+      earned += PTS; tick(Math.round(earned / TOTAL * 100));
+      if (!reduce) restart(board, 'shake');
+    }
+    $('status').textContent = (kind === 'move' ? 'Move. ' : 'Stay. ') + 'David is on ' + Math.round(earned / TOTAL * 100) + '%.';
+    setTimeout(next, HOLD);
+  }
+
+  function next(){
+    verdict.classList.remove('on');
+    board.classList.remove('shake');
+    i++;
+    if (i < TURNS.length) render(); else finish();
+  }
+
+  function finish(){
+    const p = Math.round(earned / TOTAL * 100), end = $('end');
+    board.classList.add('done');
+    if (p >= GATE){
+      end.className = 'end pass';
+      board.classList.add('fast');
+      $('endTitle').textContent = 'David passes on ' + p + '%';
+      $('endText').textContent = 'In the real Show he reacts to your answers too. If you both reach 70%, you set up a video call.';
+    } else {
+      end.className = 'end';
+      $('endTitle').textContent = 'David finishes on ' + p + '%';
+      $('endText').textContent = 'He needed 70% to pass. That isn’t a verdict on him. You want different things, and now you both know before a first date.';
+    }
+    $('again').focus({ preventScroll:true });
+  }
+
+  function reset(){
+    i = 0; earned = 0; tick(0);
+    board.classList.remove('done', 'fast');
+    render();
+    bMove.focus({ preventScroll:true });
+  }
+
+  bStay.addEventListener('click', () => react('stay'));
+  bMove.addEventListener('click', () => react('move'));
+  $('again').addEventListener('click', reset);
+  render();
+})();
+</script>
+</body>
+</html>
